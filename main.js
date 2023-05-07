@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
+const { createDDSImage } = require('./dds')
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -16,7 +17,7 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   createWindow()
-
+  createDDSImage('./images/test.png', './images/test.dds', 'DXT5')
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
