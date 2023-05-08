@@ -22,8 +22,8 @@ function createDDSHeader(width, height, format) {
     header.set([0x07, 0x10, 0x0a, 0x00], 8);  // dwFlags
     header.set([height & 0xFF, (height >> 8) & 0xFF, (height >> 16) & 0xFF, (height >> 24) & 0xFF], 12);      // dwHeight
     header.set([width & 0xFF, (width >> 8) & 0xFF, (width >> 16) & 0xFF, (width >> 24) & 0xFF], 16);      // dwWidth
-    header.set([0, 0, 0, 0], 20);       // dwPitchOrLinearSize
-    header.set([0, 0, 0, 0], 24)        // dwDepth
+    header.set([0x70, 0x55, 0x55, 0], 20);       // dwPitchOrLinearSize
+    header.set([0x01, 0, 0, 0], 24)        // dwDepth
 
     // Automatically determine number of mipmaps
     let numMipmaps = calculateMipmaps(width, height);
@@ -85,7 +85,7 @@ function encodeDXT5(imageData, width, height) {
             output.set(alphaCodes, offset);
 
             // Calculate color values
-            const colorValues = new Uint8Array(16);
+            const colorValues = new Uint16Array(16);
             for (let i = 0; i < 16; i++) {
                 const x = blockX * 4 + (i % 4);
                 const y = blockY * 4 + Math.floor(i / 4);
@@ -106,29 +106,40 @@ function encodeDXT5(imageData, width, height) {
 }
 
 function encodeAlpha(alphaValues) {
-    const alphaCodes = new Uint8Array(8);
-    if (alphaValues[0] > alphaValues[1]) {
-        // 8-alpha block: 00000xxx 00000yyy
-        alphaCodes[0] = ((8 - 1) << 2) | ((7 - 0) << 0);
-        alphaCodes[1] = ((6 - 1) << 2) | ((5 - 0) << 0);
-        alphaCodes[2] = ((4 - 1) << 2) | ((3 - 0) << 0);
-        alphaCodes[3] = ((2 - 1) << 2) | ((1 - 0) << 0);
-        alphaCodes[4] = alphaValues[0];
-        alphaCodes[5] = alphaValues[1];
-        alphaCodes[6] = alphaValues[2];
-        alphaCodes[7] = alphaValues[3];
+    const alpha0 = alphaValues[0];
+    const alpha1 = alphaValues[1];
+    const hasAlpha1 = alpha0 > alpha1;
+    const alphaBits = new Uint8Array(6);
+
+    // Determine the 6 alpha bits
+    if (hasAlpha1) {
+        alphaBits[0] = alpha0;
+        alphaBits[1] = alpha1;
+        alphaBits[2] = Math.round((6 * alpha0 + 1 * alpha1) / 7);
+        alphaBits[3] = Math.round((5 * alpha0 + 2 * alpha1) / 7);
+        alphaBits[4] = Math.round((4 * alpha0 + 3 * alpha1) / 7);
+        alphaBits[5] = Math.round((3 * alpha0 + 4 * alpha1) / 7);
     } else {
-        // 6-alpha block: 000000xx 0000yyyy
-        alphaCodes[0] = ((6 - 1) << 2) | ((5 - 0) << 0);
-        alphaCodes[1] = ((4 - 1) << 2) | ((3 - 0) << 0);
-        alphaCodes[2] = ((2 - 1) << 2) | ((1 - 0) << 0);
-        alphaCodes[3] = alphaValues[0];
-        alphaCodes[4] = alphaValues[1];
-        alphaCodes[5] = alphaValues[2];
-        alphaCodes[6] = alphaValues[3];
-        alphaCodes[7] = 0;
+        alphaBits[0] = alpha0;
+        alphaBits[1] = alpha1;
+        alphaBits[2] = Math.round((4 * alpha0 + 1 * alpha1) / 5);
+        alphaBits[3] = Math.round((3 * alpha0 + 2 * alpha1) / 5);
+        alphaBits[4] = Math.round((2 * alpha0 + 3 * alpha1) / 5);
+        alphaBits[5] = Math.round((1 * alpha0 + 4 * alpha1) / 5);
     }
-    return alphaCodes;
+
+    // Pack the alpha bits into 3 bytes
+    const alphaBytes = new Uint8Array(8);
+    alphaBytes[0] = (alphaBits[0]) & 0xff;
+    alphaBytes[1] = (alphaBits[1]) & 0xff;
+    alphaBytes[2] = ((alphaBits[2] << 3) | (alphaBits[3] >> 2)) & 0xff;
+    alphaBytes[3] = ((alphaBits[4] << 3) | (alphaBits[5] >> 2)) & 0xff;
+    alphaBytes[4] = ((alphaBits[6] << 3) | (alphaBits[7] >> 2)) & 0xff;
+    alphaBytes[5] = ((alphaBits[8] << 3) | (alphaBits[9] >> 2)) & 0xff;
+    alphaBytes[6] = ((alphaBits[10] << 3) | (alphaBits[11] >> 2)) & 0xff;
+    alphaBytes[7] = ((alphaBits[12] << 3) | (alphaBits[13] >> 2)) & 0xff;
+
+    return alphaBytes;
 }
 
 function encodeColorDXT1(colors) {
@@ -248,15 +259,38 @@ function encodeDXT1(imageData, width, height) {
 }
 
 function pack565(r, g, b) {
-    return ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | (b >> 3);
+    // Packs a red, green, and blue color into a 565 format.
+    r = r >> 3;
+    g = g >> 2;
+    b = b >> 3;
+    return (r << 11) | (g << 5) | b;
 }
 
 function unpack565(color) {
-    const r = (color >> 11) & 0x1F;
-    const g = (color >> 5) & 0x3F;
-    const b = color & 0x1F;
-    return { r: r << 3, g: g << 2, b: b << 3 };
+    // Unpacks a 565 format color into its red, green, and blue components.
+    var r = (color >> 11) << 3;
+    var g = ((color >> 5) & 0x3F) << 2;
+    var b = (color & 0x1F) << 3;
+    return {r, g, b};
 }
+
+function calculateWeight565(color, color0, color1) {
+    // Calculate the weight of the given color in relation to the two endpoint colors
+    const [r, g, b] = unpack565(color);
+    const [r0, g0, b0] = unpack565(color0);
+    const [r1, g1, b1] = unpack565(color1);
+
+    const dr = r1 - r0;
+    const dg = g1 - g0;
+    const db = b1 - b0;
+
+    const rIndex = Math.round(((r - r0) / dr) * 7);
+    const gIndex = Math.round(((g - g0) / dg) * 7);
+    const bIndex = Math.round(((b - b0) / db) * 3);
+
+    return (rIndex << 6) | (gIndex << 3) | bIndex;
+}
+
 
 async function createDDSImage(inputPath, outputPath, format) {
     Jimp.read(inputPath)
