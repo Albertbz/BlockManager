@@ -60,6 +60,40 @@ function createDDSHeader(width, height, format) {
     return header;
 }
 
+function encodeDXT1(imageData, width, height) {
+    const blockSize = 8;
+    const numBlocksX = Math.ceil(width / 4);
+    const numBlocksY = Math.ceil(height / 4);
+    const numBlocks = numBlocksX * numBlocksY;
+    const output = new Uint8Array(blockSize * numBlocks);
+    const data = imageData;
+
+    // Iterate over each block
+    for (let blockY = 0; blockY < numBlocksY; blockY++) {
+        for (let blockX = 0; blockX < numBlocksX; blockX++) {
+            const offset = (blockY * numBlocksX + blockX) * blockSize;
+
+            // Calculate color values
+            const colorValues = new Uint8Array(16);
+            for (let i = 0; i < 16; i++) {
+                const x = blockX * 4 + (i % 4);
+                const y = blockY * 4 + Math.floor(i / 4);
+                const colorIndex = (y * width + x) * 4;
+                const r = data[colorIndex];
+                const g = data[colorIndex + 1];
+                const b = data[colorIndex + 2];
+                colorValues[i] = pack565(r, g, b);
+            }
+
+            // Encode color block
+            const colorBlock = encodeColorDXT1(colorValues);
+            output.set(colorBlock, offset);
+        }
+    }
+
+    return output;
+}
+
 function encodeDXT5(imageData, width, height) {
     const blockSize = 16;
     const numBlocksX = Math.ceil(width / 4);
@@ -166,94 +200,38 @@ function encodeColorDXT1(colors) {
     }
 
     // Pack the colors into 2 bytes
-    const color0 = pack565(minR, minG, minB);
-    const color1 = pack565(maxR, maxG, maxB);
+    const color0 = pack565(maxR, maxG, maxB);
+    const color1 = pack565(minR, minG, minB);
 
     // Write the color codes to the buffer
     codeBuffer[0] = color0 & 0xFF;
     codeBuffer[1] = color0 >> 8;
-    codeBuffer[2] = color1 & 0xFF;
-    codeBuffer[3] = color1 >> 8;
+    if (color0 != color1) {
+        codeBuffer[2] = color1 & 0xFF;
+        codeBuffer[3] = color1 >> 8;
+    }
 
     // Calculate the color lookup table
     const colorTable = new Uint8Array(4 * 4);
 
     if (color0 > color1) {
         for (let i = 0; i < 16; i++) {
-            const color = unpack565(colors[i]);
-
-            if (color0 > color1) {
-                if (color.r == maxR && color.g == maxG && color.b == maxB) {
-                    colorTable[i] = 1;
-                } else if (color.r == minR && color.g == minG && color.b == minB) {
-                    colorTable[i] = 0;
-                } else {
-                    const weight = calculateWeight565(color, color0, color1);
-                    colorTable[i] = 2 + weight;
-                }
-            } else {
-                if (color.r == maxR && color.g == maxG && color.b == maxB) {
-                    colorTable[i] = 0;
-                } else if (color.r == minR && color.g == minG && color.b == minB) {
-                    colorTable[i] = 1;
-                } else {
-                    const weight = calculateWeight565(color, color0, color1);
-                    colorTable[i] = weight;
-                }
-            }
+            colorTable[i] = calculateWeight(colors[i], color0, color1);
         }
-    } else {
-        // The two colors are the same, so all indices point to color0
-        colorTable.fill(0);
     }
 
     // Pack the color lookup table into 4 bytes
-    let tableIndex = 0;
-    for (let i = 4; i < 8; i++) {
+    for (let i = 0; i < 8; i++) {
         let value = 0;
         for (let j = 0; j < 4; j++) {
-            const colorIndex = i - 4 + j * 4;
-            value |= colorTable[colorIndex] << (j * 2);
+            const colorIndex = i * 4 + j;
+            value |= (colorTable[colorIndex] << (j * 2));
         }
-        output[i] = value;
+        codeBuffer[i + 4] = value;
     }
 
     // Copy the color codes to the output
     output.set(codeBuffer, 0);
-
-    return output;
-}
-
-function encodeDXT1(imageData, width, height) {
-    const blockSize = 8;
-    const numBlocksX = Math.ceil(width / 4);
-    const numBlocksY = Math.ceil(height / 4);
-    const numBlocks = numBlocksX * numBlocksY;
-    const output = new Uint8Array(blockSize * numBlocks);
-    const data = imageData.data;
-
-    // Iterate over each block
-    for (let blockY = 0; blockY < numBlocksY; blockY++) {
-        for (let blockX = 0; blockX < numBlocksX; blockX++) {
-            const offset = (blockY * numBlocksX + blockX) * blockSize;
-
-            // Calculate color values
-            const colorValues = new Uint8Array(16);
-            for (let i = 0; i < 16; i++) {
-                const x = blockX * 4 + (i % 4);
-                const y = blockY * 4 + Math.floor(i / 4);
-                const colorIndex = (y * width + x) * 4;
-                const r = data[colorIndex];
-                const g = data[colorIndex + 1];
-                const b = data[colorIndex + 2];
-                colorValues[i] = pack565(r, g, b);
-            }
-
-            // Encode color block
-            const colorBlock = encodeColorDXT1(colorValues);
-            output.set(colorBlock, offset);
-        }
-    }
 
     return output;
 }
@@ -267,29 +245,54 @@ function pack565(r, g, b) {
 }
 
 function unpack565(color) {
-    // Unpacks a 565 format color into its red, green, and blue components.
-    var r = (color >> 11) << 3;
-    var g = ((color >> 5) & 0x3F) << 2;
-    var b = (color & 0x1F) << 3;
-    return {r, g, b};
+    var r = (color & 0xF800) >> 11;  // Extract the 5 most significant bits for red
+    var g = (color & 0x07E0) >> 5;   // Extract the 6 middle bits for green
+    var b = (color & 0x001F);        // Extract the 5 least significant bits for blue
+    // Expand the 5-bit values to 8-bit by shifting left and or-ing with itself
+    r = (r << 3) | (r >> 2);
+    g = (g << 2) | (g >> 4);
+    b = (b << 3) | (b >> 2);
+    // Convert the 8-bit color values to RGB565 format by shifting and or-ing
+    return { r, g, b}
 }
 
-function calculateWeight565(color, color0, color1) {
-    // Calculate the weight of the given color in relation to the two endpoint colors
-    const [r, g, b] = unpack565(color);
-    const [r0, g0, b0] = unpack565(color0);
-    const [r1, g1, b1] = unpack565(color1);
+function calculateWeight(color, color0, color1) {
+    const c = unpack565(color);
+    const c0 = unpack565(color0);
+    const c1 = unpack565(color1);
 
-    const dr = r1 - r0;
-    const dg = g1 - g0;
-    const db = b1 - b0;
+    if (c.r == c0.r && c.g == c0.g && c.b == c0.b) return 0;
+    if (c.r == c1.r && c.g == c1.g && c.b == c1.b) return 1;
 
-    const rIndex = Math.round(((r - r0) / dr) * 7);
-    const gIndex = Math.round(((g - g0) / dg) * 7);
-    const bIndex = Math.round(((b - b0) / db) * 3);
+    const c2a = {
+        r: (2 / 3 * c0.r + 1 / 3 * c1.r),
+        g: (2 / 3 * c0.g + 1 / 3 * c1.g),
+        b: (2 / 3 * c0.b + 1 / 3 * c1.b)
+    };
+    const c3a = {
+        r: (1 / 3 * c0.r + 2 / 3 * c1.r),
+        g: (1 / 3 * c0.g + 2 / 3 * c1.g),
+        b: (1 / 3 * c0.b + 2 / 3 * c1.b)
+    };
 
-    return (rIndex << 6) | (gIndex << 3) | bIndex;
+    const testc2 = pack565(c2a.r, c2a.g, c2a.b);
+    const testc3 = pack565(c3a.r, c3a.g, c3a.b);
+    const c2 = unpack565(testc2);
+    const c3 = unpack565(testc3);
+
+    const dist0 = Math.pow(c.r - c0.r, 2) + Math.pow(c.g - c0.g, 2) + Math.pow(c.b - c0.b, 2);
+    const dist1 = Math.pow(c.r - c1.r, 2) + Math.pow(c.g - c1.g, 2) + Math.pow(c.b - c1.b, 2);
+    const dist2 = Math.pow(c.r - c2.r, 2) + Math.pow(c.g - c2.g, 2) + Math.pow(c.b - c2.b, 2);
+    const dist3 = Math.pow(c.r - c3.r, 2) + Math.pow(c.g - c3.g, 2) + Math.pow(c.b - c3.b, 2);
+
+    switch (Math.min(dist0, dist1, dist2, dist3)) {
+        case dist0: return 0;
+        case dist1: return 1;
+        case dist2: return 2;
+        case dist3: return 3;
+    };
 }
+
 
 
 async function createDDSImage(inputPath, outputPath, format) {
@@ -312,13 +315,15 @@ async function createDDSImage(inputPath, outputPath, format) {
 
             let numMipmaps = calculateMipmaps(image.bitmap.width, image.bitmap.height);
             let encodedData = new Uint8Array();
+            let imageCopy = image.clone();
             for (let i = 0; i < numMipmaps; i++) {
-                let newEncodedData = encodeFunction(image.bitmap.data, image.bitmap.width, image.bitmap.height);
+                let newEncodedData = encodeFunction(imageCopy.bitmap.data, imageCopy.bitmap.width, imageCopy.bitmap.height);
                 let tempOldEncodedData = encodedData;
                 encodedData = new Uint8Array(tempOldEncodedData.length + newEncodedData.length);
                 encodedData.set(tempOldEncodedData);
-                encodedData.set(newEncodedData, tempOldEncodedData.length)
-                image.resize(image.bitmap.width / 2, image.bitmap.height / 2);
+                encodedData.set(newEncodedData, tempOldEncodedData.length);
+                imageCopy = image.clone();
+                imageCopy.resize(imageCopy.bitmap.width / Math.pow(2, i + 1), imageCopy.bitmap.height / Math.pow(2, i + 1));
             }
 
             const output = Buffer.concat([header, encodedData]);
