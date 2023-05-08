@@ -76,7 +76,7 @@ function encodeDXT5(imageData, width, height) {
             // Calculate alpha values
             const alphaValues = new Uint8Array(8);
             for (let i = 0; i < 8; i++) {
-                const alphaIndex = i * 2 + offset + 8;
+                const alphaIndex = i * 4 + offset + 3;
                 alphaValues[i] = data[alphaIndex];
             }
             const alphaCodes = encodeAlpha(alphaValues);
