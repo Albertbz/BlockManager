@@ -17,7 +17,8 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   createWindow()
-  createDDSImage('./images/test.png', './images/test.dds', 'DXT5')
+  createDDSImage('C:\\Users\\alber\\OneDrive\\Dokumenter\\Hobbies\\cyubeVR\\BlockManager\\images\\test.png', 
+                 'C:\\Users\\alber\\OneDrive\\Dokumenter\\Hobbies\\cyubeVR\\BlockManager\\images\\test.dds', 'BC3')
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
