@@ -70,3 +70,15 @@ document.querySelectorAll(".btn-navigate-form-step").forEach((formNavigationBtn)
         navigateToFormStep(stepNumber);
     });
 });
+
+/**
+ * Generate random number and put it into the uniqueID
+ * input.
+ */
+let uniqueIDButton = document.getElementById('uniqueIDButton');
+let uniqueIDInput = document.getElementById('uniqueIDInput');
+
+uniqueIDButton.addEventListener('click', function() {
+    const randomInt = Math.floor(Math.random() * 2147483648) + 1;
+    uniqueIDInput.value = randomInt;
+});

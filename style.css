@@ -1,5 +1,6 @@
 .container {
 	padding-top: 2%;
+	padding-bottom: 2%;
 	padding-left: 5%;
 	padding-right: 5%;
 }
@@ -49,14 +50,99 @@ input::-webkit-inner-spin-button {
 	margin-top: 2rem;
 }
 
-/*
-* Form stepper
-*/
+.mb-2 {
+	margin-bottom: 0.75rem;
+}
 
+.form-vertical {
+	display: flex;
+	justify-content: space-around;
+}
+
+.btns {
+	display: flex;
+	justify-content: space-between;
+}
+
+.form-part {
+	width: 30%;
+}
+
+.form-label {
+	display: flex;
+	width: 100%;
+}
+
+.form-group {
+	display: flex;
+	justify-content: space-between;
+}
+
+.form-control {
+	width: 100%;
+}
+
+.btn {
+	width: auto;
+}
+
+input {
+	box-sizing: border-box;
+}
+
+select {
+	height: 21px;
+	box-sizing: border-box;
+}
+
+/**
+ * Custom checkboxes
+ */
+input[type=checkbox] {
+	visibility: hidden;
+}
+
+.checkbox {
+	width: 35px;
+	height: 21px;
+	background: #717171;
+	transition: background .3s ease;
+	position: relative;
+	border-radius: 50px;
+}
+
+.checkbox label {
+	display: block;
+	width: 17px;
+	height: 17px;
+	border-radius: 50%;
+
+	transition: all .3s ease;
+	cursor: pointer;
+	position: absolute;
+	top: 2px;
+	z-index: 1;
+	left: 2px;
+	background: #ddd;
+}
+
+.checkbox input[type=checkbox]:checked + label {
+	left: 16px;
+}
+
+.checkbox:has(input[type=checkbox]:checked)  {
+	background: #26ca28;
+}
+
+
+/**
+ * Form stepper
+ */
 ul.form-stepper {
 	counter-reset: section;
 	margin-bottom: 3%;
 	margin-top: 0;
+	user-select: none;
 }
 
 ul.form-stepper .form-stepper-circle {
@@ -133,11 +219,7 @@ ul.form-stepper li a .form-stepper-circle {
     color: #4361ee !important;
 }
 
-/* Does this do anything? */
-.form-stepper .form-stepper-active .form-stepper-circle:hover {
-    background-color: #4361ee !important;
-    color: #fff !important;
-}
+
 
 .form-stepper .form-stepper-unfinished .form-stepper-circle {
     background-color: #f8f7ff;
