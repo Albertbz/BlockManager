@@ -75,10 +75,121 @@ document.querySelectorAll(".btn-navigate-form-step").forEach((formNavigationBtn)
  * Generate random number and put it into the uniqueID
  * input.
  */
-let uniqueIDButton = document.getElementById('uniqueIDButton');
-let uniqueIDInput = document.getElementById('uniqueIDInput');
+const uniqueIDButton = document.getElementById('uniqueIDButton');
+const uniqueIDInput = document.getElementById('uniqueIDInput');
 
 uniqueIDButton.addEventListener('click', function() {
     const randomInt = Math.floor(Math.random() * 2147483648) + 1;
     uniqueIDInput.value = randomInt;
+});
+
+/**
+ * Texture choosing mechanism
+ */
+document.querySelectorAll('div.texture-selector-parent').forEach((textureSelectorDiv) => {
+    let textureFilesInput = textureSelectorDiv.previousElementSibling;
+    let textureFiles = [];
+
+    textureFilesInput.addEventListener('change', (e) => {
+        addTexturesToDiv(textureFiles, textureFilesInput.files, textureSelectorDiv);
+    })
+})
+
+function clearDiv(div) {
+    while (div.firstElementChild) {
+        div.removeChild(div.lastElementChild);
+    }
+}
+
+function addTexturesToDiv(fileArray, newFiles, selectorDiv) {
+    clearDiv(selectorDiv);
+    fileArray.push(...newFiles);
+    for (let i = 0; i < fileArray.length; i++) {
+        const div = document.createElement('div');
+        const label = document.createElement('label');
+        const textureImg = document.createElement('img');
+        const crossImg = document.createElement('img');
+        const select = createSelect(fileArray.length, i);
+
+        div.classList.add('texture-selector-child');
+        div.appendChild(label);
+        div.appendChild(select);
+
+        label.classList.add('form-label', 'texture-label')
+        label.appendChild(textureImg);
+        label.appendChild(crossImg);
+
+        textureImg.src = fileArray[i].path;
+        textureImg.classList.add('texture-img');
+        textureImg.addEventListener('click', (e) => {
+            fileArray.splice(i, 1);
+            addTexturesToDiv(fileArray, [], selectorDiv);
+        })
+
+        crossImg.src = "./images/cross.png";
+        crossImg.classList.add('cross');
+
+        selectorDiv.appendChild(div);
+    }
+}
+
+function createSelect(amountOfTextures, textureNum) {
+    const select = document.createElement('select');
+
+    let options = [];
+
+    switch (amountOfTextures) {
+        case 1:
+            options[0] = createOption('all', 'All');
+            break;
+        case 2:
+            options[0] = createOption('sides', 'Sides');
+            options[1] = createOption('updown', 'Up/down');
+            break;
+        case 3:
+            options[0] = createOption('sides', 'Sides');
+            options[1] = createOption('up', 'Up');
+            options[2] = createOption('down', 'Down')
+            break;
+        case 6:
+            options[0] = createOption('up', 'Up');
+            options[1] = createOption('down', 'Down');
+            options[2] = createOption('left', 'Left');
+            options[3] = createOption('right', 'Right');
+            options[4] = createOption('front', 'Front');
+            options[5] = createOption('back', 'Back');
+            break;
+        default:
+            for (let i = 0; i < amountOfTextures; i++) {
+                options[i] = createOption('invalid', 'Invalid');
+            }
+    }
+
+    for (let i = 0; i < options.length; i++) {
+        select.appendChild(options[i]);
+    }
+
+    select.value = options[textureNum].value;
+    select.classList.add('form-control', 'mb-2');
+
+    return select;
+}
+
+function createOption(value, innerText) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.innerText = innerText;
+    return option;
+}
+
+/**
+ * Handle form submit
+ */
+const form = document.getElementById('blockForm');
+
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    
+
 });
