@@ -21,7 +21,7 @@ function createWindow() {
     // Set window size to be 50% of the width of the
     // display and 60% of the height, and then center
     // it.
-    win.setSize(display.bounds.width * 0.5, display.bounds.height * 0.6);
+    win.setSize(Math.round(display.bounds.width * 0.5), Math.round(display.bounds.height * 0.6));
     win.center();
 
     // Load the main HTML file onto the window.
