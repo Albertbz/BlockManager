@@ -1,20 +1,122 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <link rel="stylesheet" href="./style.css">
     <title>Block Manager for cyubeVR</title>
-  </head>
-  <body>
-    
-  </body>
-  <script src="./renderer.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Form steps -->
+        <ul class="form-stepper form-stepper-horizontal text-center mx-auto pl-0">
+            <!-- Step 1 -->
+            <li class="form-stepper-active form-stepper-list" step="1">
+                <a>
+                    <span class="form-stepper-circle">
+                        <span>1</span>
+                    </span>
+                    <div class="label">Properties</div>
+                </a>
+            </li>
+            <!-- Step 2 -->
+            <li class="form-stepper-unfinished form-stepper-list" step="2">
+                <a>
+                    <span class="form-stepper-circle">
+                        <span>2</span>
+                    </span>
+                    <div class="label text-muted">Textures</div>
+                </a>
+            </li>
+            <!-- Step 3 -->
+            <li class="form-stepper-unfinished form-stepper-list" step="3">
+                <a>
+                    <span class="form-stepper-circle">
+                        <span>3</span>
+                    </span>
+                    <div class="label text-muted">Finalization</div>
+                </a>
+            </li>
+        </ul>
+
+        <form action="" id="blockForm">
+            <!-- Step 1 -->
+            <section id="step-1" class="form-step">
+                <h2>Properties</h2>
+                <div class="mt-3">
+                    <h3>Required</h3>
+                    <label for="name">Name of block</label><br>
+                    <input type="text" name="name" id="nameInput"><br>
+            
+                    <label for="creatorName">Name of creator</label><br>
+                    <input type="text" name="creatorName" id="creatorNameInput"><br>
+            
+                    <label for="uniqueID">ID of block</label><br>
+                    <input type="number" name="uniqueID" id="uniqueIDInput" min="1" max="2147483648">
+                    <input type="button" value="Generate random"><br>
+            
+                    <label for="yield">Yield</label><br>
+                    <input type="number" name="yield" id="yieldInput" min="1" max="50"><br>
+            
+                    <label for="similarTo">Tool used to break</label><br>
+                    <select name="similarTo" id="similarToInput">
+                        <option value="1">Pickaxe</option>
+                        <option value="2">Axe</option>
+                        <option value="3">Shovel</option>
+                        <option value="4">None</option>
+                    </select><br>
+                    
+                    <h3>Optional</h3>
+
+                    <label for="categoryName">Category name</label><br>
+                    <input type="text" name="categoryName" id="categoryNameInput"><br>
+
+                    <label for="uniqueIDToDrop">Block to drop (ID)</label><br>
+                    <input list="uniqueIDToDropList" name="uniqueIDToDrop" id="uniqueIDToDrop">
+                    <datalist id="uniqueIDToDropList">
+                        <option value="-2">Itself</option>
+                        <option value="-1">Nothing</option>
+                    </datalist><br>
+
+                    <label for="allowMove">Allow moving after placement</label><br>
+                    <input type="checkbox" name="allowMove" id="allowMoveInput" checked><br>
+
+                    <label for="allowCrystalPlacement">Allow crystal assisted block placement</label><br>
+                    <input type="checkbox" name="allowCrystalPlacement" id="allowCrystalPlacementInput" checked><br>
+                </div>
+                <div class="mt-3">
+                    <button class="btn-navigate-form-step" type="button" step_number="2">Next</button>
+                </div>
+            </section>
+            <!-- Step 2 -->
+            <section id="step-2" class="form-step d-none">
+                <h2>Textures</h2>
+                <div class="mt-3">
+
+                </div>
+                <div class="mt-3">
+                    <button class="btn-navigate-form-step" type="button" step_number="1">Previous</button>
+                    <button class="btn-navigate-form-step" type="button" step_number="3">Next</button>
+                </div>
+            </section>
+            <!-- Step 3 -->
+            <section id="step-3" class="form-step d-none">
+                <h2>Finalization</h2>
+                <div class="mt-3">
+
+                </div>
+                <div class="mt-3">
+                    <button class="btn-navigate-form-step" type="button" step_number="2">Previous</button>
+                    <button class="submit-btn" type="submit">Generate</button>
+                </div>
+            </section>
+        </form>
+    </div>
+</body>
+<script src="./renderer.js"></script>
+
 </html>
