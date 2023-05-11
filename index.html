@@ -11,144 +11,167 @@
 </head>
 
 <body>
-    <div class="container">
-        <!-- Form steps -->
-        <ul class="form-stepper form-stepper-horizontal text-center mx-auto pl-0">
-            <!-- Step 1 -->
-            <li class="form-stepper-active form-stepper-list" step="1">
-                <a>
-                    <span class="form-stepper-circle">
-                        <span>1</span>
-                    </span>
-                    <div class="label">Properties</div>
-                </a>
-            </li>
-            <!-- Step 2 -->
-            <li class="form-stepper-unfinished form-stepper-list" step="2">
-                <a>
-                    <span class="form-stepper-circle">
-                        <span>2</span>
-                    </span>
-                    <div class="label text-muted">Textures</div>
-                </a>
-            </li>
-            <!-- Step 3 -->
-            <li class="form-stepper-unfinished form-stepper-list" step="3">
-                <a>
-                    <span class="form-stepper-circle">
-                        <span>3</span>
-                    </span>
-                    <div class="label text-muted">Finalization</div>
-                </a>
-            </li>
-        </ul>
+    <div class="container box">
+        <div class="header">
+            <!-- Form steps -->
+            <ul class="form-stepper form-stepper-horizontal text-center mx-auto pl-0">
+                <!-- Step 1 -->
+                <li class="form-stepper-active form-stepper-list" step="1">
+                    <a>
+                        <span class="form-stepper-circle">
+                            <span>1</span>
+                        </span>
+                        <div class="label">Properties</div>
+                    </a>
+                </li>
+                <!-- Step 2 -->
+                <li class="form-stepper-unfinished form-stepper-list" step="2">
+                    <a>
+                        <span class="form-stepper-circle">
+                            <span>2</span>
+                        </span>
+                        <div class="label text-muted">Textures</div>
+                    </a>
+                </li>
+                <!-- Step 3 -->
+                <li class="form-stepper-unfinished form-stepper-list" step="3">
+                    <a>
+                        <span class="form-stepper-circle">
+                            <span>3</span>
+                        </span>
+                        <div class="label text-muted">Finalization</div>
+                    </a>
+                </li>
+            </ul>
+        </div>
 
-        <form action="" id="blockForm">
-            <!-- Step 1 -->
-            <section id="step-1" class="form-step">
-                <h2 class="text-center">Properties</h2>
+        <div class="content">
+            <form class="box" action="" id="blockForm">
+                <!-- Step 1 -->
+                <section id="step-1" class="form-step content box">
+                    <h2 class="text-center mt-0 header">Properties</h2>
 
-                <div class="form-vertical">
-                    <div class="form-part">
-                        <h3 class="text-center">Required</h3>
+                    <div class="content box-vertical">
+                        <div class="form-part content box">
+                            <h3 class="text-center header">Required</h3>
 
-                        <label class="form-label" for="nameInput">Name of block:</label>
-                        <input class="form-control mb-2" type="text" name="name" id="nameInput" placeholder="e.g., White marble">
-    
-                        <label class="form-label" for="creatorNameInput">Name of creator:</label>
-                        <input class="form-control mb-2" type="text" name="creatorName" id="creatorNameInput" placeholder="e.g., Albertbz">
-    
-                        <label class="form-label" for="uniqueIDInput">ID of block:</label>
-                        <div class="form-group mb-2">
-                            <input class="form-control" type="number" name="uniqueID" id="uniqueIDInput" min="1" max="2147483648" placeholder="e.g., 325235">
-                            <input class="form-control btn" type="button" value="Random" id="uniqueIDButton">
+                            <div class="scrollable content box">
+                                <label class="form-label" for="nameInput">Name of block:</label>
+                                <input class="form-control mb-2" type="text" name="name" id="nameInput"
+                                    placeholder="e.g., White marble">
+
+                                <label class="form-label" for="creatorNameInput">Name of creator:</label>
+                                <input class="form-control mb-2" type="text" name="creatorName" id="creatorNameInput"
+                                    placeholder="e.g., Albertbz">
+
+                                <label class="form-label" for="uniqueIDInput">ID of block:</label>
+                                <div class="form-group mb-2">
+                                    <input class="form-control" type="number" name="uniqueID" id="uniqueIDInput" min="1"
+                                        max="2147483648" placeholder="e.g., 325235">
+                                    <input class="form-control btn" type="button" value="Random" id="uniqueIDButton">
+                                </div>
+
+                                <label class="form-label" for="yieldInput">Yield:</label>
+                                <input class="form-control mb-2" type="number" name="yield" id="yieldInput" min="1" max="50"
+                                    placeholder="e.g., 10">
+
+                                <label class="form-label" for="similarToInput">Tool used to break:</label>
+                                <select class="form-control" name="similarTo" id="similarToInput">
+                                    <option value="1">Pickaxe</option>
+                                    <option value="2">Axe</option>
+                                    <option value="3">Shovel</option>
+                                    <option value="4">None</option>
+                                </select>
+                            </div>
                         </div>
-    
-                        <label class="form-label" for="yieldInput">Yield:</label>
-                        <input class="form-control mb-2" type="number" name="yield" id="yieldInput" min="1" max="50" placeholder="e.g., 10">
-    
-                        <label class="form-label" for="similarToInput">Tool used to break:</label>
-                        <select class="form-control" name="similarTo" id="similarToInput">
-                            <option value="1">Pickaxe</option>
-                            <option value="2">Axe</option>
-                            <option value="3">Shovel</option>
-                            <option value="4">None</option>
-                        </select>
-    
-                    </div>
-                    <div class="form-part">
-                        <h3 class="text-center">Optional</h3>
-    
-                        <label class="form-label" for="categoryNameInput">Category name:</label>
-                        <input class="form-control mb-2" type="text" name="categoryName" id="categoryNameInput" placeholder="e.g., Marble">
-    
-                        <label class="form-label" for="uniqueIDToDropInput">Block to drop (ID):</label>
-                        <input class="form-control mb-2" list="uniqueIDToDropList" name="uniqueIDToDrop" id="uniqueIDToDropInput" placeholder="e.g., 89794">
-                        <datalist id="uniqueIDToDropList">
-                            <option value="-2">Itself</option>
-                            <option value="-1">Nothing</option>
-                        </datalist>
-    
-                        <label class="form-label" for="allowMoveInput">Allow movement after placement:</label>
-                        <div class="checkbox mb-2">
-                            <input class="form-control" type="checkbox" name="allowMove" id="allowMoveInput" checked>
-                            <label for="allowMoveInput"></label>
-                        </div>
-    
-                        <label class="form-label" for="allowCrystalPlacementInput">Allow crystal assisted block placement:</label>
-                        <div class="checkbox mb-2">
-                            <input class="form-control" type="checkbox" name="allowCrystalPlacement" id="allowCrystalPlacementInput" checked>
-                            <label for="allowCrystalPlacementInput"></label>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-3 btns">
-                    <span></span>
-                    <button class="btn-navigate-form-step btn-large" type="button" step_number="2">Next</button>
-                </div>
-            </section>
-            <!-- Step 2 -->
-            <section id="step-2" class="form-step d-none">
-                <h2 class="text-center">Textures</h2>
-                <div class="form-vertical">
-                    <div class="form-part">
-                        <h3 class="text-center">Required</h3>
+                        <div class="form-part content box">
+                            <h3 class="text-center header">Optional</h3>
 
-                        <label class="form-label" for="textureFilesInput">Choose your texture file(s). Must be 2048x2048:</label>
-                        <input class="form-control mb-2" type="file" name="textureFiles" id="textureFilesInput" multiple accept=".png,.jpg,.jpeg">
-                        <div class="texture-selector-parent" id="textureSelectorDiv">
-                            <!-- Textures are automatically added here -->
-                        </div>
+                            <div class="scrollable content box">
+                                <label class="form-label" for="categoryNameInput">Category name:</label>
+                                <input class="form-control mb-2" type="text" name="categoryName" id="categoryNameInput"
+                                    placeholder="e.g., Marble">
 
-                        <label for="smallTextureFilesInput" class="form-label">Choose your small texture file(s). Must be 512x512:</label>
-                        <input type="file" name="smallTextureFiles" id="smallTextureFilesInput" class="form-control mb-2" multiple accept=".png,.jpg,.jpeg">
-                        <div class="texture-selector-parent" id="smalltextureSelectorDiv">
-                            <!-- Textures are automatically added here -->
+                                <label class="form-label" for="uniqueIDToDropInput">Block to drop (ID):</label>
+                                <input class="form-control mb-2" list="uniqueIDToDropList" name="uniqueIDToDrop"
+                                    id="uniqueIDToDropInput" placeholder="e.g., 89794">
+                                <datalist id="uniqueIDToDropList">
+                                    <option value="-2">Itself</option>
+                                    <option value="-1">Nothing</option>
+                                </datalist>
+
+                                <label class="form-label" for="allowMoveInput">Allow movement after placement:</label>
+                                <div class="checkbox mb-2">
+                                    <input class="form-control" type="checkbox" name="allowMove" id="allowMoveInput"
+                                        checked>
+                                    <label for="allowMoveInput"></label>
+                                </div>
+
+                                <label class="form-label" for="allowCrystalPlacementInput">Allow crystal assisted block
+                                    placement:</label>
+                                <div class="checkbox mb-2">
+                                    <input class="form-control" type="checkbox" name="allowCrystalPlacement"
+                                        id="allowCrystalPlacementInput" checked>
+                                    <label for="allowCrystalPlacementInput"></label>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-part">
-                        <h3 class="text-center">Optional</h3>
-    
-                        
+                    <div class="btns footer">
+                        <span></span>
+                        <button class="btn-navigate-form-step btn-large" type="button" step_number="2">Next</button>
                     </div>
-                </div>
-                <div class="mt-3 btns">
-                    <button class="btn-navigate-form-step btn-large" type="button" step_number="1">Previous</button>
-                    <button class="btn-navigate-form-step btn-large" type="button" step_number="3">Next</button>
-                </div>
-            </section>
-            <!-- Step 3 -->
-            <section id="step-3" class="form-step d-none">
-                <h2 class="text-center">Finalization</h2>
-                <div class="mt-3">
+                </section>
+                <!-- Step 2 -->
+                <section id="step-2" class="form-step content box d-none">
+                    <h2 class="text-center mt-0 header">Textures</h2>
+                    <div class="content box-vertical">
+                        <div class="form-part content box">
+                            <h3 class="text-center header">Required</h3>
 
-                </div>
-                <div class="mt-3 btns">
-                    <button class="btn-navigate-form-step btn-large" type="button" step_number="2">Previous</button>
-                    <button class="submit-btn btn-large" type="submit">Generate</button>
-                </div>
-            </section>
-        </form>
+                            <div class="scrollable content box">
+                                <label class="form-label" for="textureFilesInput">Choose your texture file(s). Must be
+                                    2048x2048:</label>
+                                <input class="form-control mb-2" type="file" name="textureFiles" id="textureFilesInput"
+                                    multiple accept=".png,.jpg,.jpeg">
+                                <div class="texture-selector-parent" id="textureSelectorDiv">
+                                    <!-- Textures are automatically added here -->
+                                </div>
+
+                                <label for="smallTextureFilesInput" class="form-label">Choose your small texture
+                                    file(s). Must be 512x512:</label>
+                                <input type="file" name="smallTextureFiles" id="smallTextureFilesInput"
+                                    class="form-control mb-2" multiple accept=".png,.jpg,.jpeg">
+                                <div class="texture-selector-parent" id="smalltextureSelectorDiv">
+                                    <!-- Textures are automatically added here -->
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="form-part content box">
+                            <h3 class="text-center header">Optional</h3>
+
+
+                        </div>
+                    </div>
+                    <div class="btns footer">
+                        <button class="btn-navigate-form-step btn-large" type="button" step_number="1">Previous</button>
+                        <button class="btn-navigate-form-step btn-large" type="button" step_number="3">Next</button>
+                    </div>
+                </section>
+                <!-- Step 3 -->
+                <section id="step-3" class="form-step d-none">
+                    <h2 class="text-center">Finalization</h2>
+                    <div class="mt-3">
+
+                    </div>
+                    <div class="mt-3 btns">
+                        <button class="btn-navigate-form-step btn-large" type="button" step_number="2">Previous</button>
+                        <button class="submit-btn btn-large" type="submit">Generate</button>
+                    </div>
+                </section>
+            </form>
+        </div>
     </div>
 </body>
 <script src="./renderer.js"></script>

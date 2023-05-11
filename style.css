@@ -3,6 +3,8 @@
 	padding-bottom: 2%;
 	padding-left: 5%;
 	padding-right: 5%;
+	height: 100%;
+	box-sizing: border-box;
 }
 
 * {
@@ -13,6 +15,39 @@ body {
 	margin: 0;
 	background-color: rgb(242, 242, 242);
 	height: 100vh;
+}
+
+.box {
+	display: flex;
+	flex-flow: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+.box .header {
+	flex: 0 1 auto;
+	margin-top: 0;
+}
+
+.box .content {
+	flex: 1 1 auto;
+	min-height: 0;
+	min-width: 0;
+}
+
+.box .footer {
+	flex: 0 1 auto;
+}
+
+.box-vertical {
+	display: flex;
+	flex-flow: row;
+	justify-content: space-around;
+	width: 100%;
+}
+
+.box-vertical .content {
+	flex: 0 1 auto;
 }
 
 input:invalid {
@@ -46,21 +81,16 @@ input::-webkit-inner-spin-button {
 	padding-left: 0;
 }
 
-.d-none {
-	display: none;
-}
-
 .mt-3 {
 	margin-top: 2rem;
 }
 
-.mb-2 {
-	margin-bottom: 0.75rem;
+.mt-0 {
+	margin-top: 0;
 }
 
-.form-vertical {
-	display: flex;
-	justify-content: space-around;
+.mb-2 {
+	margin-bottom: 0.75rem;
 }
 
 .btns {
@@ -68,30 +98,12 @@ input::-webkit-inner-spin-button {
 	justify-content: space-between;
 }
 
-.form-part {
-	width: 30%;
-}
-
-.form-label {
-	display: flex;
-	width: 100%;
-}
-
-.form-group {
-	display: flex;
-	justify-content: space-between;
-}
-
-.form-control {
-	width: 100%;
-}
-
 .btn {
 	width: auto;
 }
 
 .btn-large {
-	font-size: large;
+	font-size: x-large;
 }
 
 input {
@@ -137,13 +149,71 @@ select {
 
 .texture-selector-parent {
 	display: flex;
+	flex: 0 1 auto;
 	flex-flow: row wrap;
 	width: 100%;
+}
+
+.texture-selector-child {
+	display: flex;
+	flex: 0 1 auto;
+	flex-flow: column;
 }
 
 .texture-selector-child:not(:last-child) {
 	padding-right: 4px;
 }
+
+
+.h-100 {
+	height: 100%;
+}
+
+.h-auto {
+	height: auto;
+}
+
+/**
+ * Form steps
+ */
+.d-none {
+	display: none;
+}
+
+.scrollable {
+	overflow-y: auto !important;
+}
+
+.form-part {
+	width: 40%;
+}
+
+.form-label {
+	display: flex;
+	flex: 0 1 auto;
+}
+
+.form-group {
+	display: flex;
+	flex: 0 1 auto;
+	justify-content: space-between;
+}
+
+.form-control {
+	display: flex;
+	flex: 0 0 auto;
+}
+
+.form-group .form-control {
+	display: flex;
+	flex: 1 1 auto;
+}
+
+.form-group .btn {
+	display: flex;
+	flex: 0 1 auto;
+}
+
 
 /**
  * Custom checkboxes
@@ -181,7 +251,7 @@ input[type=checkbox] {
 }
 
 .checkbox:has(input[type=checkbox]:checked)  {
-	background: #26ca28;
+	background: rgb(0, 195, 20);
 }
 
 
@@ -190,7 +260,7 @@ input[type=checkbox] {
  */
 ul.form-stepper {
 	counter-reset: section;
-	margin-bottom: 3%;
+	margin-bottom: 2%;
 	margin-top: 0;
 	user-select: none;
 }
