@@ -72,15 +72,15 @@
                                 </div>
 
                                 <label class="form-label" for="yieldInput">Yield:</label>
-                                <input class="form-control mb-2" type="number" name="yield" id="yieldInput" min="1" max="50"
-                                    placeholder="e.g., 10">
+                                <input class="form-control mb-2" type="number" name="yield" id="yieldInput" min="1"
+                                    max="50" placeholder="e.g., 10">
 
                                 <label class="form-label" for="similarToInput">Tool used to break:</label>
                                 <select class="form-control" name="similarTo" id="similarToInput">
                                     <option value="1">Pickaxe</option>
                                     <option value="2">Axe</option>
                                     <option value="3">Shovel</option>
-                                    <option value="4">None</option>
+                                    <option value="4">Indestructible</option>
                                 </select>
                             </div>
                         </div>
@@ -130,20 +130,23 @@
                             <h3 class="text-center header">Required</h3>
 
                             <div class="scrollable content box">
-                                <label class="form-label" for="textureFilesInput">Choose your texture file(s). Must be
+                                <label class="form-label" for="textureFilesInput">Texture file(s). Must be
                                     2048x2048:</label>
-                                <input class="form-control mb-2" type="file" name="textureFiles" id="textureFilesInput"
+                                <input class="form-control" type="file" name="textureFiles" id="textureFilesInput"
                                     multiple accept=".png,.jpg,.jpeg">
-                                <div class="texture-selector-parent" id="textureSelectorDiv">
+                                <div class="texture-selector-parent mb-2">
                                     <!-- Textures are automatically added here -->
+                                    <label for="textureFilesInput" class="custom-file-uploader">Upload file(s)</label>
                                 </div>
 
-                                <label for="smallTextureFilesInput" class="form-label">Choose your small texture
-                                    file(s). Must be 512x512:</label>
+                                <label for="smallTextureFilesInput" class="form-label">Small texture file(s). Must be
+                                    512x512:</label>
                                 <input type="file" name="smallTextureFiles" id="smallTextureFilesInput"
                                     class="form-control mb-2" multiple accept=".png,.jpg,.jpeg">
-                                <div class="texture-selector-parent" id="smalltextureSelectorDiv">
+                                <div class="texture-selector-parent">
                                     <!-- Textures are automatically added here -->
+                                    <label for="smallTextureFilesInput" class="custom-file-uploader">Upload
+                                        file(s)</label>
                                 </div>
                             </div>
 
@@ -151,7 +154,27 @@
                         <div class="form-part content box">
                             <h3 class="text-center header">Optional</h3>
 
+                            <div class="scrollable content box">
+                                <label class="form-label" for="normalTextureFilesInput">Normal map file(s). Must be
+                                    2048x2048:</label>
+                                <input class="form-control" type="file" name="normalTextureFiles"
+                                    id="normalTextureFilesInput" multiple accept=".png,.jpg,.jpeg">
+                                <div class="texture-selector-parent mb-2">
+                                    <!-- Textures are automatically added here -->
+                                    <label for="normalTextureFilesInput" class="custom-file-uploader">Upload
+                                        file(s)</label>
+                                </div>
 
+                                <label for="glowTextureFilesInput" class="form-label">Glow map file(s). Must be
+                                    1024x1024:</label>
+                                <input type="file" name="glowTextureFiles" id="glowTextureFilesInput"
+                                    class="form-control mb-2" multiple accept=".png,.jpg,.jpeg">
+                                <div class="texture-selector-parent">
+                                    <!-- Textures are automatically added here -->
+                                    <label for="glowTextureFilesInput" class="custom-file-uploader">Upload
+                                        file(s)</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="btns footer">

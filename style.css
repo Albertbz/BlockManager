@@ -1,6 +1,6 @@
 .container {
 	padding-top: 2%;
-	padding-bottom: 2%;
+	padding-bottom: 1%;
 	padding-left: 5%;
 	padding-right: 5%;
 	height: 100%;
@@ -37,6 +37,7 @@ body {
 
 .box .footer {
 	flex: 0 1 auto;
+	padding-top: 1%;
 }
 
 .box-vertical {
@@ -158,12 +159,8 @@ select {
 	display: flex;
 	flex: 0 1 auto;
 	flex-flow: column;
-}
-
-.texture-selector-child:not(:last-child) {
 	padding-right: 4px;
 }
-
 
 .h-100 {
 	height: 100%;
@@ -177,7 +174,7 @@ select {
  * Form steps
  */
 .d-none {
-	display: none;
+	display: none !important;
 }
 
 .scrollable {
@@ -254,6 +251,29 @@ input[type=checkbox] {
 	background: rgb(0, 195, 20);
 }
 
+/**
+ * Custom file uploaders
+ */
+input[type=file] {
+	display: none;
+}
+
+.custom-file-uploader {
+	display: flex;
+	flex: 0 1 auto;
+	width: 80px;
+	height: 80px;
+	cursor: pointer;
+	border: 2px dotted rgb(186, 186, 186);
+	background-color: rgb(225, 225, 225);
+	box-sizing: border-box;
+	text-align: center;
+	align-items: center;
+}
+
+.custom-file-uploader:hover {
+	background-color: rgb(232, 232, 232);
+}
 
 /**
  * Form stepper

@@ -95,21 +95,23 @@ document.querySelectorAll('div.texture-selector-parent').forEach((textureSelecto
     })
 })
 
-function clearDiv(div) {
-    while (div.firstElementChild) {
-        div.removeChild(div.lastElementChild);
+function clearTexturesInDiv(div) {
+    const textureChildDivs = div.querySelectorAll('div.texture-selector-child');
+    for (let i = 0; i < textureChildDivs.length; i++) {
+        div.removeChild(textureChildDivs[i]);
     }
 }
 
 function addTexturesToDiv(fileArray, newFiles, selectorDiv) {
-    clearDiv(selectorDiv);
+    clearTexturesInDiv(selectorDiv);
     fileArray.push(...newFiles);
-    for (let i = 0; i < fileArray.length; i++) {
+    const amountOfTextures = fileArray.length;
+    for (let i = 0; i < amountOfTextures; i++) {
         const div = document.createElement('div');
         const label = document.createElement('label');
         const textureImg = document.createElement('img');
         const crossImg = document.createElement('img');
-        const select = createSelect(fileArray.length, i);
+        const select = createSelect(amountOfTextures, i);
 
         div.classList.add('texture-selector-child');
         div.appendChild(label);
@@ -129,7 +131,14 @@ function addTexturesToDiv(fileArray, newFiles, selectorDiv) {
         crossImg.src = "./images/cross.png";
         crossImg.classList.add('cross');
 
-        selectorDiv.appendChild(div);
+        if (amountOfTextures == 6) {
+            selectorDiv.lastElementChild.classList.add('d-none');
+        }
+        else {
+            selectorDiv.lastElementChild.classList.remove('d-none');
+        }
+
+        selectorDiv.insertBefore(div, selectorDiv.lastElementChild);
     }
 }
 
