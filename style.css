@@ -86,6 +86,10 @@ input[type=range] {
 	text-align: center;
 }
 
+.align-left {
+	justify-content: left !important;
+}
+
 .mx-auto {
 	margin-left: auto;
 	margin-right: auto;
@@ -128,6 +132,15 @@ select {
 	height: 22px;
 	box-sizing: border-box;
 }
+
+.d-none {
+	display: none !important;
+}
+
+
+/**
+ * Textures
+ */
 
 .texture-label {
 	position: relative;
@@ -175,20 +188,10 @@ select {
 	padding-right: 4px;
 }
 
-.h-100 {
-	height: 100%;
-}
-
-.h-auto {
-	height: auto;
-}
 
 /**
  * Form steps
  */
-.d-none {
-	display: none !important;
-}
 
 .scrollable {
 	overflow-y: auto !important;
@@ -201,6 +204,7 @@ select {
 .form-label {
 	display: flex;
 	flex: 0 1 auto;
+	margin-bottom: 3px;
 }
 
 .form-group {
@@ -212,6 +216,7 @@ select {
 .form-control {
 	display: flex;
 	flex: 0 0 auto;
+	justify-content: center;
 }
 
 .form-group .form-control {
@@ -228,6 +233,7 @@ select {
 /**
  * Custom checkboxes
  */
+
 input[type=checkbox] {
 	visibility: hidden;
 }
@@ -264,9 +270,11 @@ input[type=checkbox] {
 	background: rgb(0, 117, 255);
 }
 
+
 /**
  * Custom file uploaders
  */
+
 input[type=file] {
 	display: none;
 }
@@ -277,23 +285,49 @@ input[type=file] {
 	width: 80px;
 	height: 80px;
 	cursor: pointer;
-	border: 2px dotted rgb(186, 186, 186);
-	background-color: rgb(225, 225, 225);
+	border: 2px dashed rgb(190, 190, 190);
+	border-radius: 6px;
+	background-color: rgb(245, 245, 245);
 	box-sizing: border-box;
 	text-align: center;
 	align-items: center;
+	margin-bottom: 22px;
+	color: rgb(165, 165, 165);
 }
 
 .custom-file-uploader:hover {
-	background-color: rgb(232, 232, 232) !important;
+	background-color: rgb(231, 231, 231) !important;
+	cursor: pointer;
 }
 
 .highlight-invalid + .texture-selector-parent > .custom-file-uploader {
 	background-color: ivory;
-	border: 2px dotted red;
-	border-radius: 3px;
+	border: 2px dashed red;
+	border-radius: 6px;
 	padding: 2px 3px;
 }
+
+
+/**
+ * Custom recipe upload
+ */
+
+.manual-recipe {
+	display: flex;
+	flex: 0 0 auto;
+	height: 60px;
+	border: 2px dashed rgb(190, 190, 190);
+	border-radius: 7px;
+	align-items: center;
+	justify-content: center;
+	color: rgb(165, 165, 165);
+}
+
+.manual-recipe:hover {
+	background-color: rgb(231, 231, 231);
+	cursor: pointer;
+}
+
 
 /**
  * Form stepper

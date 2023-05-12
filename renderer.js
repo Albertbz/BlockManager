@@ -75,44 +75,6 @@ document.querySelectorAll(".btn-navigate-form-step").forEach((formNavigationBtn)
     });
 });
 
-function hasInvalidInputs(button) {
-    document.querySelectorAll('div.texture-selector-parent').forEach(function(div) {
-        updateValidity(div);
-    });
-
-    const currentStep = button.parentElement.previousElementSibling;
-    const invalidInputs = currentStep.querySelectorAll(':invalid');
-
-    // Highlight all inputs that are invalid
-    for (let i = 0; i < invalidInputs.length; i++) {
-        addInvalidHighlight(invalidInputs[i]);
-    }
-
-    const hasInvalidInputs = invalidInputs.length != 0;
-    return hasInvalidInputs;
-}
-
-function refreshInvalidHighlight(input) {
-    if (!input.checkValidity()) {
-        addInvalidHighlight(input)
-    }
-    else {
-        removeInvalidHighlight(input);
-    }
-}
-
-function addInvalidHighlight(input) {
-    input.classList.add('highlight-invalid');
-
-    input.addEventListener('input', function (e) {
-        removeInvalidHighlight(input);
-    }, { once: true });
-}
-
-function removeInvalidHighlight(input) {
-    input.classList.remove('highlight-invalid');
-}
-
 /**
  * Generate random number and put it into the uniqueID
  * input.
@@ -127,6 +89,7 @@ uniqueIDButton.addEventListener('click', function () {
     removeInvalidHighlight(uniqueIDInput);
 });
 
+
 /**
  * Texture choosing mechanism
  */
@@ -137,7 +100,7 @@ document.querySelectorAll('div.texture-selector-parent').forEach((textureSelecto
     updateValidity(textureSelectorDiv);
 
     textureFilesInput.addEventListener('change', (e) => {
-        addTexturesToDiv(textureFiles, textureFilesInput, textureSelectorDiv);
+        addTexturesToDiv(textureFiles, textureSelectorDiv);
     })
 })
 
@@ -148,9 +111,16 @@ function removeTexturesInDiv(div) {
     }
 }
 
-function addTexturesToDiv(fileArray, input, selectorDiv) {
+function addTexturesToDiv(fileArray, selectorDiv) {
+    const input = selectorDiv.previousElementSibling;
     removeTexturesInDiv(selectorDiv);
     fileArray.push(...input.files);
+
+    // Remove any overflowing textures
+    if (fileArray.length > 6) {
+        fileArray.splice(6, fileArray.length);
+    }
+
     const amountOfTextures = fileArray.length;
     for (let i = 0; i < amountOfTextures; i++) {
         const div = document.createElement('div');
@@ -172,14 +142,14 @@ function addTexturesToDiv(fileArray, input, selectorDiv) {
         textureImg.addEventListener('click', (e) => {
             fileArray.splice(i, 1);
             input.value = null;
-            addTexturesToDiv(fileArray, input, selectorDiv);
+            addTexturesToDiv(fileArray, selectorDiv);
             removeInvalidHighlight(input);
         })
 
         crossImg.src = "./images/trash-can.png";
         crossImg.classList.add('trash-can');
 
-        if (amountOfTextures == 6) {
+        if (amountOfTextures >= 6) {
             selectorDiv.lastElementChild.classList.add('d-none');
         }
         else {
@@ -239,6 +209,44 @@ function hasSameAmountAsRegular(amountOfTextures, required) {
         return ((amountOfTextureChildren == amountOfTextures) && amountOfTextures > 0)
             || amountOfTextures == 0;
     }
+}
+
+function hasInvalidInputs(button) {
+    document.querySelectorAll('div.texture-selector-parent').forEach(function(div) {
+        updateValidity(div);
+    });
+
+    const currentStep = button.parentElement.previousElementSibling;
+    const invalidInputs = currentStep.querySelectorAll(':invalid');
+
+    // Highlight all inputs that are invalid
+    for (let i = 0; i < invalidInputs.length; i++) {
+        addInvalidHighlight(invalidInputs[i]);
+    }
+
+    const hasInvalidInputs = invalidInputs.length != 0;
+    return hasInvalidInputs;
+}
+
+function refreshInvalidHighlight(input) {
+    if (!input.checkValidity()) {
+        addInvalidHighlight(input)
+    }
+    else {
+        removeInvalidHighlight(input);
+    }
+}
+
+function addInvalidHighlight(input) {
+    input.classList.add('highlight-invalid');
+
+    input.addEventListener('input', function (e) {
+        removeInvalidHighlight(input);
+    }, { once: true });
+}
+
+function removeInvalidHighlight(input) {
+    input.classList.remove('highlight-invalid');
 }
 
 function createSelect(amountOfTextures, textureNum) {
@@ -318,4 +326,36 @@ yieldSliderInput.addEventListener('input', function (e) {
 
 yieldNumberInput.addEventListener('input', function (e) {
     yieldSliderInput.value = e.target.value;
+});
+
+/**
+ * Handle recipe info
+ */
+setDefaultRecipePreview();
+
+async function setDefaultRecipePreview() {
+    const recipeDiv = document.getElementById('recipeDiv');
+    const defaultRecipeFileContent = await window.call.getDefaultRecipeFileContent();
+    recipeDiv.innerText = defaultRecipeFileContent;
+}
+
+// Manually upload
+document.getElementById('uploadRecipeInput').addEventListener('change', function(e) {
+    const recipeFile = e.target.files[0];
+    const reader = new FileReader();
+
+    const recipeDiv = document.getElementById('recipeDiv');
+
+    reader.addEventListener('load', function() {
+        recipeDiv.innerText = reader.result;
+    });
+
+    reader.readAsText(recipeFile);
+});
+
+// Load from appdata
+document.getElementById('loadRecipeInput').addEventListener('click', async function() {
+    const recipeDiv = document.getElementById('recipeDiv');
+    const generatedRecipeFileContent = await window.call.getGeneratedRecipeFileContent();
+    recipeDiv.innerText = generatedRecipeFileContent;
 });

@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
-    "jimp": "^0.22.7"
+    "windows-env": "^1.0.1"
   }
 }

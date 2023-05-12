@@ -39,6 +39,15 @@
                         <span class="form-stepper-circle">
                             <span>3</span>
                         </span>
+                        <div class="label text-muted">Recipe</div>
+                    </a>
+                </li>
+                <!-- Step 4 -->
+                <li class="form-stepper-unfinished form-stepper-list" step="4">
+                    <a>
+                        <span class="form-stepper-circle">
+                            <span>4</span>
+                        </span>
                         <div class="label text-muted">Finalization</div>
                     </a>
                 </li>
@@ -48,7 +57,7 @@
         <div class="content">
             <form class="box" action="" id="blockForm">
                 <!-- Step 1 -->
-                <section id="step-1" class="form-step content box">
+                <section id="step-1" class="form-step content box d-none">
                     <h2 class="text-center mt-0 header">Properties</h2>
 
                     <div class="content box-vertical">
@@ -56,30 +65,30 @@
                             <h3 class="text-center header">Required</h3>
 
                             <div class="scrollable content box">
-                                <label class="form-label" for="nameInput">Name of block:</label>
+                                <label class="form-label">Name of block:</label>
                                 <input class="form-control mb-2" type="text" name="name" id="nameInput"
                                     placeholder="e.g., White marble" required>
 
-                                <label class="form-label" for="creatorNameInput">Name of creator:</label>
+                                <label class="form-label">Name of creator:</label>
                                 <input class="form-control mb-2" type="text" name="creatorName" id="creatorNameInput"
                                     placeholder="e.g., Albertbz" required>
 
-                                <label class="form-label" for="uniqueIDInput">ID of block:</label>
+                                <label class="form-label">ID of block:</label>
                                 <div class="form-group mb-2">
                                     <input class="form-control" type="number" name="uniqueID" id="uniqueIDInput" min="1"
                                         max="2147483648" placeholder="e.g., 325235" required>
                                     <button class="form-control-tight" type="button" id="uniqueIDButton">Random</button>
                                 </div>
 
-                                <label class="form-label" for="yieldNumberInput">Yield:</label>
+                                <label class="form-label">Yield:</label>
                                 <div class="form-group mb-2">
-                                    <input class="form-control" type="range" name="yieldSlider" id="yieldSliderInput" min="1"
-                                        max="50" value="10">
-                                    <input class="form-control-tight" type="number" name="yieldNumber" id="yieldNumberInput" min="1"
-                                        max="50" value="10" required>
+                                    <input class="form-control" type="range" name="yieldSlider" id="yieldSliderInput"
+                                        min="1" max="50" value="10">
+                                    <input class="form-control-tight" type="number" name="yieldNumber"
+                                        id="yieldNumberInput" min="1" max="50" value="10" required>
                                 </div>
 
-                                <label class="form-label" for="similarToInput">Tool used to break:</label>
+                                <label class="form-label">Tool used to break:</label>
                                 <select class="form-control" name="similarTo" id="similarToInput" required>
                                     <option value="1">Pickaxe</option>
                                     <option value="2">Axe</option>
@@ -92,11 +101,11 @@
                             <h3 class="text-center header">Optional</h3>
 
                             <div class="scrollable content box">
-                                <label class="form-label" for="categoryNameInput">Category name:</label>
+                                <label class="form-label">Category name:</label>
                                 <input class="form-control mb-2" type="text" name="categoryName" id="categoryNameInput"
                                     placeholder="e.g., Marble">
 
-                                <label class="form-label" for="uniqueIDToDropInput">Block to drop (ID):</label>
+                                <label class="form-label">Block to drop (ID):</label>
                                 <input class="form-control mb-2" list="uniqueIDToDropList" name="uniqueIDToDrop"
                                     id="uniqueIDToDropInput" placeholder="e.g., 89794">
                                 <datalist id="uniqueIDToDropList">
@@ -104,14 +113,14 @@
                                     <option value="-1">Nothing</option>
                                 </datalist>
 
-                                <label class="form-label" for="allowMoveInput">Allow movement after placement:</label>
+                                <label class="form-label">Allow movement after placement:</label>
                                 <div class="checkbox mb-2">
                                     <input class="form-control" type="checkbox" name="allowMove" id="allowMoveInput"
                                         checked>
                                     <label for="allowMoveInput"></label>
                                 </div>
 
-                                <label class="form-label" for="allowCrystalPlacementInput">Allow crystal assisted block
+                                <label class="form-label">Allow crystal assisted block
                                     placement:</label>
                                 <div class="checkbox mb-2">
                                     <input class="form-control" type="checkbox" name="allowCrystalPlacement"
@@ -134,24 +143,15 @@
                             <h3 class="text-center header">Required</h3>
 
                             <div class="scrollable content box">
-                                <label class="form-label" for="textureFilesInput">Texture file(s). Must be
-                                    2048x2048:</label>
-                                <input class="form-control" type="file" name="textureFiles" id="textureFilesInput"
-                                    multiple accept=".png,.jpg,.jpeg">
-                                <div class="texture-selector-parent mb-2" data-required="true" id="regularTexturesDiv">
+                                <!-- Regular texture files -->
+                                <label class="form-label">Texture file(s) [2048x2048]:</label>
+                                <input type="file" name="textureFiles" id="textureFilesInput" multiple
+                                    accept=".png,.jpg,.jpeg">
+                                <div class="texture-selector-parent" data-required="true" id="regularTexturesDiv">
                                     <!-- Textures are automatically added here -->
                                     <label for="textureFilesInput" class="custom-file-uploader">Upload file(s)</label>
                                 </div>
 
-                                <label for="smallTextureFilesInput" class="form-label">Small texture file(s). Must be
-                                    512x512:</label>
-                                <input type="file" name="smallTextureFiles" id="smallTextureFilesInput"
-                                    class="form-control mb-2" multiple accept=".png,.jpg,.jpeg">
-                                <div class="texture-selector-parent" data-required="true">
-                                    <!-- Textures are automatically added here -->
-                                    <label for="smallTextureFilesInput" class="custom-file-uploader">Upload
-                                        file(s)</label>
-                                </div>
                             </div>
 
                         </div>
@@ -159,20 +159,33 @@
                             <h3 class="text-center header">Optional</h3>
 
                             <div class="scrollable content box">
-                                <label class="form-label" for="normalTextureFilesInput">Normal map file(s). Must be
-                                    2048x2048:</label>
-                                <input class="form-control" type="file" name="normalTextureFiles"
-                                    id="normalTextureFilesInput" multiple accept=".png,.jpg,.jpeg">
+                                <!-- Small texture files -->
+                                <label class="form-label">Small texture file(s)
+                                    [512x512]:</label>
+                                <input type="file" name="smallTextureFiles" id="smallTextureFilesInput" multiple
+                                    accept=".png,.jpg,.jpeg">
+                                <div class="texture-selector-parent mb-2">
+                                    <!-- Textures are automatically added here -->
+                                    <label for="smallTextureFilesInput" class="custom-file-uploader">Upload
+                                        file(s)</label>
+                                </div>
+
+                                <!-- Normal map files -->
+                                <label class="form-label">Normal map file(s)
+                                    [2048x2048]:</label>
+                                <input type="file" name="normalTextureFiles" id="normalTextureFilesInput" multiple
+                                    accept=".png,.jpg,.jpeg">
                                 <div class="texture-selector-parent mb-2">
                                     <!-- Textures are automatically added here -->
                                     <label for="normalTextureFilesInput" class="custom-file-uploader">Upload
                                         file(s)</label>
                                 </div>
 
-                                <label for="glowTextureFilesInput" class="form-label">Glow map file(s). Must be
-                                    1024x1024:</label>
-                                <input type="file" name="glowTextureFiles" id="glowTextureFilesInput"
-                                    class="form-control mb-2" multiple accept=".png,.jpg,.jpeg">
+                                <!-- Glow map files -->
+                                <label class="form-label">Glow map file(s)
+                                    [1024x1024]:</label>
+                                <input type="file" name="glowTextureFiles" id="glowTextureFilesInput" multiple
+                                    accept=".png,.jpg,.jpeg">
                                 <div class="texture-selector-parent">
                                     <!-- Textures are automatically added here -->
                                     <label for="glowTextureFilesInput" class="custom-file-uploader">Upload
@@ -187,13 +200,59 @@
                     </div>
                 </section>
                 <!-- Step 3 -->
-                <section id="step-3" class="form-step d-none">
-                    <h2 class="text-center">Finalization</h2>
-                    <div class="mt-3">
+                <section id="step-3" class="form-step content box">
+                    <h2 class="text-center mt-0 header">Recipe</h2>
+                    <div class="content box-vertical">
+                        <div class="form-part content box">
+                            <h3 class="text-center header">Choose recipe</h3>
 
+                            <div class="scrollable content box">
+
+                                <label class="form-label">Load most recently generated
+                                    recipe:</label>
+                                <input type="button" value="Load" class="form-control mb-2" id="loadRecipeInput">
+
+                                <label class="form-label">Upload recipe manually:</label>
+                                <input type="file" name="uploadRecipe" id="uploadRecipeInput" accept=".txt">
+                                <label for="uploadRecipeInput" class="manual-recipe mb-2">Click here to browse</label>
+
+                                <label class="form-label">Generate recipe picture:</label>
+                                <input type="button" value="Generate" class="form-control mb-2"
+                                    id="generateRecipePictureInput">
+
+                                <label class="form-label">Upload recipe picture manually:</label>
+                                <input type="file" name="uploadRecipePicture" id="uploadRecipePictureInput">
+                                <label for="uploadRecipePictureInput" class="manual-recipe">Click here to browse</label>
+                            </div>
+                        </div>
+                        <div class="form-part content box">
+                            <h3 class="text-center header">Preview</h3>
+
+                            <div class="scrollable content box">
+                                <!-- Insert crafting materials, etc -->
+                                <div class="form-control" id="recipeDiv">
+                                    
+                                </div>
+                                
+                                <!-- Insert recipe preview -->
+
+                            </div>
+                        </div>
                     </div>
-                    <div class="mt-3 btns">
+                    <div class="btns footer">
                         <button class="btn-navigate-form-step btn-large" type="button" step_number="2">Previous</button>
+                        <button class="btn-navigate-form-step btn-large" type="button" step_number="4">Next</button>
+                    </div>
+                </section>
+                <!-- Step 4 -->
+                <section id="step-4" class="form-step content box d-none">
+                    <h2 class="text-center mt-0 header">Finalization</h2>
+                    <div class="content box-vertical">
+                        <!-- Preview the block 'n all that jazz -->
+                        <h3>idk what to put here yet</h3>
+                    </div>
+                    <div class="btns footer">
+                        <button class="btn-navigate-form-step btn-large" type="button" step_number="3">Previous</button>
                         <button class="submit-btn btn-large" type="submit">Generate</button>
                     </div>
                 </section>

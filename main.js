@@ -1,6 +1,9 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron')
-const path = require('path')
-const { createDDSImage } = require('./dds')
+const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const path = require('path');
+const { createDDSImage } = require('./dds');
+const env = require('windows-env');
+const fs = require('fs');
+
 
 function createWindow() {
     // Make initial window.
@@ -52,8 +55,9 @@ app.on('window-all-closed', () => {
 *
 */
 
-ipcMain.on('createDDSImage', createDDSImageWrapper);
-
+ipcMain.handle('createDDSImage', createDDSImageWrapper);
+ipcMain.handle('getGeneratedRecipeFileContent', getGeneratedRecipeFileContent);
+ipcMain.handle('getDefaultRecipeFileContent', getDefaultRecipeFileContent);
 
 
 /*
@@ -65,4 +69,27 @@ ipcMain.on('createDDSImage', createDDSImageWrapper);
 // Ignore event argument.
 function createDDSImageWrapper(event, inputPath, outputPath, format) {
     createDDSImage(inputPath, outputPath, format);
+}
+
+function getGeneratedRecipeFileContent() {
+    const localAppdataPath = env.LOCALAPPDATA;
+    const recipePath = localAppdataPath + '\\cyubeVR\\Saved\\Dev\\Recipe.txt';
+
+    try {
+        const data = fs.readFileSync(recipePath, 'utf-8');
+        return data;
+    } catch {
+        console.error(err);
+    }
+}
+
+function getDefaultRecipeFileContent() {
+    const recipePath = '.\\premade\\Recipe.txt';
+
+    try {
+        const data = fs.readFileSync(recipePath, 'utf-8');
+        return data;
+    } catch {
+        console.error(err);
+    }
 }
