@@ -58,25 +58,29 @@
                             <div class="scrollable content box">
                                 <label class="form-label" for="nameInput">Name of block:</label>
                                 <input class="form-control mb-2" type="text" name="name" id="nameInput"
-                                    placeholder="e.g., White marble">
+                                    placeholder="e.g., White marble" required>
 
                                 <label class="form-label" for="creatorNameInput">Name of creator:</label>
                                 <input class="form-control mb-2" type="text" name="creatorName" id="creatorNameInput"
-                                    placeholder="e.g., Albertbz">
+                                    placeholder="e.g., Albertbz" required>
 
                                 <label class="form-label" for="uniqueIDInput">ID of block:</label>
                                 <div class="form-group mb-2">
                                     <input class="form-control" type="number" name="uniqueID" id="uniqueIDInput" min="1"
-                                        max="2147483648" placeholder="e.g., 325235">
-                                    <input class="form-control btn" type="button" value="Random" id="uniqueIDButton">
+                                        max="2147483648" placeholder="e.g., 325235" required>
+                                    <button class="form-control-tight" type="button" id="uniqueIDButton">Random</button>
                                 </div>
 
-                                <label class="form-label" for="yieldInput">Yield:</label>
-                                <input class="form-control mb-2" type="number" name="yield" id="yieldInput" min="1"
-                                    max="50" placeholder="e.g., 10">
+                                <label class="form-label" for="yieldNumberInput">Yield:</label>
+                                <div class="form-group mb-2">
+                                    <input class="form-control" type="range" name="yieldSlider" id="yieldSliderInput" min="1"
+                                        max="50" value="10">
+                                    <input class="form-control-tight" type="number" name="yieldNumber" id="yieldNumberInput" min="1"
+                                        max="50" value="10" required>
+                                </div>
 
                                 <label class="form-label" for="similarToInput">Tool used to break:</label>
-                                <select class="form-control" name="similarTo" id="similarToInput">
+                                <select class="form-control" name="similarTo" id="similarToInput" required>
                                     <option value="1">Pickaxe</option>
                                     <option value="2">Axe</option>
                                     <option value="3">Shovel</option>
@@ -134,7 +138,7 @@
                                     2048x2048:</label>
                                 <input class="form-control" type="file" name="textureFiles" id="textureFilesInput"
                                     multiple accept=".png,.jpg,.jpeg">
-                                <div class="texture-selector-parent mb-2">
+                                <div class="texture-selector-parent mb-2" data-required="true" id="regularTexturesDiv">
                                     <!-- Textures are automatically added here -->
                                     <label for="textureFilesInput" class="custom-file-uploader">Upload file(s)</label>
                                 </div>
@@ -143,7 +147,7 @@
                                     512x512:</label>
                                 <input type="file" name="smallTextureFiles" id="smallTextureFilesInput"
                                     class="form-control mb-2" multiple accept=".png,.jpg,.jpeg">
-                                <div class="texture-selector-parent">
+                                <div class="texture-selector-parent" data-required="true">
                                     <!-- Textures are automatically added here -->
                                     <label for="smallTextureFilesInput" class="custom-file-uploader">Upload
                                         file(s)</label>

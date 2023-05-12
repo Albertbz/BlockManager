@@ -51,7 +51,14 @@ body {
 	flex: 0 1 auto;
 }
 
-input:invalid {
+input:not(:focus):not(:placeholder-shown):invalid {
+	background-color: ivory;
+	border: 1px solid red;
+	border-radius: 3px;
+	padding: 2px 3px;
+}
+
+.highlight-invalid {
 	background-color: ivory;
 	border: 1px solid red;
 	border-radius: 3px;
@@ -66,6 +73,12 @@ input:focus-visible {
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
 	-webkit-appearance: none;
+	margin: 0;
+}
+
+input[type=range] {
+	height: 22px;
+	box-sizing: border-box;
 	margin: 0;
 }
 
@@ -130,7 +143,7 @@ select {
 	height: 80px;
 }
 
-.texture-img:hover + .cross {
+.texture-img:hover + .trash-can {
 	display: block;
 }
 
@@ -138,7 +151,7 @@ select {
 	filter: blur(0.5px);
 }
 
-.cross {
+.trash-can {
 	width: 80px;
 	height: 80px;
 	position: absolute;
@@ -206,7 +219,7 @@ select {
 	flex: 1 1 auto;
 }
 
-.form-group .btn {
+.form-group .form-control-tight {
 	display: flex;
 	flex: 0 1 auto;
 }
@@ -248,7 +261,7 @@ input[type=checkbox] {
 }
 
 .checkbox:has(input[type=checkbox]:checked)  {
-	background: rgb(0, 195, 20);
+	background: rgb(0, 117, 255);
 }
 
 /**
@@ -272,7 +285,14 @@ input[type=file] {
 }
 
 .custom-file-uploader:hover {
-	background-color: rgb(232, 232, 232);
+	background-color: rgb(232, 232, 232) !important;
+}
+
+.highlight-invalid + .texture-selector-parent > .custom-file-uploader {
+	background-color: ivory;
+	border: 2px dotted red;
+	border-radius: 3px;
+	padding: 2px 3px;
 }
 
 /**
@@ -351,32 +371,25 @@ ul.form-stepper li a .form-stepper-circle {
 }
 
 .form-stepper .form-stepper-active .form-stepper-circle {
-    background-color: #4361ee !important;
+    background-color: rgb(0, 117, 255) !important;
     color: #fff;
 }
 
 .form-stepper .form-stepper-active .label {
-    color: #4361ee !important;
+    color: rgb(0, 117, 255) !important;
 }
-
-
 
 .form-stepper .form-stepper-unfinished .form-stepper-circle {
     background-color: #f8f7ff;
 }
 
 .form-stepper .form-stepper-completed .form-stepper-circle {
-    background-color: #0e9594 !important;
+    background-color: #223ebc !important;
     color: #fff;
 }
 
 .form-stepper .form-stepper-completed .label {
-    color: #0e9594 !important;
-}
-
-.form-stepper .form-stepper-completed .form-stepper-circle:hover {
-    background-color: #0e9594 !important;
-    color: #fff !important;
+    color: #223ebc !important;
 }
 
 .form-stepper .form-stepper-active span.text-muted {

@@ -60,6 +60,10 @@ document.querySelectorAll(".btn-navigate-form-step").forEach((formNavigationBtn)
      * Add a click event listener to the button.
      */
     formNavigationBtn.addEventListener("click", () => {
+        if (formNavigationBtn.innerText == 'Next' && hasInvalidInputs(formNavigationBtn)) {
+            return;
+        }
+
         /**
          * Get the value of the step.
          */
@@ -71,6 +75,44 @@ document.querySelectorAll(".btn-navigate-form-step").forEach((formNavigationBtn)
     });
 });
 
+function hasInvalidInputs(button) {
+    document.querySelectorAll('div.texture-selector-parent').forEach(function(div) {
+        updateValidity(div);
+    });
+
+    const currentStep = button.parentElement.previousElementSibling;
+    const invalidInputs = currentStep.querySelectorAll(':invalid');
+
+    // Highlight all inputs that are invalid
+    for (let i = 0; i < invalidInputs.length; i++) {
+        addInvalidHighlight(invalidInputs[i]);
+    }
+
+    const hasInvalidInputs = invalidInputs.length != 0;
+    return hasInvalidInputs;
+}
+
+function refreshInvalidHighlight(input) {
+    if (!input.checkValidity()) {
+        addInvalidHighlight(input)
+    }
+    else {
+        removeInvalidHighlight(input);
+    }
+}
+
+function addInvalidHighlight(input) {
+    input.classList.add('highlight-invalid');
+
+    input.addEventListener('input', function (e) {
+        removeInvalidHighlight(input);
+    }, { once: true });
+}
+
+function removeInvalidHighlight(input) {
+    input.classList.remove('highlight-invalid');
+}
+
 /**
  * Generate random number and put it into the uniqueID
  * input.
@@ -78,9 +120,11 @@ document.querySelectorAll(".btn-navigate-form-step").forEach((formNavigationBtn)
 const uniqueIDButton = document.getElementById('uniqueIDButton');
 const uniqueIDInput = document.getElementById('uniqueIDInput');
 
-uniqueIDButton.addEventListener('click', function() {
+uniqueIDButton.addEventListener('click', function () {
     const randomInt = Math.floor(Math.random() * 2147483648) + 1;
     uniqueIDInput.value = randomInt;
+
+    removeInvalidHighlight(uniqueIDInput);
 });
 
 /**
@@ -90,21 +134,23 @@ document.querySelectorAll('div.texture-selector-parent').forEach((textureSelecto
     let textureFilesInput = textureSelectorDiv.previousElementSibling;
     let textureFiles = [];
 
+    updateValidity(textureSelectorDiv);
+
     textureFilesInput.addEventListener('change', (e) => {
-        addTexturesToDiv(textureFiles, textureFilesInput.files, textureSelectorDiv);
+        addTexturesToDiv(textureFiles, textureFilesInput, textureSelectorDiv);
     })
 })
 
-function clearTexturesInDiv(div) {
+function removeTexturesInDiv(div) {
     const textureChildDivs = div.querySelectorAll('div.texture-selector-child');
     for (let i = 0; i < textureChildDivs.length; i++) {
         div.removeChild(textureChildDivs[i]);
     }
 }
 
-function addTexturesToDiv(fileArray, newFiles, selectorDiv) {
-    clearTexturesInDiv(selectorDiv);
-    fileArray.push(...newFiles);
+function addTexturesToDiv(fileArray, input, selectorDiv) {
+    removeTexturesInDiv(selectorDiv);
+    fileArray.push(...input.files);
     const amountOfTextures = fileArray.length;
     for (let i = 0; i < amountOfTextures; i++) {
         const div = document.createElement('div');
@@ -125,11 +171,13 @@ function addTexturesToDiv(fileArray, newFiles, selectorDiv) {
         textureImg.classList.add('texture-img');
         textureImg.addEventListener('click', (e) => {
             fileArray.splice(i, 1);
-            addTexturesToDiv(fileArray, [], selectorDiv);
+            input.value = null;
+            addTexturesToDiv(fileArray, input, selectorDiv);
+            removeInvalidHighlight(input);
         })
 
-        crossImg.src = "./images/cross.png";
-        crossImg.classList.add('cross');
+        crossImg.src = "./images/trash-can.png";
+        crossImg.classList.add('trash-can');
 
         if (amountOfTextures == 6) {
             selectorDiv.lastElementChild.classList.add('d-none');
@@ -139,6 +187,57 @@ function addTexturesToDiv(fileArray, newFiles, selectorDiv) {
         }
 
         selectorDiv.insertBefore(div, selectorDiv.lastElementChild);
+    }
+
+    updateValidity(selectorDiv);
+}
+
+function updateValidity(textureDiv) {
+    const required = textureDiv.dataset.required;
+    const input = textureDiv.previousElementSibling;
+    const amountOfTextures = textureDiv.querySelectorAll('div.texture-selector-child').length;
+    if (required) {
+        switch (amountOfTextures) {
+            case 1:
+                input.setCustomValidity("");
+                break;
+            case 2:
+                input.setCustomValidity("");
+                break;
+            case 3:
+                input.setCustomValidity("");
+                break;
+            case 6:
+                input.setCustomValidity("");
+                break;
+            default:
+                input.setCustomValidity("Invalid field.");
+        };
+        if (!hasSameAmountAsRegular(amountOfTextures, true)) {
+            input.setCustomValidity("Invalid field.");
+        }
+    }
+    else {
+        if (!hasSameAmountAsRegular(amountOfTextures, false)) {
+            input.setCustomValidity("Invalid field.");
+        }
+        else {
+            input.setCustomValidity("");
+        }
+    }
+}
+
+function hasSameAmountAsRegular(amountOfTextures, required) {
+    const regularTexturesDiv = document.getElementById('regularTexturesDiv');
+    const textureChildren = regularTexturesDiv.querySelectorAll('div.texture-selector-child');
+    const amountOfTextureChildren = textureChildren.length;
+
+    if (required) {
+        return amountOfTextureChildren == amountOfTextures;
+    }
+    else {
+        return ((amountOfTextureChildren == amountOfTextures) && amountOfTextures > 0)
+            || amountOfTextures == 0;
     }
 }
 
@@ -196,9 +295,27 @@ function createOption(value, innerText) {
  */
 const form = document.getElementById('blockForm');
 
-form.addEventListener('submit', function(e) {
+form.addEventListener('submit', function (e) {
     e.preventDefault();
-    
-    
 
+
+
+});
+
+/**
+ * Automatically update yield fields
+ */
+const yieldSliderInput = document.getElementById('yieldSliderInput');
+const yieldNumberInput = document.getElementById('yieldNumberInput');
+
+yieldSliderInput.addEventListener('input', function (e) {
+    yieldNumberInput.value = e.target.value;
+
+    if (yieldNumberInput.classList.contains('highlight-invalid')) {
+        yieldNumberInput.classList.remove('highlight-invalid');
+    }
+});
+
+yieldNumberInput.addEventListener('input', function (e) {
+    yieldSliderInput.value = e.target.value;
 });
