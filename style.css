@@ -117,11 +117,29 @@ input[type=range] {
 }
 
 .btn {
-	width: auto;
+	border: 1px solid rgb(125, 125, 125);
+	border-radius: 3px;
+	background-color: rgb(240, 240, 240);
+	box-sizing: border-box;
+}
+
+.btn:hover {
+	background-color: rgb(225, 225, 225);
+	border-color: rgb(110, 110, 110);
+}
+
+.btn:active {
+	background-color: rgb(240, 240, 240);
+	border-color: rgb(125, 125, 125);
 }
 
 .btn-large {
 	font-size: x-large;
+}
+
+.btn-pressed {
+	border-color: rgb(150, 150, 150) !important;
+	background-color: rgb(200, 200, 200) !important;
 }
 
 input {
@@ -227,6 +245,7 @@ select {
 .form-group .form-control {
 	display: flex;
 	flex: 1 1 auto;
+	width: 100%;
 }
 
 .form-group .form-control-tight {
@@ -335,7 +354,7 @@ input[type=file] {
 
 
 /**
- * Recipe picture preview
+ * Recipe preview
  */
 
 .recipe-picture-preview {
@@ -343,6 +362,11 @@ input[type=file] {
 	height: 180px;
 }
 
+.recipe-properties-preview {
+	resize: none;
+	outline: none;
+	font-size: medium;
+}
 
 /**
  * Form stepper

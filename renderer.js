@@ -212,7 +212,7 @@ function hasSameAmountAsRegular(amountOfTextures, required) {
 }
 
 function hasInvalidInputs(button) {
-    document.querySelectorAll('div.texture-selector-parent').forEach(function(div) {
+    document.querySelectorAll('div.texture-selector-parent').forEach(function (div) {
         updateValidity(div);
     });
 
@@ -298,17 +298,6 @@ function createOption(value, innerText) {
     return option;
 }
 
-/**
- * Handle form submit
- */
-const form = document.getElementById('blockForm');
-
-form.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-
-
-});
 
 /**
  * Automatically update yield fields
@@ -334,40 +323,154 @@ yieldNumberInput.addEventListener('input', function (e) {
 setDefaultRecipePreview();
 
 async function setDefaultRecipePreview() {
-    const recipeDiv = document.getElementById('recipeDiv');
+    const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const defaultRecipeFileContent = await window.call.getDefaultRecipeFileContent();
-    recipeDiv.innerText = defaultRecipeFileContent;
+    recipePropertiesTextarea.innerText = defaultRecipeFileContent;
 }
 
 // Manually upload
-document.getElementById('uploadRecipeInput').addEventListener('change', function(e) {
-    const recipeFile = e.target.files[0];
+document.getElementById('uploadRecipeInput').addEventListener('change', function (e) {
+    const recipePropertiesTextarea = e.target.files[0];
     const reader = new FileReader();
 
-    const recipeDiv = document.getElementById('recipeDiv');
+    const recipeTextarea = document.getElementById('recipePropertiesTextarea');
 
-    reader.addEventListener('load', function() {
-        recipeDiv.innerText = reader.result;
+    reader.addEventListener('load', function () {
+        recipeTextarea.innerText = reader.result;
     });
 
-    reader.readAsText(recipeFile);
+    reader.readAsText(recipePropertiesTextarea);
 });
 
 // Load from appdata
-document.getElementById('loadRecipeInput').addEventListener('click', async function() {
-    const recipeDiv = document.getElementById('recipeDiv');
+document.getElementById('loadRecipeInput').addEventListener('click', async function () {
+    const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const generatedRecipeFileContent = await window.call.getGeneratedRecipeFileContent();
-    recipeDiv.innerText = generatedRecipeFileContent;
+    recipePropertiesTextarea.innerText = generatedRecipeFileContent;
 });
 
 /**
  * Handle recipe picture preview
  */
-document.getElementById('uploadRecipePictureInput').addEventListener('change', function(e) {
+document.getElementById('uploadRecipePictureInput').addEventListener('change', function (e) {
     //const recipePictureDiv = document.getElementById('recipePictureDiv');
     const recipePictureImg = document.getElementById('recipePictureImg')
 
     const recipePictureFile = e.target.files[0];
 
     recipePictureImg.src = recipePictureFile.path;
+})
+
+/**
+ * Handle form submit
+ */
+document.getElementById('blockForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    // Get all properties
+    const blockName = formData.get('name');
+    const creatorName = formData.get('creatorName');
+    const uniqueID = formData.get('uniqueID');
+    const yield = formData.get('yieldNumber');
+    const similarTo = formData.get('similarTo');
+    const categoryName = formData.get('categoryName');
+    const uniqueIDToDrop = formData.get('uniqueIDToDrop')
+    const allowMove = formData.get('allowMove') == 'on' ? true : false;
+    const allowCrystalPlacement = formData.get('allowCrystalPlacement') == 'on' ? true : false;
+
+    // Get all textures and corresponding mode
+    const amountOfRegularTextures = document.getElementById('regularTexturesDiv').childElementCount - 1;
+    const mode = amountOfRegularTextures == 6 ? 4 : amountOfRegularTextures;
+    const regularTextures = getTexturesSrcAndValue(document.getElementById('textureFilesInput'));
+    const smallTextures = getTexturesSrcAndValue(document.getElementById('smallTextureFilesInput'));
+    const normalTextures = getTexturesSrcAndValue(document.getElementById('normalTextureFilesInput'));
+    const hasNormalTextures = normalTextures.length != 0;
+    const glowTextures = getTexturesSrcAndValue(document.getElementById('glowTextureFilesInput'));
+    const hasGlowTextures = glowTextures.length != 0;
+
+    // Get recipe properties and picture
+    const recipePropertiesRaw = formData.get('recipeProperties');
+    const recipeProperties = JSON.parse(recipePropertiesRaw.replace('"Recipe": ', '').replace('},', '}'));
+    const recipePictureImgSrc = document.getElementById('recipePictureImg').src.replace('file:///', '');
+
+    // Make properties file content
+    let propertiesFileContent = {
+        Name: blockName,
+        CreatorName: creatorName,
+        UniqueID: uniqueID,
+        Recipe: recipeProperties,
+        Yield: yield,
+        SimilarTo: similarTo,
+        Textures: {
+            Mode: mode,
+            WithNormals: hasNormalTextures,
+            WithGlowMap: hasGlowTextures
+        },
+        UniqueIDToDrop: uniqueIDToDrop,
+        AllowMove: allowMove,
+        AllowCrystalAssistedBlockPlacement: allowCrystalPlacement
+    }
+    if (categoryName.length != 0) propertiesFileContent.CategoryName = categoryName;
+
+    // Give data to main, have it make the block
+    const location = `C:\\Users\\alber\\OneDrive\\Dokumenter\\Hobbies\\cyubeVR\\BlockManager\\testing\\output\\${blockName}.${creatorName}`;
+    window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc, 
+        regularTextures, smallTextures, normalTextures, glowTextures);
+});
+
+function getTexturesSrcAndValue(textureInput) {
+    const selectorParent = textureInput.nextElementSibling;
+    const selectorChildren = selectorParent.querySelectorAll('div.texture-selector-child');
+
+    let texturesSrcAndValue = [];
+    for (let i = 0; i < selectorChildren.length; i++) {
+        texturesSrcAndValue[i] = getTextureSrcAndValue(selectorChildren[i]);
+    }
+
+    return texturesSrcAndValue;
+}
+
+function getTextureSrcAndValue(child) {
+    const img = child.firstElementChild.firstElementChild;
+    const select = child.lastElementChild;
+    const fixedImgSrc = img.src.replace('file:///', '');
+    return [fixedImgSrc, select.value];
+}
+
+/**
+ * Handle block to drop inputs
+ */
+let prevButton = document.querySelector('input.btn-pressed');
+
+document.getElementById('uniqueIDToDropDiv').querySelectorAll('input.btn').forEach((button) => {
+    button.addEventListener('click', function (e) {
+        if (prevButton == button) return;
+
+        prevButton.classList.remove('btn-pressed');
+        button.classList.add('btn-pressed');
+
+        prevButton = button;
+
+
+        const numberInput = button.parentElement.lastElementChild;
+        if (button.value == 'Custom') {
+            numberInput.readOnly = false;
+            numberInput.required = true;
+            numberInput.value = '';
+        }
+        else {
+            numberInput.readOnly = true;
+            numberInput.required = false;
+            removeInvalidHighlight(numberInput);
+
+            if (button.value == 'Itself') {
+                numberInput.value = -2;
+            }
+            else {
+                numberInput.value = -1;
+            }
+        }
+    });
 })

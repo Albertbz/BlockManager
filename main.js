@@ -58,6 +58,7 @@ app.on('window-all-closed', () => {
 ipcMain.handle('createDDSImage', createDDSImageWrapper);
 ipcMain.handle('getGeneratedRecipeFileContent', getGeneratedRecipeFileContent);
 ipcMain.handle('getDefaultRecipeFileContent', getDefaultRecipeFileContent);
+ipcMain.handle('generateCustomBlock', generateCustomBlock);
 
 
 /*
@@ -84,7 +85,7 @@ function getGeneratedRecipeFileContent() {
 }
 
 function getDefaultRecipeFileContent() {
-    const recipePath = '.\\premade\\Recipe.txt';
+    const recipePath = path.join(__dirname, '\\premade\\Recipe.txt') ;
 
     try {
         const data = fs.readFileSync(recipePath, 'utf-8');
@@ -92,4 +93,64 @@ function getDefaultRecipeFileContent() {
     } catch {
         console.error(err);
     }
+}
+
+function generateCustomBlock(event, location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
+    // Make folder for block
+    if (!fs.existsSync(location)) {
+        fs.mkdirSync(location);
+    }
+
+    // Make properties file
+    fs.appendFile(`${location}\\Properties.json`, JSON.stringify(propertiesFileContent), function(err) {
+        if (err) console.error(err);
+        console.log('Successfully made properties file')
+    })
+
+    // Make recipe preview file
+    createDDSImage(recipePictureImgSrc, `${location}\\RecipePreview.dds`, 'BC3');
+
+    // Create Textures folder
+    const texturesPath = `${location}\\Textures`;
+    if (!fs.existsSync(texturesPath)) {
+        fs.mkdirSync(texturesPath);
+    }
+
+    // Create regular textures
+    for (i = 0; i < regularTextures.length; i++) {
+        const [src, name] = regularTextures[i];
+        outputPath = `${texturesPath}\\${name}.dds`;
+        createDDSImage(src, outputPath, 'BC3');
+    }
+
+    // Create small textures. If none, automatically
+    // make them using the regular textures.
+    if (smallTextures.length == 0) {
+        for (i = 0; i < regularTextures.length; i++) {
+            const [src, name] = regularTextures[i];
+            outputPath = `${texturesPath}\\${name}_small.dds`;
+            createDDSImage(src, outputPath, 'BC3', true, 512, 512);
+        }
+    } else {
+        for (i = 0; i < smallTextures.length; i++) {
+            const [src, name] = smallTextures[i];
+            outputPath = `${texturesPath}\\${name}_small.dds`;
+            createDDSImage(src, outputPath, 'BC3');
+        }
+    }
+    
+    // Create normal map textures
+    for (i = 0; i < normalTextures.length; i++) {
+        const [src, name] = normalTextures[i];
+        outputPath = `${texturesPath}\\${name}_normal.dds`;
+        createDDSImage(src, outputPath, 'BC5');
+    }
+
+    // Create glow map textures
+    for (i = 0; i < glowTextures.length; i++) {
+        const [src, name] = glowTextures[i];
+        outputPath = `${texturesPath}\\${name}_glow.dds`;
+        createDDSImage(src, outputPath, 'BC1');
+    }
+    
 }

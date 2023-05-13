@@ -5,5 +5,8 @@ contextBridge.exposeInMainWorld('call', {
         ipcRenderer.invoke('createDDSImage', inputPath, outputPath, format);
     },
     getGeneratedRecipeFileContent: async () => await ipcRenderer.invoke('getGeneratedRecipeFileContent'),
-    getDefaultRecipeFileContent: async() => await ipcRenderer.invoke('getDefaultRecipeFileContent')
+    getDefaultRecipeFileContent: async () => await ipcRenderer.invoke('getDefaultRecipeFileContent'),
+    generateCustomBlock: function(location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
+        ipcRenderer.invoke('generateCustomBlock', location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures);
+    }
 })

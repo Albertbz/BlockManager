@@ -57,7 +57,7 @@
         <div class="content">
             <form class="box" action="" id="blockForm">
                 <!-- Step 1 -->
-                <section id="step-1" class="form-step content box d-none">
+                <section id="step-1" class="form-step content box">
                     <h2 class="text-center mt-0 header">Properties</h2>
 
                     <div class="content box-vertical">
@@ -77,7 +77,8 @@
                                 <div class="form-group mb-2">
                                     <input class="form-control" type="number" name="uniqueID" id="uniqueIDInput" min="1"
                                         max="2147483648" placeholder="e.g., 325235" required>
-                                    <button class="form-control-tight" type="button" id="uniqueIDButton">Random</button>
+                                    <button class="form-control-tight btn" type="button"
+                                        id="uniqueIDButton">Random</button>
                                 </div>
 
                                 <label class="form-label">Yield:</label>
@@ -106,12 +107,14 @@
                                     placeholder="e.g., Marble">
 
                                 <label class="form-label">Block to drop (ID):</label>
-                                <input class="form-control mb-2" list="uniqueIDToDropList" name="uniqueIDToDrop"
-                                    id="uniqueIDToDropInput" placeholder="e.g., 89794">
-                                <datalist id="uniqueIDToDropList">
-                                    <option value="-2">Itself</option>
-                                    <option value="-1">Nothing</option>
-                                </datalist>
+                                <div class="form-group mb-2" id="uniqueIDToDropDiv">
+                                    <input class="form-control-tight btn btn-pressed" type="button" value="Itself">
+                                    <input class="form-control-tight btn" type="button" value="Nothing">
+                                    <input class="form-control-tight btn" type="button" value="Custom">
+                                    <input class="form-control" type="number" name="uniqueIDToDrop"
+                                        id="uniqueIDToDropInput" readonly placeholder="e.g., 89794" min="-2"
+                                        max="2147483648" value="-2">
+                                </div>
 
                                 <label class="form-label">Allow movement after placement:</label>
                                 <div class="checkbox mb-2">
@@ -200,7 +203,7 @@
                     </div>
                 </section>
                 <!-- Step 3 -->
-                <section id="step-3" class="form-step content box">
+                <section id="step-3" class="form-step content box d-none">
                     <h2 class="text-center mt-0 header">Recipe</h2>
                     <div class="content box-vertical">
                         <div class="form-part content box">
@@ -231,10 +234,9 @@
                             <div class="scrollable content box">
                                 <!-- Insert crafting materials, etc -->
                                 <label class="form-label">Recipe properties:</label>
-                                <div class="form-control mb-2" id="recipeDiv">
-                                    
-                                </div>
-                                
+                                <textarea class="recipe-properties-preview mb-2" name="recipeProperties"
+                                    id="recipePropertiesTextarea" rows="5" required spellcheck="false"></textarea>
+
                                 <!-- Insert recipe preview -->
                                 <label class="form-label">Recipe picture:</label>
                                 <div class="form-control" id="recipePictureDiv">
@@ -253,7 +255,7 @@
                     <h2 class="text-center mt-0 header">Finalization</h2>
                     <div class="content box-vertical">
                         <!-- Preview the block 'n all that jazz -->
-                        <h3>idk what to put here yet</h3>
+                        <h3>Will be able to choose where to save block here...</h3>
                     </div>
                     <div class="btns footer">
                         <button class="btn-navigate-form-step btn-large" type="button" step_number="3">Previous</button>
