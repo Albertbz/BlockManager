@@ -162,6 +162,7 @@ select {
 
 .texture-img:hover {
 	filter: blur(0.5px);
+	cursor: pointer;
 }
 
 .trash-can {
@@ -186,6 +187,10 @@ select {
 	flex: 0 1 auto;
 	flex-flow: column;
 	padding-right: 4px;
+}
+
+.texture-selector-child .form-label {
+	margin-bottom: 0;
 }
 
 
@@ -326,6 +331,16 @@ input[type=file] {
 .manual-recipe:hover {
 	background-color: rgb(231, 231, 231);
 	cursor: pointer;
+}
+
+
+/**
+ * Recipe picture preview
+ */
+
+.recipe-picture-preview {
+	width: 180px;
+	height: 180px;
 }
 
 

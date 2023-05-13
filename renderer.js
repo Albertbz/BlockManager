@@ -359,3 +359,15 @@ document.getElementById('loadRecipeInput').addEventListener('click', async funct
     const generatedRecipeFileContent = await window.call.getGeneratedRecipeFileContent();
     recipeDiv.innerText = generatedRecipeFileContent;
 });
+
+/**
+ * Handle recipe picture preview
+ */
+document.getElementById('uploadRecipePictureInput').addEventListener('change', function(e) {
+    //const recipePictureDiv = document.getElementById('recipePictureDiv');
+    const recipePictureImg = document.getElementById('recipePictureImg')
+
+    const recipePictureFile = e.target.files[0];
+
+    recipePictureImg.src = recipePictureFile.path;
+})

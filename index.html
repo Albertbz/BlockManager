@@ -216,11 +216,11 @@
                                 <input type="file" name="uploadRecipe" id="uploadRecipeInput" accept=".txt">
                                 <label for="uploadRecipeInput" class="manual-recipe mb-2">Click here to browse</label>
 
-                                <label class="form-label">Generate recipe picture:</label>
+                                <label class="form-label">Generate recipe picture (not implemented yet):</label>
                                 <input type="button" value="Generate" class="form-control mb-2"
-                                    id="generateRecipePictureInput">
+                                    id="generateRecipePictureInput" disabled>
 
-                                <label class="form-label">Upload recipe picture manually:</label>
+                                <label class="form-label">Upload recipe picture manually [512x512]:</label>
                                 <input type="file" name="uploadRecipePicture" id="uploadRecipePictureInput">
                                 <label for="uploadRecipePictureInput" class="manual-recipe">Click here to browse</label>
                             </div>
@@ -230,12 +230,16 @@
 
                             <div class="scrollable content box">
                                 <!-- Insert crafting materials, etc -->
-                                <div class="form-control" id="recipeDiv">
+                                <label class="form-label">Recipe properties:</label>
+                                <div class="form-control mb-2" id="recipeDiv">
                                     
                                 </div>
                                 
                                 <!-- Insert recipe preview -->
-
+                                <label class="form-label">Recipe picture:</label>
+                                <div class="form-control" id="recipePictureDiv">
+                                    <img src="" alt="" class="recipe-picture-preview" id="recipePictureImg">
+                                </div>
                             </div>
                         </div>
                     </div>
