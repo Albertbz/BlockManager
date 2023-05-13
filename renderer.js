@@ -325,35 +325,34 @@ setDefaultRecipePreview();
 async function setDefaultRecipePreview() {
     const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const defaultRecipeFileContent = await window.call.getDefaultRecipeFileContent();
-    recipePropertiesTextarea.innerText = defaultRecipeFileContent;
+    recipePropertiesTextarea.value = defaultRecipeFileContent;
 }
 
 // Manually upload
 document.getElementById('uploadRecipeInput').addEventListener('change', function (e) {
-    const recipePropertiesTextarea = e.target.files[0];
+    const recipePropertiesFile = e.target.files[0];
     const reader = new FileReader();
 
-    const recipeTextarea = document.getElementById('recipePropertiesTextarea');
+    const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
 
     reader.addEventListener('load', function () {
-        recipeTextarea.innerText = reader.result;
+        recipePropertiesTextarea.value = reader.result;
     });
 
-    reader.readAsText(recipePropertiesTextarea);
+    reader.readAsText(recipePropertiesFile);
 });
 
 // Load from appdata
 document.getElementById('loadRecipeInput').addEventListener('click', async function () {
     const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const generatedRecipeFileContent = await window.call.getGeneratedRecipeFileContent();
-    recipePropertiesTextarea.innerText = generatedRecipeFileContent;
+    recipePropertiesTextarea.value = generatedRecipeFileContent;
 });
 
 /**
  * Handle recipe picture preview
  */
 document.getElementById('uploadRecipePictureInput').addEventListener('change', function (e) {
-    //const recipePictureDiv = document.getElementById('recipePictureDiv');
     const recipePictureImg = document.getElementById('recipePictureImg')
 
     const recipePictureFile = e.target.files[0];
@@ -440,7 +439,7 @@ function getTextureSrcAndValue(child) {
 }
 
 /**
- * Handle block to drop inputs
+ * Handle uniqueIDToDrop inputs
  */
 let prevButton = document.querySelector('input.btn-pressed');
 
@@ -472,5 +471,14 @@ document.getElementById('uniqueIDToDropDiv').querySelectorAll('input.btn').forEa
                 numberInput.value = -1;
             }
         }
+    });
+});
+
+/**
+ * Handle excess whitespace in front of and behind all input.
+ */
+document.querySelectorAll('input[type=text]').forEach((input) => {
+    input.addEventListener('focusout', function(e) {
+        input.value = input.value.trim();
     });
 })
