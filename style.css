@@ -122,20 +122,24 @@ input[type=range] {
 
 .btn {
 	border: 1px solid rgb(125, 125, 125);
-	border-radius: 3px;
+	border-radius: 4px;
 	background-color: rgb(240, 240, 240);
 	box-sizing: border-box;
-	height: 22px;
+	height: auto;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
 	background-color: rgb(225, 225, 225);
 	border-color: rgb(110, 110, 110);
 }
 
-.btn:active {
+.btn:active:not(:disabled) {
 	background-color: rgb(240, 240, 240);
 	border-color: rgb(125, 125, 125);
+}
+
+.btn:disabled {
+	border-color: rgba(125, 125, 125, 0.5);
 }
 
 .btn-large {
@@ -147,8 +151,9 @@ input[type=range] {
 }
 
 .btn-pressed {
-	border-color: rgb(150, 150, 150) !important;
-	background-color: rgb(200, 200, 200) !important;
+	border-color: rgb(0, 94, 201) !important;
+	background-color: rgb(0, 117, 255) !important;
+	color: rgb(240, 240, 240);
 }
 
 .btn-path {
