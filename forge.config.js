@@ -7,7 +7,7 @@ module.exports = {
           owner: 'Albertbz',
           name: 'BlockManager',
         },
-        prerelease: false,
+        prerelease: true,
         draft: true,
       },
     },
