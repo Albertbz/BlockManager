@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
+    "steam-game-path": "^2.2.0",
     "windows-env": "^1.0.1"
   }
 }

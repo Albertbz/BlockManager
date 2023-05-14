@@ -57,7 +57,7 @@
         <div class="content">
             <form class="box" action="" id="blockForm">
                 <!-- Step 1 -->
-                <section id="step-1" class="form-step content box">
+                <section id="step-1" class="form-step content box d-none">
                     <h2 class="text-center mt-0 header">Properties</h2>
 
                     <div class="content box-vertical">
@@ -108,7 +108,8 @@
 
                                 <label class="form-label">Block to drop (ID):</label>
                                 <div class="form-group mb-2" id="uniqueIDToDropDiv">
-                                    <input class="form-control-tight btn btn-pressed" type="button" value="Itself">
+                                    <input class="form-control-tight btn btn-pressed" type="button" value="Itself"
+                                        id="uniqueIDToDropItselfInput">
                                     <input class="form-control-tight btn" type="button" value="Nothing">
                                     <input class="form-control-tight btn" type="button" value="Custom">
                                     <input class="form-control" type="number" name="uniqueIDToDrop"
@@ -217,7 +218,7 @@
 
                                 <label class="form-label">Upload recipe manually:</label>
                                 <input type="file" name="uploadRecipe" id="uploadRecipeInput" accept=".txt">
-                                <label for="uploadRecipeInput" class="manual-recipe mb-2">Click here to browse</label>
+                                <label for="uploadRecipeInput" class="manual-upload mb-2">Click here to browse</label>
 
                                 <label class="form-label">Generate recipe picture (not implemented yet):</label>
                                 <input type="button" value="Generate" class="form-control mb-2"
@@ -225,7 +226,7 @@
 
                                 <label class="form-label">Upload recipe picture manually [512x512]:</label>
                                 <input type="file" name="uploadRecipePicture" id="uploadRecipePictureInput">
-                                <label for="uploadRecipePictureInput" class="manual-recipe">Click here to browse</label>
+                                <label for="uploadRecipePictureInput" class="manual-upload">Click here to browse</label>
                             </div>
                         </div>
                         <div class="form-part content box">
@@ -240,7 +241,7 @@
                                 <!-- Insert recipe preview -->
                                 <label class="form-label">Recipe picture:</label>
                                 <div class="form-control" id="recipePictureDiv">
-                                    <img src="" alt="" class="recipe-picture-preview" id="recipePictureImg">
+                                    <img src="./premade/placeholder.png" alt="" class="recipe-picture-preview" id="recipePictureImg">
                                 </div>
                             </div>
                         </div>
@@ -251,11 +252,30 @@
                     </div>
                 </section>
                 <!-- Step 4 -->
-                <section id="step-4" class="form-step content box d-none">
+                <section id="step-4" class="form-step content box">
                     <h2 class="text-center mt-0 header">Finalization</h2>
                     <div class="content box-vertical">
-                        <!-- Preview the block 'n all that jazz -->
-                        <h3>Will be able to choose where to save block here...</h3>
+                        <div class="form-part-wide content box">
+                            <h3 class="text-center header">Choose where to save the block</h3>
+
+                            <div class="scrollable content box">
+                                <label class="form-label">Save in Blocks folder (default):</label>
+                                <input type="button" value="" class="btn form-control mb-2 btn-pressed btn-path"
+                                    id="blocksFolderInput">
+
+                                <label class="form-label">Save in some Mod folder:</label>
+                                <div class="form-group-vertical mb-2" id="modFolderDiv">
+
+                                </div>
+
+                                <label class="form-label">Save somewhere manually:</label>
+                                <input class="form-control btn btn-path" type="button" name="saveBlockManually"
+                                    id="saveBlockManuallyInput" webkitdirectory directory value="Click here to browse">
+                            </div>
+
+                        </div>
+
+
                     </div>
                     <div class="btns footer">
                         <button class="btn-navigate-form-step btn-large" type="button" step_number="3">Previous</button>

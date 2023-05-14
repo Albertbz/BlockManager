@@ -1,13 +1,14 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron');
 const path = require('path');
 const { createDDSImage } = require('./dds');
 const env = require('windows-env');
 const fs = require('fs');
+const { getGamePath, getSteamPath } = require('steam-game-path');
 
-
+let win;
 function createWindow() {
     // Make initial window.
-    const win = new BrowserWindow({
+    win = new BrowserWindow({
         width: 0, // Will be changed in a bit.
         height: 0, // Will be changed in a bit.
         webPreferences: {
@@ -29,6 +30,17 @@ function createWindow() {
 
     // Load the main HTML file onto the window.
     win.loadFile('index.html');
+
+    ipcMain.handle('selectFolder', async () => {
+        const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+            properties: ['openDirectory']
+        })
+        if (canceled) {
+            return;
+        } else {
+            return filePaths[0];
+        }
+    });
 }
 
 // As soon as the Electron app is ready, create the window.
@@ -59,6 +71,9 @@ ipcMain.handle('createDDSImage', createDDSImageWrapper);
 ipcMain.handle('getGeneratedRecipeFileContent', getGeneratedRecipeFileContent);
 ipcMain.handle('getDefaultRecipeFileContent', getDefaultRecipeFileContent);
 ipcMain.handle('generateCustomBlock', generateCustomBlock);
+ipcMain.handle('getModsFolderPath', getModsFolderPath);
+ipcMain.handle('getAllModFolders', getAllModFolders);
+ipcMain.handle('generationCompletePopup', generationCompletePopup);
 
 
 /*
@@ -153,4 +168,51 @@ function generateCustomBlock(event, location, propertiesFileContent, recipePictu
         createDDSImage(src, outputPath, 'BC1');
     }
     
+    return true;
+}
+
+function getModsFolderPath() {
+    const cyubeVRPath = getGamePath(619500).game.path;
+    const modsFolderPath = path.join(cyubeVRPath, '\\cyubeVR\\Mods');
+    return modsFolderPath;
+}
+
+function getAllModFolders() {
+    const modsFolderPath = getModsFolderPath();
+    const modFoldersPath = path.join(modsFolderPath, '\\ModFolders');
+
+    let res = [];
+
+    const modFoldersNames = fs.readdirSync(modFoldersPath, { withFileTypes: true })
+        .filter((item) => item.isDirectory())
+        .map((item) => item.name);
+    
+    for (let i = 0; i < modFoldersNames.length; i++) {
+        const name = modFoldersNames[i];
+        const modPath = path.join(modFoldersPath, `\\${name}`);
+
+        const updates = fs.readdirSync(modPath, { withFileTypes: true })
+            .filter((item) => item.isDirectory())
+            .map((item) => item.name)
+            .filter((item) => item.includes('Update'));
+
+        const values = {
+            name: name,
+            updates: updates
+        }
+        res.push(values);
+    }
+
+    return res;
+}
+
+function generationCompletePopup() {
+    const childWin = new BrowserWindow({
+        width: 150,
+        height: 100,
+        center: true,
+        frame: false
+    });
+
+    childWin.loadFile('generationComplete.html');
 }

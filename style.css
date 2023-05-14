@@ -107,6 +107,10 @@ input[type=range] {
 	margin-top: 0;
 }
 
+.mb-0 {
+	margin-bottom: 0;
+}
+
 .mb-2 {
 	margin-bottom: 0.75rem;
 }
@@ -121,6 +125,7 @@ input[type=range] {
 	border-radius: 3px;
 	background-color: rgb(240, 240, 240);
 	box-sizing: border-box;
+	height: 22px;
 }
 
 .btn:hover {
@@ -140,6 +145,11 @@ input[type=range] {
 .btn-pressed {
 	border-color: rgb(150, 150, 150) !important;
 	background-color: rgb(200, 200, 200) !important;
+}
+
+.btn-path {
+	white-space: normal;
+	height: 44px;
 }
 
 input {
@@ -224,6 +234,10 @@ select {
 	width: 40%;
 }
 
+.form-part-wide {
+	width: 60%;
+}
+
 .form-label {
 	display: flex;
 	flex: 0 1 auto;
@@ -251,6 +265,16 @@ select {
 .form-group .form-control-tight {
 	display: flex;
 	flex: 0 1 auto;
+}
+
+.form-group-vertical {
+	display: flex;
+	flex: 0 1 auto;
+	flex-flow: column;
+}
+
+.form-group-vertical .form-group {
+	margin-bottom: 3px;
 }
 
 
@@ -336,7 +360,7 @@ input[type=file] {
  * Custom recipe upload
  */
 
-.manual-recipe {
+.manual-upload {
 	display: flex;
 	flex: 0 0 auto;
 	height: 60px;
@@ -347,7 +371,7 @@ input[type=file] {
 	color: rgb(165, 165, 165);
 }
 
-.manual-recipe:hover {
+.manual-upload:hover {
 	background-color: rgb(231, 231, 231);
 	cursor: pointer;
 }

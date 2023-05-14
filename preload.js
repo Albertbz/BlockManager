@@ -6,7 +6,11 @@ contextBridge.exposeInMainWorld('call', {
     },
     getGeneratedRecipeFileContent: async () => await ipcRenderer.invoke('getGeneratedRecipeFileContent'),
     getDefaultRecipeFileContent: async () => await ipcRenderer.invoke('getDefaultRecipeFileContent'),
-    generateCustomBlock: function(location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
-        ipcRenderer.invoke('generateCustomBlock', location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures);
-    }
+    generateCustomBlock: async function(location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
+        await ipcRenderer.invoke('generateCustomBlock', location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures);
+    },
+    selectFolder: () => ipcRenderer.invoke('selectFolder'),
+    getModsFolderPath: () => ipcRenderer.invoke('getModsFolderPath'),
+    getAllModFolders: () => ipcRenderer.invoke('getAllModFolders'),
+    generationCompletePopup: () => ipcRenderer.invoke('generationCompletePopup')
 })

@@ -414,9 +414,11 @@ document.getElementById('blockForm').addEventListener('submit', function (e) {
     if (categoryName.length != 0) propertiesFileContent.CategoryName = categoryName;
 
     // Give data to main, have it make the block
-    const location = `C:\\Users\\alber\\OneDrive\\Dokumenter\\Hobbies\\cyubeVR\\BlockManager\\testing\\output\\${blockName}.${creatorName}`;
+    const location = `${saveLocation}\\${blockName}.${creatorName}`;
     window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc, 
         regularTextures, smallTextures, normalTextures, glowTextures);
+
+    //window.call.generationCompletePopup();
 });
 
 function getTexturesSrcAndValue(textureInput) {
@@ -441,7 +443,7 @@ function getTextureSrcAndValue(child) {
 /**
  * Handle uniqueIDToDrop inputs
  */
-let prevButton = document.querySelector('input.btn-pressed');
+let prevButton = document.getElementById('uniqueIDToDropItselfInput');
 
 document.getElementById('uniqueIDToDropDiv').querySelectorAll('input.btn').forEach((button) => {
     button.addEventListener('click', function (e) {
@@ -481,4 +483,98 @@ document.querySelectorAll('input[type=text]').forEach((input) => {
     input.addEventListener('focusout', function(e) {
         input.value = input.value.trim();
     });
+})
+
+/**
+ * Handle where to save
+ */
+let prevSaveButton = document.getElementById('blocksFolderInput');
+let saveLocation;
+
+document.getElementById('blocksFolderInput').addEventListener('click', updateSaveButton);
+
+function updateSaveButton(e) {
+    if (prevSaveButton == e.target) return;
+
+    prevSaveButton.classList.remove('btn-pressed');
+    e.target.classList.add('btn-pressed');
+    saveLocation = e.target.value;
+
+    prevSaveButton = e.target;
+}
+
+/**
+ * Put path to Blocks folder in button
+ */
+putPathToBlocksFolderInButton(document.getElementById('blocksFolderInput'));
+
+async function putPathToBlocksFolderInButton(button) {
+    const modsFolderPath = await window.call.getModsFolderPath();
+    const blocksFolderPath = modsFolderPath + '\\Blocks';
+    button.value = blocksFolderPath;
+    saveLocation = blocksFolderPath;
+} 
+
+/**
+ * Populate Mod folder picker
+ */
+populateModFolderPicker();
+
+async function populateModFolderPicker() {
+    const modFolderDiv = document.getElementById('modFolderDiv');
+    const modFolders = await window.call.getAllModFolders();
+    
+    for (let i = 0; i < modFolders.length; i++) {
+        modFolderDiv.appendChild(createInputGroup(modFolders[i]));
+    }
+    if (modFolders.length == 0) {
+        modFolderDiv.innerText = 'No mod folders found.'
+    }
+}
+
+function createInputGroup(values) {
+    const div = document.createElement('div');
+    div.classList.add('form-group');
+
+    const input = document.createElement('input');
+    input.type = 'button';
+    input.classList.add('btn', 'form-control');
+    input.value = values.name;
+
+    const select = document.createElement('select');
+    select.classList.add('form-control-tight');
+
+    for (i = 0; i < values.updates.length; i++) {
+        const option = document.createElement('option');
+        option.value = values.updates[i];
+        option.innerText = values.updates[i];
+        select.appendChild(option);
+    } 
+
+    input.addEventListener('click', async (e) => {
+        if (prevSaveButton == e.target) return;
+
+        prevSaveButton.classList.remove('btn-pressed');
+        e.target.classList.add('btn-pressed');
+        const update = e.target.nextElementSibling.value;
+        saveLocation = (await window.call.getModsFolderPath()) + `\\ModFolders\\${e.target.value}\\${update}\\Blocks`;
+
+        prevSaveButton = e.target;
+    })
+
+    div.appendChild(input);
+    div.appendChild(select);
+
+    return div;
+}
+
+/**
+ * Handle directory picker for saving
+ */
+document.getElementById('saveBlockManuallyInput').addEventListener('click', async function(e) {
+    const path = await window.call.selectFolder();
+    if (path == undefined) return;
+    e.target.value = path;
+
+    updateSaveButton(e);
 })
