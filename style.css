@@ -126,6 +126,7 @@ input[type=range] {
 	background-color: rgb(240, 240, 240);
 	box-sizing: border-box;
 	height: auto;
+	transition: all 0.2s;
 }
 
 .btn:hover:not(:disabled) {
@@ -153,7 +154,7 @@ input[type=range] {
 .btn-pressed {
 	border-color: rgb(0, 94, 201) !important;
 	background-color: rgb(0, 117, 255) !important;
-	color: rgb(240, 240, 240);
+	color: rgb(255, 255, 255);
 }
 
 .btn-path {
@@ -193,13 +194,13 @@ select {
 	height: 80px;
 }
 
-.texture-img:hover + .trash-can {
-	display: block;
-}
-
 .texture-img:hover {
 	filter: blur(0.5px);
 	cursor: pointer;
+}
+
+.texture-img:hover + .trash-can {
+	display: block;
 }
 
 .trash-can {
@@ -350,6 +351,7 @@ input[type=file] {
 	align-items: center;
 	margin-bottom: 22px;
 	color: rgb(165, 165, 165);
+	transition: background-color 0.2s;
 }
 
 .custom-file-uploader:hover {
@@ -378,6 +380,7 @@ input[type=file] {
 	align-items: center;
 	justify-content: center;
 	color: rgb(165, 165, 165);
+	transition: background-color 0.2s;
 }
 
 .manual-upload:hover {

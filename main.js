@@ -3,7 +3,7 @@ const path = require('path');
 const { createDDSImage } = require('./dds');
 const env = require('windows-env');
 const fs = require('fs');
-const { getGamePath, getSteamPath } = require('steam-game-path');
+const { getGamePath } = require('steam-game-path');
 
 let win;
 function createWindow() {
@@ -29,7 +29,9 @@ function createWindow() {
     win.center();
 
     // Load the main HTML file onto the window.
-    win.loadFile('index.html');
+    win.loadFile('generator.html');
+
+    
 
     ipcMain.handle('selectFolder', async () => {
         const { canceled, filePaths } = await dialog.showOpenDialog(win, {
@@ -224,7 +226,11 @@ function generationCompletePopup(event, location) {
         modal: true
     });
 
-    childWin.loadFile('generationComplete.html');
+    childWin.loadFile('generationPopup.html');
+
+    const winPosition = win.getPosition();
+    const winSize = win.getSize();
+    childWin.setPosition(winPosition[0] + Math.round(winSize[0]/2) - 150, winPosition[1] + Math.round(winSize[1]/2) - 100);
 }
 
 function openGenerationLocation() {
@@ -237,5 +243,5 @@ function generateNewBlock() {
 }
 
 function refreshMainWindow() {
-    win.loadFile('index.html');
+    win.reload();
 }
