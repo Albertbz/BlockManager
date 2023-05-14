@@ -1,5 +1,24 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <link rel="stylesheet" href="style.css">
+    <title>Generation Popup</title>
+</head>
 
+<body>
+    <div class="container box">
+        <h2 class="text-center header mt-1">Generation complete!</h2>
+        <div class="box content">
+            <button class="btn content mb-2 btn-medium" id="openInExplorer">See block in file explorer</button>
+            <button class="btn content mb-2 btn-medium" id="generateNewBlock">Generate new block</button>
 
+        </div>
+    </div>
+</body>
+
+<script src="generationComplete.js"></script>
 </html>

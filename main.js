@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, dialog, shell } = require('electron');
 const path = require('path');
 const { createDDSImage } = require('./dds');
 const env = require('windows-env');
@@ -74,6 +74,8 @@ ipcMain.handle('generateCustomBlock', generateCustomBlock);
 ipcMain.handle('getModsFolderPath', getModsFolderPath);
 ipcMain.handle('getAllModFolders', getAllModFolders);
 ipcMain.handle('generationCompletePopup', generationCompletePopup);
+ipcMain.handle('openGenerationLocation', openGenerationLocation);
+ipcMain.handle('generateNewBlock', generateNewBlock);
 
 
 /*
@@ -206,13 +208,34 @@ function getAllModFolders() {
     return res;
 }
 
-function generationCompletePopup() {
-    const childWin = new BrowserWindow({
-        width: 150,
-        height: 100,
+let generationLocation;
+let childWin;
+function generationCompletePopup(event, location) {
+    generationLocation = location;
+    childWin = new BrowserWindow({
+        width: 300,
+        height: 200,
         center: true,
-        frame: false
+        frame: false,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+        },
+        parent: win,
+        modal: true
     });
 
     childWin.loadFile('generationComplete.html');
+}
+
+function openGenerationLocation() {
+    shell.showItemInFolder(generationLocation);
+}
+
+function generateNewBlock() {
+    refreshMainWindow();
+    childWin.destroy();
+}
+
+function refreshMainWindow() {
+    win.loadFile('index.html');
 }

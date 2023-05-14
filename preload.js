@@ -12,5 +12,7 @@ contextBridge.exposeInMainWorld('call', {
     selectFolder: () => ipcRenderer.invoke('selectFolder'),
     getModsFolderPath: () => ipcRenderer.invoke('getModsFolderPath'),
     getAllModFolders: () => ipcRenderer.invoke('getAllModFolders'),
-    generationCompletePopup: () => ipcRenderer.invoke('generationCompletePopup')
+    generationCompletePopup: (location) => ipcRenderer.invoke('generationCompletePopup', location),
+    openGenerationLocation: () => ipcRenderer.invoke('openGenerationLocation'),
+    generateNewBlock: () => ipcRenderer.invoke('generateNewBlock')
 })

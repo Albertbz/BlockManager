@@ -418,7 +418,7 @@ document.getElementById('blockForm').addEventListener('submit', function (e) {
     window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc, 
         regularTextures, smallTextures, normalTextures, glowTextures);
 
-    //window.call.generationCompletePopup();
+    window.call.generationCompletePopup(location);
 });
 
 function getTexturesSrcAndValue(textureInput) {

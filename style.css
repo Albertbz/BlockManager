@@ -142,6 +142,10 @@ input[type=range] {
 	font-size: x-large;
 }
 
+.btn-medium {
+	font-size: medium;
+}
+
 .btn-pressed {
 	border-color: rgb(150, 150, 150) !important;
 	background-color: rgb(200, 200, 200) !important;
