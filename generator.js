@@ -371,11 +371,11 @@ document.getElementById('blockForm').addEventListener('submit', function (e) {
     // Get all properties
     const blockName = formData.get('name');
     const creatorName = formData.get('creatorName');
-    const uniqueID = formData.get('uniqueID');
-    const yield = formData.get('yieldNumber');
-    const similarTo = formData.get('similarTo');
+    const uniqueID = parseInt(formData.get('uniqueID'));
+    const yield = parseInt(formData.get('yieldNumber'));
+    const similarTo = parseInt(formData.get('similarTo'));
     const categoryName = formData.get('categoryName');
-    const uniqueIDToDrop = formData.get('uniqueIDToDrop')
+    const uniqueIDToDrop = parseInt(formData.get('uniqueIDToDrop'));
     const allowMove = formData.get('allowMove') == 'on' ? true : false;
     const allowCrystalPlacement = formData.get('allowCrystalPlacement') == 'on' ? true : false;
 

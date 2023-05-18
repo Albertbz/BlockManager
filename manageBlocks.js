@@ -138,12 +138,16 @@ function makeButtonDiv(block) {
 
 function getBrokenBy(similarTo) {
     switch (similarTo) {
+        case 1:
         case '1':
             return 'Pickaxe';
+        case 2:
         case '2':
             return 'Axe';
+        case 3:
         case '3':
             return 'Shovel';
+        case 4:
         case '4':
             return 'Indestructible';
     }
