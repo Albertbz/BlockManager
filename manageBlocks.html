@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <link rel="stylesheet" href="./style.css">
+    <title>Block Manager for cyubeVR</title>
+</head>
+
+<body>
+    <div class="container box">
+        <h1 class="text-center header">Manage Blocks</h1>
+
+        <div class="content box">
+            <div class="header mb-2 text-center">
+                Insert sorting stuff here
+            </div>
+
+            <div class="box blocks align-center" id="blocksDiv"></div>
+        </div>
+
+        <div class="footer btns">
+            <span></span>
+            <button class="btn btn-large" type="button">Make new block</button>
+            <span></span>
+        </div>
+    </div>
+</body>
+
+<script src="./manageBlocks.js"></script>
+</html>

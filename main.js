@@ -25,11 +25,13 @@ function createWindow() {
     // Set window size to be 50% of the width of the
     // display and 60% of the height, and then center
     // it.
-    win.setSize(Math.round(display.bounds.width * 0.5), Math.round(display.bounds.height * 0.6));
+    const newHeight = Math.round(display.bounds.height * 0.7);
+    const newWidth = Math.round(newHeight * 1.5)
+    win.setSize(newWidth, newHeight);
     win.center();
 
     // Load the main HTML file onto the window.
-    win.loadFile('generator.html');
+    win.loadFile('manageBlocks.html');
 
     
 
@@ -78,6 +80,7 @@ ipcMain.handle('getAllModFolders', getAllModFolders);
 ipcMain.handle('generationCompletePopup', generationCompletePopup);
 ipcMain.handle('openGenerationLocation', openGenerationLocation);
 ipcMain.handle('generateNewBlock', generateNewBlock);
+ipcMain.handle('getAllBlocks', getAllBlocks);
 
 
 /*
@@ -177,13 +180,13 @@ function generateCustomBlock(event, location, propertiesFileContent, recipePictu
 
 function getModsFolderPath() {
     const cyubeVRPath = getGamePath(619500).game.path;
-    const modsFolderPath = path.join(cyubeVRPath, '\\cyubeVR\\Mods');
+    const modsFolderPath = path.join(cyubeVRPath, 'cyubeVR\\Mods');
     return modsFolderPath;
 }
 
 function getAllModFolders() {
     const modsFolderPath = getModsFolderPath();
-    const modFoldersPath = path.join(modsFolderPath, '\\ModFolders');
+    const modFoldersPath = path.join(modsFolderPath, 'ModFolders');
 
     let res = [];
 
@@ -244,4 +247,57 @@ function generateNewBlock() {
 
 function refreshMainWindow() {
     win.reload();
+}
+
+function getAllBlocks() {
+    const modsFolderPath = getModsFolderPath();
+    let blocks = {
+        defaultBlocksFolder: []
+    };
+
+    /**
+     * Add all blocks in Blocks folder
+     */
+    const blocksFolderPath = path.join(modsFolderPath, 'Blocks');
+    
+    // Get all folders of the blocks
+    const blocksFolders = fs.readdirSync(blocksFolderPath, { withFileTypes: true })
+        .filter((item) => item.isDirectory())
+        .map((item) => item.name);
+    
+    // For each folder, get information and save in blocks array
+    for (let i = 0; i < blocksFolders.length; i++) {
+        const blockPath = path.join(blocksFolderPath, blocksFolders[i]);
+        let block = {};
+
+        // Add properties
+        try {
+            const propertiesFilePath = path.join(blockPath, `Properties.json`);
+            const propertiesJSON = fs.readFileSync(propertiesFilePath);
+            const properties = JSON.parse(propertiesJSON);
+            block.properties = properties;
+        } catch (err) {
+            console.error(err);
+        }
+
+        // Add path to recipe preview
+        const recipePreviewPath = path.join(blockPath, `RecipePreview.dds`)
+        block.recipePreviewPath = recipePreviewPath;
+
+        // Add texture paths
+        try {
+            const texturesFolderPath = path.join(blockPath, `Textures`);
+            const textureFilesPaths = fs.readdirSync(texturesFolderPath)
+                .map(fileName => {
+                    return path.join(texturesFolderPath, fileName);
+                });
+            block.textureFilesPaths = textureFilesPaths;
+        } catch (err) {
+            console.error(err);
+        }
+
+        blocks.defaultBlocksFolder.push(block);
+    }
+
+    return blocks;
 }

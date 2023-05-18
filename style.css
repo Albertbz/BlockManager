@@ -40,14 +40,14 @@ body {
 	padding-top: 1%;
 }
 
-.box-vertical {
+.box-horizontal {
 	display: flex;
 	flex-flow: row;
 	justify-content: space-around;
 	width: 100%;
 }
 
-.box-vertical .content {
+.box-horizontal .content {
 	flex: 0 1 auto;
 }
 
@@ -115,6 +115,14 @@ input[type=range] {
 	margin-bottom: 0.75rem;
 }
 
+.me-2 {
+	margin-right: 0.75rem;
+}
+
+.ms-2 {
+	margin-left: 0.75rem;
+}
+
 .btns {
 	display: flex;
 	justify-content: space-between;
@@ -175,6 +183,45 @@ select {
 	display: none !important;
 }
 
+/**
+ * Manage Blocks
+ */
+
+.block {
+	background-color: rgb(237, 237, 237);
+}
+
+.block:nth-child(odd) {
+	background-color: rgb(225, 225, 225);
+	border-radius: 5px;
+}
+
+.blocks {
+	width: 60%;
+}
+
+.dropdown-arrow {
+	width: 20px;
+	height: 20px;
+	margin-top: 7px;
+	margin-bottom: 7px;
+}
+
+.align-center {
+	align-self: center;
+}
+
+.justify-between {
+	justify-content: space-between;
+}
+
+.justify-left {
+	justify-content: left;
+}
+
+.justify-center {
+	justify-content: center;
+}
 
 /**
  * Textures
