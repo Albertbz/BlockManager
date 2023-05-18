@@ -5,10 +5,9 @@ const env = require('windows-env');
 const fs = require('fs');
 const { getGamePath } = require('steam-game-path');
 
-let win;
 function createWindow() {
     // Make initial window.
-    win = new BrowserWindow({
+    const win = new BrowserWindow({
         width: 0, // Will be changed in a bit.
         height: 0, // Will be changed in a bit.
         webPreferences: {
@@ -32,19 +31,6 @@ function createWindow() {
 
     // Load the main HTML file onto the window.
     win.loadFile('manageBlocks.html');
-
-    
-
-    ipcMain.handle('selectFolder', async () => {
-        const { canceled, filePaths } = await dialog.showOpenDialog(win, {
-            properties: ['openDirectory']
-        })
-        if (canceled) {
-            return;
-        } else {
-            return filePaths[0];
-        }
-    });
 }
 
 // As soon as the Electron app is ready, create the window.
@@ -81,6 +67,7 @@ ipcMain.handle('generationCompletePopup', generationCompletePopup);
 ipcMain.handle('openGenerationLocation', openGenerationLocation);
 ipcMain.handle('generateNewBlock', generateNewBlock);
 ipcMain.handle('getAllBlocks', getAllBlocks);
+ipcMain.handle('openGenerator', openGenerator);
 
 
 /*
@@ -124,7 +111,7 @@ function generateCustomBlock(event, location, propertiesFileContent, recipePictu
     }
 
     // Make properties file
-    fs.appendFile(`${location}\\Properties.json`, JSON.stringify(propertiesFileContent), function(err) {
+    fs.writeFile(`${location}\\Properties.json`, JSON.stringify(propertiesFileContent), function(err) {
         if (err) console.error(err);
         console.log('Successfully made properties file')
     })
@@ -214,10 +201,10 @@ function getAllModFolders() {
 }
 
 let generationLocation;
-let childWin;
 function generationCompletePopup(event, location) {
+    const parentWindow = BrowserWindow.fromId(event.sender.id);
     generationLocation = location;
-    childWin = new BrowserWindow({
+    const childWin = new BrowserWindow({
         width: 300,
         height: 200,
         center: true,
@@ -225,14 +212,14 @@ function generationCompletePopup(event, location) {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
         },
-        parent: win,
+        parent: parentWindow,
         modal: true
     });
 
     childWin.loadFile('generationPopup.html');
 
-    const winPosition = win.getPosition();
-    const winSize = win.getSize();
+    const winPosition = parentWindow.getPosition();
+    const winSize = parentWindow.getSize();
     childWin.setPosition(winPosition[0] + Math.round(winSize[0]/2) - 150, winPosition[1] + Math.round(winSize[1]/2) - 100);
 }
 
@@ -240,13 +227,11 @@ function openGenerationLocation() {
     shell.showItemInFolder(generationLocation);
 }
 
-function generateNewBlock() {
-    refreshMainWindow();
-    childWin.destroy();
-}
-
-function refreshMainWindow() {
-    win.reload();
+function generateNewBlock(event) {
+    const childWindow = BrowserWindow.fromId(event.sender.id);
+    const parentWindow = childWindow.getParentWindow();
+    parentWindow.reload();
+    childWindow.destroy();
 }
 
 function getAllBlocks() {
@@ -300,4 +285,50 @@ function getAllBlocks() {
     }
 
     return blocks;
+}
+
+let generatorWindow;
+function openGenerator() {
+    if (generatorWindow == undefined || generatorWindow.isDestroyed()) {
+         // Make generator window.
+         generatorWindow = new BrowserWindow({
+            width: 0, // Will be changed in a bit.
+            height: 0, // Will be changed in a bit.
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+            },
+            autoHideMenuBar: true, // Menu bar is ugly, so hide it.
+        });
+    
+        // Get window bounds to figure out what display the
+        // window was spawned in.
+        const winBounds = generatorWindow.getBounds();
+        const display = screen.getDisplayMatching(winBounds);
+    
+        // Set window size to be 50% of the width of the
+        // display and 60% of the height, and then center
+        // it.
+        const newHeight = Math.round(display.bounds.height * 0.7);
+        const newWidth = Math.round(newHeight * 1.5)
+        generatorWindow.setSize(newWidth, newHeight);
+        generatorWindow.center();
+    
+        // Load the main HTML file onto the window.
+        generatorWindow.loadFile('generator.html');
+    
+        ipcMain.removeHandler('selectFolder');
+        ipcMain.handle('selectFolder', async () => {
+            const { canceled, filePaths } = await dialog.showOpenDialog(generatorWindow, {
+                properties: ['openDirectory']
+            })
+            if (canceled) {
+                return;
+            } else {
+                return filePaths[0];
+            }
+        });
+        
+    } else {
+        generatorWindow.focus();
+    }
 }

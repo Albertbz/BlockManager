@@ -123,6 +123,18 @@ input[type=range] {
 	margin-left: 0.75rem;
 }
 
+.mt-2 {
+	margin-top: 0.75rem;
+}
+
+.mx-2 {
+	margin: 0.75rem !important; 
+}
+
+.px-2 {
+	padding: 0.75rem !important
+}
+
 .btns {
 	display: flex;
 	justify-content: space-between;
@@ -198,6 +210,12 @@ select {
 
 .blocks {
 	width: 60%;
+	user-select: none;
+}
+
+.block p {
+	margin-bottom: 0;
+	margin-top: 0;
 }
 
 .dropdown-arrow {
@@ -205,10 +223,19 @@ select {
 	height: 20px;
 	margin-top: 7px;
 	margin-bottom: 7px;
+	transition: transform 0.2s;
+}
+
+.toggled .dropdown-arrow {
+	transform: rotate(90deg);
 }
 
 .align-center {
 	align-self: center;
+}
+
+.align-end {
+	align-self: end;
 }
 
 .justify-between {
@@ -221,6 +248,10 @@ select {
 
 .justify-center {
 	justify-content: center;
+}
+
+.justify-evently {
+	justify-content: space-evenly;
 }
 
 /**
