@@ -6,13 +6,15 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
     <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
     <link rel="stylesheet" href="./style.css">
+    <script src="./glmatrix/gl-matrix-min.js"></script>
+    <script src="./blockPreview.js" type="module"></script>
     <title>Block Manager for cyubeVR</title>
 </head>
 
 <body>
     <div class="container box">
         <h1 class="text-center header">Manage Blocks</h1>
-
+        <canvas class="header" id="glcanvas" width="640" height="480"></canvas>
         <div class="content box">
             <div class="header mb-2 text-center">
                 Insert sorting stuff here

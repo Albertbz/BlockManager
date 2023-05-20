@@ -104,7 +104,17 @@ function makePropertiesDiv(block) {
     categoryElem.innerText = 'Category: ' + getCategory(block.properties.CategoryName);
     propertiesDiv.appendChild(categoryElem);
 
+    const dropsElem = document.createElement('p');
+    dropsElem.innerText = 'Drops: ' + getDrop(block.properties.UniqueIDToDrop);
+    propertiesDiv.appendChild(dropsElem);
 
+    const movableElem = document.createElement('p');
+    movableElem.innerText = 'Movable: ' + getMovable(block.properties.AllowMove);
+    propertiesDiv.appendChild(movableElem);
+
+    const crystalAssistElem = document.createElement('p');
+    crystalAssistElem.innerText = 'Crystal assist: ' + getCrystalAssist(block.properties.AllowCrystalAssistedBlockPlacement);
+    propertiesDiv.appendChild(crystalAssistElem);
 
     return propertiesDiv;
 }
@@ -158,6 +168,39 @@ function getCategory(categoryName) {
         return 'None';
     } else {
         return categoryName;
+    }
+}
+
+function getDrop(uniqueIDToDrop) {
+    if (uniqueIDToDrop == undefined) return 'Itself';
+
+    switch (uniqueIDToDrop) {
+        case '-2':
+        case -2:
+            return 'Itself';
+        case '-1':
+        case -1:
+            return 'Nothing';
+        default:
+            return uniqueIDToDrop;
+    }
+}
+
+function getMovable(allowMove) {
+    return booleanToYesNo(allowMove);
+}
+
+function getCrystalAssist(allowCrystalAssistedBlockPlacement) {
+    return booleanToYesNo(allowCrystalAssistedBlockPlacement);
+}
+
+function booleanToYesNo(boolean) {
+    if (boolean == undefined) return 'Yes';
+
+    if (boolean) {
+        return 'Yes';
+    } else {
+        return 'No';
     }
 }
 
