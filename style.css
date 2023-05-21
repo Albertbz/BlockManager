@@ -226,6 +226,11 @@ select {
 	transition: transform 0.2s;
 }
 
+.block-preview {
+	height: 135px;
+	width: 135px;
+}
+
 .toggled .dropdown-arrow {
 	transform: rotate(90deg);
 }

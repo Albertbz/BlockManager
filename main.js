@@ -272,18 +272,21 @@ function getAllBlocks() {
         // Add texture paths
         try {
             const texturesFolderPath = path.join(blockPath, `Textures`);
-            const textureFilesPaths = fs.readdirSync(texturesFolderPath)
-                .map(fileName => {
-                    return path.join(texturesFolderPath, fileName);
+            block.textureFilesPaths = {};
+            fs.readdirSync(texturesFolderPath)
+                .filter(fileName => !fileName.includes('_'))
+                .forEach(fileName => {
+                    const name = fileName.replace('.dds', '');
+                    const src = path.join(texturesFolderPath, fileName);
+                    block.textureFilesPaths[name] = src;
                 });
-            block.textureFilesPaths = textureFilesPaths;
         } catch (err) {
             console.error(err);
         }
 
         blocks.defaultBlocksFolder.push(block);
     }
-
+    
     return blocks;
 }
 

@@ -2,13 +2,13 @@ import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
 
 
-main();
+//main();
 
 let cubeRotation = 0.0;
 let deltaTime = 0;
 
-function main() {
-    const canvas = document.querySelector("#glcanvas");
+async function createCanvas(canvas, texturePaths) {
+    //const canvas = document.querySelector("#glcanvas");
     // Initialize the GL context
     const gl = canvas.getContext("webgl");
 
@@ -21,7 +21,7 @@ function main() {
     }
 
     // Set clear color to black, fully opaque
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
     // Clear the color buffer with specified clear color
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -46,7 +46,7 @@ function main() {
 
             highp vec3 ambientLight = vec3(0.4, 0.4, 0.4);
             highp vec3 directionalLightColor = vec3(1, 1, 1);
-            highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+            highp vec3 directionalVector = normalize(vec3(0.3, 0.0, 0.85));
 
             highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
 
@@ -97,7 +97,7 @@ function main() {
     const buffers = initBuffers(gl);
 
     // Load texture
-    const texture = loadTexture(gl, "./testing/images/hmm.png");
+    const texture = await loadTexture(gl, "C:\\Users\\alber\\OneDrive\\Dokumenter\\Hobbies\\cyubeVR\\BlockManager\\testing\\images\\all.dds");
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -111,7 +111,7 @@ function main() {
         then = now;
 
         drawScene(gl, programInfo, buffers, texture, cubeRotation);
-        cubeRotation += deltaTime;
+        cubeRotation += deltaTime * 0.05;
 
         requestAnimationFrame(render);
     }
@@ -179,66 +179,70 @@ function loadShader(gl, type, source) {
 // Initialize a texture and load an image.
 // When the image finished loading copy it into the texture.
 //
-function loadTexture(gl, url) {
+async function loadTexture(gl, url) {
     const texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-
-    // Because images have to be downloaded over the internet
-    // they might take a moment until they are ready.
-    // Until then put a single pixel in the texture so we can
-    // use it immediately. When the image has finished downloading
-    // we'll update the texture with the contents of the image.
-    const level = 0;
-    const internalFormat = gl.RGBA;
-    const width = 1;
-    const height = 1;
-    const border = 0;
-    const srcFormat = gl.RGBA;
-    const srcType = gl.UNSIGNED_BYTE;
-    const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
-    gl.texImage2D(
-        gl.TEXTURE_2D,
-        level,
-        internalFormat,
-        width,
-        height,
-        border,
-        srcFormat,
-        srcType,
-        pixel
-    );
-
-    const image = new Image();
-    image.onload = () => {
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            level,
-            internalFormat,
-            srcFormat,
-            srcType,
-            image
-        );
-
-        // WebGL1 has different requirements for power of 2 images
-        // vs. non power of 2 images so check if the image is a
-        // power of 2 in both dimensions.
-        if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
-            // Yes, it's a power of 2. Generate mips.
-            gl.generateMipmap(gl.TEXTURE_2D);
-        } else {
-            // No, it's not a power of 2. Turn off mips and set
-            // wrapping to clamp to edge
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.bindTexture(gl.TEXTURE_2D, texture); // create texture object on GPU
+    const ext = gl.getExtension("WEBGL_compressed_texture_s3tc"); // will be null if not supported
+    if (ext) {
+        // the file is already in the correct compressed format
+        const dataArrayBuffer = await fetch(url)
+            .then((response) => response.arrayBuffer());
+        for (let level = 0; level <= 11; level++) {
+            const width = 2048 / 2 ** level;
+            const height = 2048 / 2 ** level;
+            const levelDataArrayBuffer = extractMipLevel(dataArrayBuffer, level, width, height);
+            gl.compressedTexImage2D(
+                gl.TEXTURE_2D,
+                level, // set the base image level
+                ext.COMPRESSED_RGBA_S3TC_DXT5_EXT, // the compressed format we are using
+                width,
+                height, // width, height of the image
+                0, // border, always 0
+                new DataView(levelDataArrayBuffer)
+            );
         }
-    };
-    image.src = url;
 
-    return texture;
+        return texture;
+    }
 }
 
-function isPowerOf2(value) {
-    return (value & (value - 1)) === 0;
+function extractMipLevel(dataArrayBuffer, level, width, height) {
+    // Calculate the size of the mip level data
+    const blockSize = 16; // 4x4 block size for DXT5 compression
+    const numBlocks = Math.ceil(width / 4) * Math.ceil(height / 4);
+    const mipSize = numBlocks * blockSize;
+
+    // Create a new ArrayBuffer for the mip level data
+    const mipArrayBuffer = new ArrayBuffer(mipSize);
+
+    // Copy the relevant portion of the original dataArrayBuffer into the mipArrayBuffer
+    const dataViewSrc = new DataView(dataArrayBuffer);
+    const dataViewDest = new DataView(mipArrayBuffer);
+
+    let srcOffset = 128;  // Initial offset in the source dataArrayBuffer
+    let destOffset = 0; // Initial offset in the destination mipArrayBuffer
+
+    // Determine the offset in the source dataArrayBuffer for the desired mip level
+    for (let i = 0; i < level; i++) {
+        const mipWidth = 2048 / 2 ** i;
+        const mipHeight = 2048 / 2 ** i;
+        const mipBlocks = Math.ceil(mipWidth / 4) * Math.ceil(mipHeight / 4);
+        srcOffset += mipBlocks * blockSize;
+    }
+
+    // Copy the data block by block
+    for (let j = 0; j < numBlocks; j++) {
+        // Copy 16 bytes (128 bits) from the source to the destination
+        for (let k = 0; k < blockSize; k++) {
+            dataViewDest.setUint8(destOffset + k, dataViewSrc.getUint8(srcOffset + k));
+        }
+
+        srcOffset += blockSize;  // Move to the next block in the source
+        destOffset += blockSize; // Move to the next block in the destination
+    }
+
+    // Return the ArrayBuffer containing the mip level data
+    return mipArrayBuffer;
 }
+
+export { createCanvas }

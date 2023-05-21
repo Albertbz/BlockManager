@@ -1,5 +1,5 @@
 function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
-    gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
+    gl.clearColor(0.0, 0.0, 0.0, 0.0); // Clear to black, fully opaque
     gl.clearDepth(1.0); // Clear everything
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
@@ -34,7 +34,7 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
     glMatrix.mat4.translate(
         modelViewMatrix, // destination matrix
         modelViewMatrix, // matrix to translate
-        [-0.0, 0.0, -6.0]
+        [-0.0, 0.0, -4.5]
     ); // amount to translate
 
     glMatrix.mat4.rotate(

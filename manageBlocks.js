@@ -1,3 +1,5 @@
+import { createCanvas } from "./blockPreview.js";
+
 populateBlocksDiv();
 
 async function populateBlocksDiv() {
@@ -121,6 +123,49 @@ function makePropertiesDiv(block) {
 
 function makePreviewDiv(block) {
     const previewDiv = document.createElement('div');
+    previewDiv.classList.add('header', 'block-preview');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 135;
+    canvas.height = 135;
+
+    // Make an array with 6 paths to textures
+    let texturePaths = [];
+    switch (Object.keys(block.textureFilesPaths).length) {
+        case 1:
+            for (let i = 0; i < 6; i++) {
+                texturePaths[i] = block.textureFilesPaths.all;
+            }
+            break;
+        case 2:
+            texturePaths[0] = block.textureFilesPaths.sides;
+            texturePaths[1] = block.textureFilesPaths.sides;
+            texturePaths[2] = block.textureFilesPaths.sides;
+            texturePaths[3] = block.textureFilesPaths.sides;
+            texturePaths[4] = block.textureFilesPaths.updown;
+            texturePaths[5] = block.textureFilesPaths.updown;
+            break;
+        case 3:
+            texturePaths[0] = block.textureFilesPaths.sides;
+            texturePaths[1] = block.textureFilesPaths.sides;
+            texturePaths[2] = block.textureFilesPaths.sides;
+            texturePaths[3] = block.textureFilesPaths.sides;
+            texturePaths[4] = block.textureFilesPaths.up;
+            texturePaths[5] = block.textureFilesPaths.down;
+            break;
+        case 6:
+            texturePaths[0] = block.textureFilesPaths.left;
+            texturePaths[1] = block.textureFilesPaths.right;
+            texturePaths[2] = block.textureFilesPaths.front;
+            texturePaths[3] = block.textureFilesPaths.back;
+            texturePaths[4] = block.textureFilesPaths.up;
+            texturePaths[5] = block.textureFilesPaths.down;
+            break;
+    }
+
+    createCanvas(canvas, block.textureFilesPaths);
+
+    previewDiv.appendChild(canvas);
 
     return previewDiv;
 }
