@@ -83,7 +83,7 @@ function makeContentDiv(block) {
     contentDiv.classList.add('header', 'box-horizontal', 'd-none', 'justify-between', 'mb-2');
 
     const propertiesDiv = makePropertiesDiv(block);
-    const previewDiv = makePreviewDiv(block);
+    const previewDiv = makePreviewDiv();
     const buttonDiv = makeButtonDiv(block);
 
     contentDiv.appendChild(propertiesDiv);
@@ -98,37 +98,37 @@ function makePropertiesDiv(block) {
     propertiesDiv.classList.add('box', 'justify-center', 'ms-2');
 
     const creatorElem = document.createElement('p');
-    creatorElem.innerText = 'Creator: ' + block.properties.CreatorName;
+    creatorElem.innerHTML = '<b>Creator:</b> ' + block.properties.CreatorName;
     propertiesDiv.appendChild(creatorElem);
 
     const yieldElem = document.createElement('p');
-    yieldElem.innerText = 'Yield: ' + block.properties.Yield;
+    yieldElem.innerHTML = '<b>Yield:</b> ' + block.properties.Yield;
     propertiesDiv.appendChild(yieldElem);
 
     const brokenByElem = document.createElement('p');
-    brokenByElem.innerText = 'Broken by: ' + getBrokenBy(block.properties.SimilarTo);
+    brokenByElem.innerHTML = '<b>Broken by:</b> ' + getBrokenBy(block.properties.SimilarTo);
     propertiesDiv.appendChild(brokenByElem);
 
     const categoryElem = document.createElement('p');
-    categoryElem.innerText = 'Category: ' + getCategory(block.properties.CategoryName);
+    categoryElem.innerHTML = '<b>Category:</b> ' + getCategory(block.properties.CategoryName);
     propertiesDiv.appendChild(categoryElem);
 
     const dropsElem = document.createElement('p');
-    dropsElem.innerText = 'Drops: ' + getDrop(block.properties.UniqueIDToDrop);
+    dropsElem.innerHTML = '<b>Drops:</b> ' + getDrop(block.properties.UniqueIDToDrop);
     propertiesDiv.appendChild(dropsElem);
 
     const movableElem = document.createElement('p');
-    movableElem.innerText = 'Movable: ' + getMovable(block.properties.AllowMove);
+    movableElem.innerHTML = '<b>Movable:</b> ' + getMovable(block.properties.AllowMove);
     propertiesDiv.appendChild(movableElem);
 
     const crystalAssistElem = document.createElement('p');
-    crystalAssistElem.innerText = 'Crystal assist: ' + getCrystalAssist(block.properties.AllowCrystalAssistedBlockPlacement);
+    crystalAssistElem.innerHTML = '<b>Crystal assist:</b> ' + getCrystalAssist(block.properties.AllowCrystalAssistedBlockPlacement);
     propertiesDiv.appendChild(crystalAssistElem);
 
     return propertiesDiv;
 }
 
-function makePreviewDiv(block) {
+function makePreviewDiv() {
     const previewDiv = document.createElement('div');
     previewDiv.classList.add('header', 'block-preview');
 
@@ -194,6 +194,10 @@ function makeButtonDiv(block) {
     deleteButton.type = 'button';
     deleteButton.innerText = 'Delete';
     deleteButton.classList.add('btn');
+
+    deleteButton.addEventListener('click', (e) => {
+        window.call.displayDeleteDialog(block);
+    });
 
     buttonDiv.appendChild(deleteButton);
 

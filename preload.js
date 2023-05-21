@@ -16,5 +16,6 @@ contextBridge.exposeInMainWorld('call', {
     openGenerationLocation: () => ipcRenderer.invoke('openGenerationLocation'),
     generateNewBlock: () => ipcRenderer.invoke('generateNewBlock'),
     getAllBlocks: () => ipcRenderer.invoke('getAllBlocks'),
-    openGenerator: () => ipcRenderer.invoke('openGenerator')
+    openGenerator: () => ipcRenderer.invoke('openGenerator'),
+    displayDeleteDialog: (block) => ipcRenderer.invoke('displayDeleteDialog', block)
 })
