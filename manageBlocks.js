@@ -140,30 +140,30 @@ function makePreviewDiv(block) {
         case 2:
             texturePaths[0] = block.textureFilesPaths.sides;
             texturePaths[1] = block.textureFilesPaths.sides;
-            texturePaths[2] = block.textureFilesPaths.sides;
-            texturePaths[3] = block.textureFilesPaths.sides;
-            texturePaths[4] = block.textureFilesPaths.updown;
-            texturePaths[5] = block.textureFilesPaths.updown;
+            texturePaths[2] = block.textureFilesPaths.updown;
+            texturePaths[3] = block.textureFilesPaths.updown;
+            texturePaths[4] = block.textureFilesPaths.sides;
+            texturePaths[5] = block.textureFilesPaths.sides;
             break;
         case 3:
             texturePaths[0] = block.textureFilesPaths.sides;
             texturePaths[1] = block.textureFilesPaths.sides;
-            texturePaths[2] = block.textureFilesPaths.sides;
-            texturePaths[3] = block.textureFilesPaths.sides;
-            texturePaths[4] = block.textureFilesPaths.up;
-            texturePaths[5] = block.textureFilesPaths.down;
+            texturePaths[2] = block.textureFilesPaths.up;
+            texturePaths[3] = block.textureFilesPaths.down;
+            texturePaths[4] = block.textureFilesPaths.sides;
+            texturePaths[5] = block.textureFilesPaths.sides;
             break;
         case 6:
-            texturePaths[0] = block.textureFilesPaths.left;
-            texturePaths[1] = block.textureFilesPaths.right;
-            texturePaths[2] = block.textureFilesPaths.front;
-            texturePaths[3] = block.textureFilesPaths.back;
-            texturePaths[4] = block.textureFilesPaths.up;
-            texturePaths[5] = block.textureFilesPaths.down;
+            texturePaths[0] = block.textureFilesPaths.front;
+            texturePaths[1] = block.textureFilesPaths.back;
+            texturePaths[2] = block.textureFilesPaths.up;
+            texturePaths[3] = block.textureFilesPaths.down;
+            texturePaths[4] = block.textureFilesPaths.right;
+            texturePaths[5] = block.textureFilesPaths.left;
             break;
     }
 
-    createCanvas(canvas, block.textureFilesPaths);
+    createCanvas(canvas, texturePaths);
 
     previewDiv.appendChild(canvas);
 

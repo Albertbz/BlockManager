@@ -202,6 +202,7 @@ function getAllModFolders() {
 
 let generationLocation;
 function generationCompletePopup(event, location) {
+    console.log(event.sender.id);
     const parentWindow = BrowserWindow.fromId(event.sender.id);
     generationLocation = location;
     const childWin = new BrowserWindow({

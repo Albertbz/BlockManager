@@ -1,4 +1,4 @@
-function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
+function drawScene(gl, programInfo, buffers, textures, cubeRotation) {
     gl.clearColor(0.0, 0.0, 0.0, 0.0); // Clear to black, fully opaque
     gl.clearDepth(1.0); // Clear everything
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -10,12 +10,12 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
 
     // Create a perspective matrix, a special matrix that is
     // used to simulate the distortion of perspective in a camera.
-    // Our field of view is 45 degrees, with a width/height
+    // Our field of view is 40 degrees, with a width/height
     // ratio that matches the display size of the canvas
     // and we only want to see objects between 0.1 units
     // and 100 units away from the camera.
 
-    const fieldOfView = (45 * Math.PI) / 180; // in radians
+    const fieldOfView = 45 * (Math.PI / 180); // in radians
     const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     const zNear = 0.1;
     const zFar = 100.0;
@@ -29,32 +29,12 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
     // the center of the scene.
     const modelViewMatrix = glMatrix.mat4.create();
 
-    // Now move the drawing position a bit to where we want to
-    // start drawing the square.
-    glMatrix.mat4.translate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to translate
-        [-0.0, 0.0, -4.5]
-    ); // amount to translate
+    const eye = glMatrix.vec3.fromValues(3.7 * Math.sin(cubeRotation), 2.3, 3.7 * Math.cos(cubeRotation))
+    // const eye = glMatrix.vec3.fromValues(0, -4, 4)
 
-    glMatrix.mat4.rotate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        cubeRotation, // amount to rotate in radians
-        [0, 0, 1]
-    ); // axis to rotate around (Z)
-    glMatrix.mat4.rotate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        cubeRotation * 0.7, // amount to rotate in radians
-        [0, 1, 0]
-    ); // axis to rotate around (Y)
-    glMatrix.mat4.rotate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        cubeRotation * 0.3, // amount to rotate in radians
-        [1, 0, 0]
-    ); // axis to rotate around (X)
+    glMatrix.mat4.lookAt(modelViewMatrix, eye, glMatrix.vec3.fromValues(0, 0, 0), glMatrix.vec3.fromValues(0, 1, 0));
+
+
 
     const normalMatrix = glMatrix.mat4.create();
     glMatrix.mat4.invert(normalMatrix, modelViewMatrix);
@@ -91,22 +71,23 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
         normalMatrix
     );
 
-    // Tell WebGL we want to affect texture unit 0
-    gl.activeTexture(gl.TEXTURE0);
+    for (let i = 0; i < 6; i++) {
+        // Tell WebGL we want to affect texture unit 0
+        gl.activeTexture(gl.TEXTURE0 + i);
 
-    // Bind the texture to texture unit 0
-    gl.bindTexture(gl.TEXTURE_2D, texture);
+        // Bind the texture to texture unit 0
+        gl.bindTexture(gl.TEXTURE_2D, textures[i]);
 
-    // Tell the shader we bound the texture to texture unit 0
-    gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+        // Tell the shader we bound the texture to texture unit 0
+        gl.uniform1i(programInfo.uniformLocations.uSampler, i);
 
-    {
-        const vertexCount = 36;
-        const type = gl.UNSIGNED_SHORT;
-        const offset = 0;
-        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+        {
+            const vertexCount = 6;
+            const type = gl.UNSIGNED_SHORT;
+            const offset = i * 12;
+            gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+        }
     }
-
 }
 
 // Tell WebGL how to pull out the positions from the position
@@ -168,7 +149,5 @@ function setNormalAttribute(gl, buffers, programInfo) {
     );
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
 }
-
-
 
 export { drawScene };

@@ -1,14 +1,10 @@
 import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
 
-
-//main();
-
-let cubeRotation = 0.0;
-let deltaTime = 0;
-
 async function createCanvas(canvas, texturePaths) {
-    //const canvas = document.querySelector("#glcanvas");
+    let cubeRotation = 0.0;
+    let deltaTime = 0;
+
     // Initialize the GL context
     const gl = canvas.getContext("webgl");
 
@@ -96,8 +92,12 @@ async function createCanvas(canvas, texturePaths) {
     // objects we'll be drawing.
     const buffers = initBuffers(gl);
 
-    // Load texture
-    const texture = await loadTexture(gl, "C:\\Users\\alber\\OneDrive\\Dokumenter\\Hobbies\\cyubeVR\\BlockManager\\testing\\images\\all.dds");
+    // Load textures
+    const textures = [];
+    for (let i = 0; i < texturePaths.length; i++) {
+        textures[i] = await loadTexture(gl, texturePaths[i]);
+    }
+
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -110,8 +110,8 @@ async function createCanvas(canvas, texturePaths) {
         deltaTime = now - then;
         then = now;
 
-        drawScene(gl, programInfo, buffers, texture, cubeRotation);
-        cubeRotation += deltaTime * 0.05;
+        drawScene(gl, programInfo, buffers, textures, cubeRotation);
+        cubeRotation += deltaTime * 0.5;
 
         requestAnimationFrame(render);
     }
