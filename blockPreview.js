@@ -1,7 +1,7 @@
 import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
 
-async function createCanvas(canvas, texturePaths) {
+async function loadCanvas(canvas, texturePaths) {
     let cubeRotation = 0.0;
     let deltaTime = 0;
 
@@ -245,4 +245,4 @@ function extractMipLevel(dataArrayBuffer, level, width, height) {
     return mipArrayBuffer;
 }
 
-export { createCanvas }
+export { loadCanvas }

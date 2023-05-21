@@ -1,4 +1,4 @@
-import { createCanvas } from "./blockPreview.js";
+import { loadCanvas } from "./blockPreview.js";
 
 populateBlocksDiv();
 
@@ -32,9 +32,16 @@ function makeBlockDiv(block) {
     const dropDownDiv = makeDropDownDiv(block);
     const contentDiv = makeContentDiv(block);
 
+    let canvasLoaded = false;
     dropDownDiv.addEventListener('click', (e) => {
         dropDownDiv.classList.toggle('toggled');
         contentDiv.classList.toggle('d-none');
+
+        if (!canvasLoaded) {
+            const canvas = contentDiv.querySelector('canvas');
+            loadCanvas(canvas, getTexturePaths(block));
+            canvasLoaded = true;
+        }
     })
 
     div.appendChild(dropDownDiv);
@@ -129,6 +136,12 @@ function makePreviewDiv(block) {
     canvas.width = 135;
     canvas.height = 135;
 
+    previewDiv.appendChild(canvas);
+
+    return previewDiv;
+}
+
+function getTexturePaths(block) {
     // Make an array with 6 paths to textures
     let texturePaths = [];
     switch (Object.keys(block.textureFilesPaths).length) {
@@ -163,11 +176,7 @@ function makePreviewDiv(block) {
             break;
     }
 
-    createCanvas(canvas, texturePaths);
-
-    previewDiv.appendChild(canvas);
-
-    return previewDiv;
+    return texturePaths;
 }
 
 function makeButtonDiv(block) {
@@ -251,7 +260,7 @@ function booleanToYesNo(boolean) {
 
 
 /**
- * Add eventlistener to Make new block
+ * Add eventlistener to make new block
  */
 document.getElementById('makeNewBlock').addEventListener('click', (e) => {
     window.call.openGenerator();
