@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, screen, dialog, shell } = require('electron');
 const path = require('path');
-const { createDDSImage } = require('./dds');
+const { createDDSImage, decompressDDSImage } = require('./dds');
 const env = require('windows-env');
 const fs = require('fs');
 const { getGamePath } = require('steam-game-path');
@@ -34,9 +34,49 @@ function createWindow() {
     mainWindow.loadFile('manageBlocks.html');
 }
 
+let loadingWin;
+async function spawnLoadingBlockWindow() {
+    loadingWin = new BrowserWindow({
+        width: 250,
+        height: 75,
+        center: true,
+        frame: false,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+        },
+        parent: mainWindow,
+        modal: true,
+        show: false
+    });
+
+    loadingWin.loadFile('loadingPopup.html');
+}
+
+let generatingWin;
+async function spawnGeneratingBlockWindow() {
+    generatingWin = new BrowserWindow({
+        width: 250,
+        height: 75,
+        center: true,
+        frame: false,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+        },
+        parent: mainWindow,
+        modal: true,
+        show: false
+    });
+
+    generatingWin.loadFile('generatingPopup.html');
+}
+
 // As soon as the Electron app is ready, create the window.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     createWindow();
+
+    await sleep(100);
+    spawnGeneratingBlockWindow();
+    spawnLoadingBlockWindow();
 
     // iOS specific check. Honestly makes no sense that
     // I have this here as this program doesn't support
@@ -72,6 +112,10 @@ ipcMain.handle('refreshMainWindow', () => mainWindow.reload());
 ipcMain.handle('loadGenerator', loadGenerator);
 ipcMain.handle('loadManageBlocks', loadManageBlocks);
 ipcMain.handle('selectFolder', selectFolder);
+ipcMain.handle('saveBlockInTemp', saveBlockInTemp);
+ipcMain.handle('clearTemp', clearTemp);
+ipcMain.handle('getTemp', getTemp);
+ipcMain.handle('getTempTextures', getTempTextures)
 
 
 /*
@@ -108,7 +152,10 @@ function getDefaultRecipeFileContent() {
     }
 }
 
-function generateCustomBlock(event, location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
+async function generateCustomBlock(event, location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
+    showPopup(generatingWin);
+    await sleep(100);
+    
     // Make folder for block
     if (!fs.existsSync(location)) {
         fs.mkdirSync(location);
@@ -165,6 +212,8 @@ function generateCustomBlock(event, location, propertiesFileContent, recipePictu
         outputPath = `${texturesPath}\\${name}_glow.dds`;
         createDDSImage(src, outputPath, 'BC1');
     }
+
+    generatingWin.hide();
 
     return true;
 }
@@ -326,5 +375,80 @@ async function selectFolder() {
     } else {
         return filePaths[0];
     }
-    ;
+}
+
+let temp = undefined;
+const tempPath = path.join(__dirname, 'temp');
+async function saveBlockInTemp(event, block) {
+    clearTemp();
+    showPopup(loadingWin);
+    await sleep(100);
+    decompressTexturesAndMoveToTemp(block);
+    decompressRecipePreviewAndMoveToTemp(block);
+    loadingWin.hide();
+    temp = block;
+    return true;
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function clearTemp() {
+    temp = undefined;
+    fs.readdirSync(tempPath).forEach(f => fs.rmSync(`${tempPath}\\${f}`, { recursive: true }));
+}
+
+function getTemp() {
+    return temp;
+}
+
+function decompressTexturesAndMoveToTemp(block) {
+    const texturesPath = path.join(block.path, 'Textures');
+    const compressedTexturesPaths = fs.readdirSync(texturesPath)
+        .map(fileName => [path.join(texturesPath, fileName), fileName]);
+
+    for (const [inputPath, fileName] of compressedTexturesPaths) {
+        const outputPath = path.join(tempPath, fileName.replace('dds', 'png'));
+
+        decompressDDSImage(inputPath, outputPath);
+    }
+}
+
+function decompressRecipePreviewAndMoveToTemp(block) {
+    const inputPath = block.recipePreviewPath;
+    const outputPath = path.join(tempPath, 'recipePreview.png');
+    decompressDDSImage(inputPath, outputPath);
+}
+
+function getTempTextures() {
+    let textures = {};
+    const allTextures = fs.readdirSync(tempPath)
+        .filter(fileName => !fileName.includes('recipe'));
+
+    textures.regular = allTextures
+        .filter(fileName => !fileName.includes('_'))
+        .map(fileName => path.join(tempPath, fileName));
+
+    textures.small = allTextures
+        .filter(fileName => fileName.includes('small'))
+        .map(fileName => path.join(tempPath, fileName));
+
+    textures.normal = allTextures
+        .filter(fileName => fileName.includes('normal'))
+        .map(fileName => path.join(tempPath, fileName));
+
+    textures.glow = allTextures
+        .filter(fileName => fileName.includes('glow'))
+        .map(fileName => path.join(tempPath, fileName));
+
+    return textures;
+}
+
+function showPopup(popupWin) {
+    const winPosition = mainWindow.getPosition();
+    const winSize = mainWindow.getSize();
+    popupWin.setPosition(winPosition[0] + Math.round(winSize[0] / 2) - Math.round(popupWin.getSize()[0] / 2), winPosition[1] + Math.round(winSize[1] / 2) - Math.round(popupWin.getSize()[1] / 2));
+
+    popupWin.show();
 }

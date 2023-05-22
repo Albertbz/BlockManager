@@ -111,6 +111,10 @@ input[type=range] {
 	margin-bottom: 0;
 }
 
+.mb-1 {
+	margin-bottom: 0.25rem;
+}
+
 .mb-2 {
 	margin-bottom: 0.75rem;
 }
@@ -140,13 +144,13 @@ input[type=range] {
 	justify-content: space-between;
 }
 
-.btns .left {
+.left {
 	display: flex;
 	flex: 1;
 	justify-content: left;
 }
 
-.btns .right {
+.right {
 	display: flex;
 	flex: 1;
 	justify-content: right;
@@ -261,6 +265,10 @@ select {
 
 .justify-left {
 	justify-content: left;
+}
+
+.justify-right {
+	justify-content: right;
 }
 
 .justify-center {

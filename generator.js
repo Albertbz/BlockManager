@@ -90,19 +90,33 @@ uniqueIDButton.addEventListener('click', function () {
 });
 
 
+
 /**
- * Texture choosing mechanism
- */
-document.querySelectorAll('div.texture-selector-parent').forEach((textureSelectorDiv) => {
-    let textureFilesInput = textureSelectorDiv.previousElementSibling;
-    let textureFiles = [];
+ * Texture choosing mechanism.
+*/
+const textureFiles = {
+    regular: [],
+    small: [],
+    normal: [],
+    glow: []
+};
 
-    updateValidity(textureSelectorDiv);
+loadTemp();
 
-    textureFilesInput.addEventListener('change', (e) => {
-        addTexturesToDiv(textureFiles, textureSelectorDiv);
-    })
-})
+function addEventListenersToTextureSelectors() {
+    document.querySelectorAll('div.texture-selector-parent').forEach((textureSelectorDiv, i) => {
+        let textureFilesInput = textureSelectorDiv.previousElementSibling;
+    
+        updateValidity(textureSelectorDiv);
+    
+        const type = Object.keys(textureFiles)[i];
+        addTexturesToDiv(textureFiles[type], textureSelectorDiv);
+    
+        textureFilesInput.addEventListener('change', (e) => {
+            addTexturesToDiv(textureFiles[type], textureSelectorDiv);
+        })
+    });
+}
 
 function removeTexturesInDiv(div) {
     const textureChildDivs = div.querySelectorAll('div.texture-selector-child');
@@ -114,7 +128,9 @@ function removeTexturesInDiv(div) {
 function addTexturesToDiv(fileArray, selectorDiv) {
     const input = selectorDiv.previousElementSibling;
     removeTexturesInDiv(selectorDiv);
-    fileArray.push(...input.files);
+
+    const newFiles = [...input.files].map(item => item.path);
+    fileArray.push(...newFiles);
 
     // Remove any overflowing textures
     if (fileArray.length > 6) {
@@ -137,7 +153,7 @@ function addTexturesToDiv(fileArray, selectorDiv) {
         label.appendChild(textureImg);
         label.appendChild(crossImg);
 
-        textureImg.src = fileArray[i].path;
+        textureImg.src = fileArray[i];
         textureImg.classList.add('texture-img');
         textureImg.addEventListener('click', (e) => {
             fileArray.splice(i, 1);
@@ -589,3 +605,96 @@ document.querySelectorAll('button.discard').forEach(button => {
         window.call.loadManageBlocks();
     });
 });
+
+/**
+ * Load block in temp if there is one.
+ */
+async function loadTemp() {
+    const tempBlock = await window.call.getTemp();
+    if (tempBlock != undefined) {
+        const formElem = document.forms['blockForm'];
+        
+        // Set all properties
+        formElem.elements['name'].value = tempBlock.properties.Name;
+        formElem.elements['creatorName'].value = tempBlock.properties.CreatorName;
+        formElem.elements['uniqueID'].value = tempBlock.properties.UniqueID;
+        formElem.elements['yieldSlider'].value = tempBlock.properties.Yield;
+        formElem.elements['yieldNumber'].value = tempBlock.properties.Yield;
+        formElem.elements['similarTo'].value = tempBlock.properties.SimilarTo;
+        
+        if (tempBlock.properties.CategoryName != undefined) {
+            formElem.elements['categoryName'].value = tempBlock.properties.CategoryName;
+        }
+        if (tempBlock.properties.UniqueIDToDrop != undefined) {
+            formElem.elements['uniqueIDToDrop'].value = tempBlock.properties.UniqueIDToDrop;
+            updateUniqueIDToDropDiv();
+        }
+        if (tempBlock.properties.AllowMove != undefined) {
+            formElem.elements['allowMove'].checked = tempBlock.properties.AllowMove;
+        }
+        if (tempBlock.properties.AllowCrystalAssistedBlockPlacement != undefined) {
+            formElem.elements['allowCrystalPlacement'].checked = tempBlock.properties.AllowCrystalAssistedBlockPlacement;
+        }
+    
+        // Set textures
+        const textures = await window.call.getTempTextures();
+        addFilesToTextureFiles(textures.regular, textureFiles.regular);
+        addFilesToTextureFiles(textures.small, textureFiles.small);
+        addFilesToTextureFiles(textures.normal, textureFiles.normal);
+        addFilesToTextureFiles(textures.glow, textureFiles.glow);
+        
+        // Set recipe
+        const recipePropertiesJSON = JSON.stringify({Recipe: tempBlock.properties.Recipe}, null, 4);
+        formElem.elements['recipeProperties'].value = recipePropertiesJSON.substring(2, recipePropertiesJSON.length-2).replace('    ', '');
+        document.getElementById('recipePictureImg').src = './temp/recipePreview.png';
+    };
+
+    addEventListenersToTextureSelectors();
+}
+
+function updateUniqueIDToDropDiv() {
+    const uniqueIDToDropDiv = document.getElementById('uniqueIDToDropDiv');
+    const value = uniqueIDToDropDiv.lastElementChild.value;
+
+    switch (value) {
+        case -2:
+        case '-2':
+            break;
+        case -1:
+        case '-1':
+            prevButton.classList.remove('btn-pressed');
+            prevButton = uniqueIDToDropDiv.firstElementChild.nextElementSibling
+            prevButton.classList.add('btn-pressed');
+            break;
+        default:
+            prevButton.classList.remove('btn-pressed');
+            prevButton = uniqueIDToDropDiv.lastElementChild.previousElementSibling
+            prevButton.classList.add('btn-pressed');
+            break;
+    }
+}
+
+function addFilesToTextureFiles(newFiles, existingFiles) {
+    switch (newFiles.length) {
+        case 1:
+            existingFiles.push(newFiles[0])
+            break;
+        case 2:
+            existingFiles.push(newFiles[0]);
+            existingFiles.push(newFiles[1]);
+            break;
+        case 3:
+            existingFiles.push(newFiles[1]);
+            existingFiles.push(newFiles[2]);
+            existingFiles.push(newFiles[0]);
+            break;
+        case 6:
+            existingFiles.push(newFiles[5]);
+            existingFiles.push(newFiles[1]);
+            existingFiles.push(newFiles[3]);
+            existingFiles.push(newFiles[4]);
+            existingFiles.push(newFiles[2]);
+            existingFiles.push(newFiles[0]);
+            break;
+    }
+}

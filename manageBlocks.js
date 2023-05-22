@@ -93,7 +93,7 @@ function makeContentDiv(block) {
 
 function makePropertiesDiv(block) {
     const propertiesDiv = document.createElement('div');
-    propertiesDiv.classList.add('box', 'justify-center', 'ms-2');
+    propertiesDiv.classList.add('box', 'ms-2', 'left');
 
     const creatorElem = document.createElement('p');
     creatorElem.innerHTML = '<b>Creator:</b> ' + block.properties.CreatorName;
@@ -128,7 +128,7 @@ function makePropertiesDiv(block) {
 
 function makePreviewDiv() {
     const previewDiv = document.createElement('div');
-    previewDiv.classList.add('header', 'block-preview');
+    previewDiv.classList.add('block-preview', 'right');
 
     const canvas = document.createElement('canvas');
     canvas.width = 135;
@@ -179,14 +179,23 @@ function getTexturePaths(block) {
 
 function makeButtonDiv(block) {
     const buttonDiv = document.createElement('div');
-    buttonDiv.classList.add('box', 'align-end', 'me-2');
+    buttonDiv.classList.add('align-end', 'me-2', 'right');
+
+    const buttonSpan = document.createElement('span');
+    buttonSpan.classList.add('box')
+    buttonDiv.appendChild(buttonSpan);
 
     const editButton = document.createElement('button');
     editButton.type = 'button';
     editButton.innerText = 'Edit';
-    editButton.classList.add('btn');
+    editButton.classList.add('btn', 'mb-1');
 
-    buttonDiv.appendChild(editButton);
+    editButton.addEventListener('click', async (e) => {
+        const success = await window.call.saveBlockInTemp(block);
+        if (success) window.call.loadGenerator();
+    });
+
+    buttonSpan.appendChild(editButton);
 
     const deleteButton = document.createElement('button');
     deleteButton.type = 'button';
@@ -194,11 +203,11 @@ function makeButtonDiv(block) {
     deleteButton.classList.add('btn');
 
     deleteButton.addEventListener('click', async (e) => {
-        const response = await window.call.displayDeleteDialog(block);
-        if (response) deleteButton.parentElement.parentElement.parentElement.remove();
+        const success = await window.call.displayDeleteDialog(block);
+        if (success) deleteButton.parentElement.parentElement.parentElement.remove();
     });
 
-    buttonDiv.appendChild(deleteButton);
+    buttonSpan.appendChild(deleteButton);
 
     return buttonDiv;
 }
@@ -266,5 +275,6 @@ function booleanToYesNo(boolean) {
  * Add eventlistener to make new block
  */
 document.getElementById('makeNewBlock').addEventListener('click', (e) => {
+    window.call.clearTemp();
     window.call.loadGenerator();
 });

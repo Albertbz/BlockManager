@@ -1,9 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('call', {
-    createDDSImage: function(inputPath, outputPath, format) {
-        ipcRenderer.invoke('createDDSImage', inputPath, outputPath, format);
-    },
     getGeneratedRecipeFileContent: async () => await ipcRenderer.invoke('getGeneratedRecipeFileContent'),
     getDefaultRecipeFileContent: async () => await ipcRenderer.invoke('getDefaultRecipeFileContent'),
     generateCustomBlock: (location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) =>
@@ -18,4 +15,8 @@ contextBridge.exposeInMainWorld('call', {
     refreshMainWindow: () => ipcRenderer.invoke('refreshMainWindow'),
     loadGenerator: () => ipcRenderer.invoke('loadGenerator'),
     loadManageBlocks: () => ipcRenderer.invoke('loadManageBlocks'),
+    saveBlockInTemp: (block) => ipcRenderer.invoke('saveBlockInTemp', block),
+    clearTemp: () => ipcRenderer.invoke('clearTemp'),
+    getTemp: () => ipcRenderer.invoke('getTemp'),
+    getTempTextures: () => ipcRenderer.invoke('getTempTextures')
 })

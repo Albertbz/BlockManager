@@ -4,6 +4,7 @@ document.getElementById('openInExplorer').addEventListener('click', () => {
 });
 
 document.getElementById('generateNewBlock').addEventListener('click', () => {
+    window.call.clearTemp();
     window.call.loadGenerator();
     window.close();
 })
