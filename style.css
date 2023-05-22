@@ -140,6 +140,18 @@ input[type=range] {
 	justify-content: space-between;
 }
 
+.btns .left {
+	display: flex;
+	flex: 1;
+	justify-content: left;
+}
+
+.btns .right {
+	display: flex;
+	flex: 1;
+	justify-content: right;
+}
+
 .btn {
 	border: 1px solid rgb(125, 125, 125);
 	border-radius: 4px;

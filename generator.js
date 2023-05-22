@@ -216,7 +216,7 @@ function hasInvalidInputs(button) {
         updateValidity(div);
     });
 
-    const currentStep = button.parentElement.previousElementSibling;
+    const currentStep = button.parentElement.parentElement.previousElementSibling;
     const invalidInputs = currentStep.querySelectorAll(':invalid');
 
     // Highlight all inputs that are invalid
@@ -363,7 +363,7 @@ document.getElementById('uploadRecipePictureInput').addEventListener('change', f
 /**
  * Handle form submit
  */
-document.getElementById('blockForm').addEventListener('submit', function (e) {
+document.getElementById('blockForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const formData = new FormData(e.target);
@@ -415,10 +415,12 @@ document.getElementById('blockForm').addEventListener('submit', function (e) {
 
     // Give data to main, have it make the block
     const location = `${saveLocation}\\${blockName}.${creatorName}`;
-    window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc, 
+    const response = await window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc, 
         regularTextures, smallTextures, normalTextures, glowTextures);
-
-    window.call.generationCompletePopup(location);
+    
+    if (response) {
+        window.call.generationCompletePopup(location);
+    }
 });
 
 function getTexturesSrcAndValue(textureInput) {
@@ -578,3 +580,12 @@ document.getElementById('saveBlockManuallyInput').addEventListener('click', asyn
 
     updateSaveButton(e);
 })
+
+/**
+ * Handle Discard block buttons
+ */
+document.querySelectorAll('button.discard').forEach(button => {
+    button.addEventListener('click', (e) => {
+        window.call.loadManageBlocks();
+    });
+});

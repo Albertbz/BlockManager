@@ -1,7 +1,7 @@
 const { exec } = require('child_process');
 const path = require('path');
 
-async function createDDSImage(inputPath, outputPath, format, resize = false, width = 0, height = 0) {
+function createDDSImage(inputPath, outputPath, format, resize = false, width = 0, height = 0) {
     const cliPath = path.join(__dirname, 'PVRTexToolCLI.exe');
     let command = `"${cliPath}" -i "${inputPath}" -o "${outputPath}" -m -f ${format} -ics lRGB`;
     if (resize) {
@@ -13,7 +13,7 @@ async function createDDSImage(inputPath, outputPath, format, resize = false, wid
                 console.log(error);
                 return;
             }
-            console.log(`stdout: ${stdout}`);
+            //console.log(`stdout: ${stdout}`);
         });
 }
 

@@ -66,10 +66,12 @@ ipcMain.handle('getModsFolderPath', getModsFolderPath);
 ipcMain.handle('getAllModFolders', getAllModFolders);
 ipcMain.handle('generationCompletePopup', generationCompletePopup);
 ipcMain.handle('openGenerationLocation', openGenerationLocation);
-ipcMain.handle('generateNewBlock', generateNewBlock);
 ipcMain.handle('getAllBlocks', getAllBlocks);
-ipcMain.handle('openGenerator', openGenerator);
 ipcMain.handle('displayDeleteDialog', displayDeleteDialog);
+ipcMain.handle('refreshMainWindow', () => mainWindow.reload());
+ipcMain.handle('loadGenerator', loadGenerator);
+ipcMain.handle('loadManageBlocks', loadManageBlocks);
+ipcMain.handle('selectFolder', selectFolder);
 
 
 /*
@@ -96,7 +98,7 @@ function getGeneratedRecipeFileContent() {
 }
 
 function getDefaultRecipeFileContent() {
-    const recipePath = path.join(__dirname, '\\premade\\Recipe.txt') ;
+    const recipePath = path.join(__dirname, '\\premade\\Recipe.txt');
 
     try {
         const data = fs.readFileSync(recipePath, 'utf-8');
@@ -113,9 +115,9 @@ function generateCustomBlock(event, location, propertiesFileContent, recipePictu
     }
 
     // Make properties file
-    fs.writeFile(`${location}\\Properties.json`, JSON.stringify(propertiesFileContent), function(err) {
+    fs.writeFile(`${location}\\Properties.json`, JSON.stringify(propertiesFileContent), function (err) {
         if (err) console.error(err);
-        console.log('Successfully made properties file')
+        //console.log('Successfully made properties file')
     })
 
     // Make recipe preview file
@@ -149,7 +151,7 @@ function generateCustomBlock(event, location, propertiesFileContent, recipePictu
             createDDSImage(src, outputPath, 'BC3');
         }
     }
-    
+
     // Create normal map textures
     for (i = 0; i < normalTextures.length; i++) {
         const [src, name] = normalTextures[i];
@@ -163,7 +165,7 @@ function generateCustomBlock(event, location, propertiesFileContent, recipePictu
         outputPath = `${texturesPath}\\${name}_glow.dds`;
         createDDSImage(src, outputPath, 'BC1');
     }
-    
+
     return true;
 }
 
@@ -182,7 +184,7 @@ function getAllModFolders() {
     const modFoldersNames = fs.readdirSync(modFoldersPath, { withFileTypes: true })
         .filter((item) => item.isDirectory())
         .map((item) => item.name);
-    
+
     for (let i = 0; i < modFoldersNames.length; i++) {
         const name = modFoldersNames[i];
         const modPath = path.join(modFoldersPath, `\\${name}`);
@@ -205,7 +207,7 @@ function getAllModFolders() {
 let generationLocation;
 async function generationCompletePopup(event, location) {
     generationLocation = location;
-    
+
     const popupWin = new BrowserWindow({
         width: 300,
         height: 200,
@@ -214,26 +216,19 @@ async function generationCompletePopup(event, location) {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
         },
-        parent: generatorWindow,
+        parent: mainWindow,
         modal: true
     });
 
     popupWin.loadFile('generationPopup.html');
 
-    const winPosition = generatorWindow.getPosition();
-    const winSize = generatorWindow.getSize();
-    popupWin.setPosition(winPosition[0] + Math.round(winSize[0]/2) - 150, winPosition[1] + Math.round(winSize[1]/2) - 100);
+    const winPosition = mainWindow.getPosition();
+    const winSize = mainWindow.getSize();
+    popupWin.setPosition(winPosition[0] + Math.round(winSize[0] / 2) - 150, winPosition[1] + Math.round(winSize[1] / 2) - 100);
 }
 
 function openGenerationLocation() {
     shell.showItemInFolder(generationLocation);
-}
-
-function generateNewBlock(event) {
-    const childWindow = BrowserWindow.fromId(event.sender.id);
-    const parentWindow = childWindow.getParentWindow();
-    parentWindow.reload();
-    childWindow.destroy();
 }
 
 function getAllBlocks() {
@@ -246,12 +241,12 @@ function getAllBlocks() {
      * Add all blocks in Blocks folder
      */
     const blocksFolderPath = path.join(modsFolderPath, 'Blocks');
-    
+
     // Get all folders of the blocks
     const blocksFolders = fs.readdirSync(blocksFolderPath, { withFileTypes: true })
         .filter((item) => item.isDirectory())
         .map((item) => item.name);
-    
+
     // For each folder, get information and save in blocks array
     for (let i = 0; i < blocksFolders.length; i++) {
         const blockPath = path.join(blocksFolderPath, blocksFolders[i]);
@@ -278,83 +273,58 @@ function getAllBlocks() {
         try {
             const texturesFolderPath = path.join(blockPath, `Textures`);
             block.textureFilesPaths = {};
-            fs.readdirSync(texturesFolderPath)
-                .filter(fileName => !fileName.includes('_'))
-                .forEach(fileName => {
-                    const name = fileName.replace('.dds', '');
-                    const src = path.join(texturesFolderPath, fileName);
-                    block.textureFilesPaths[name] = src;
-                });
+            const fileNames = fs.readdirSync(texturesFolderPath)
+                .filter(fileName => !fileName.includes('_'));
+            fileNames.forEach(fileName => {
+                const name = fileName.replace('.dds', '');
+                const src = path.join(texturesFolderPath, fileName);
+                block.textureFilesPaths[name] = src;
+            });
         } catch (err) {
             console.error(err);
         }
 
         blocks.defaultBlocksFolder.push(block);
     }
-    
+
     return blocks;
 }
 
-let generatorWindow;
-function openGenerator() {
-    if (generatorWindow == undefined || generatorWindow.isDestroyed()) {
-         // Make generator window.
-         generatorWindow = new BrowserWindow({
-            width: 0, // Will be changed in a bit.
-            height: 0, // Will be changed in a bit.
-            webPreferences: {
-                preload: path.join(__dirname, 'preload.js'),
-            },
-            autoHideMenuBar: true, // Menu bar is ugly, so hide it.
-        });
-    
-        // Get window bounds to figure out what display the
-        // window was spawned in.
-        const winBounds = generatorWindow.getBounds();
-        const display = screen.getDisplayMatching(winBounds);
-    
-        // Set window size to be 50% of the width of the
-        // display and 60% of the height, and then center
-        // it.
-        const newHeight = Math.round(display.bounds.height * 0.7);
-        const newWidth = Math.round(newHeight * 1.5)
-        generatorWindow.setSize(newWidth, newHeight);
-        generatorWindow.center();
-    
-        // Load the main HTML file onto the window.
-        generatorWindow.loadFile('generator.html');
-    
-        ipcMain.removeHandler('selectFolder');
-        ipcMain.handle('selectFolder', async () => {
-            const { canceled, filePaths } = await dialog.showOpenDialog(generatorWindow, {
-                properties: ['openDirectory']
-            })
-            if (canceled) {
-                return;
-            } else {
-                return filePaths[0];
-            }
-        });
-        
-    } else {
-        generatorWindow.focus();
-    }
-}
-
 async function displayDeleteDialog(event, block) {
-    const { response, checkboxChecked } = await dialog.showMessageBox({
+    const { response, checkboxChecked } = await dialog.showMessageBox(mainWindow, {
         type: 'question',
-        buttons: ['Delete', 'Cancel'],
+        buttons: ['Yes, delete it', 'Cancel'],
         title: 'Delete block',
         message: 'Are you sure you want to delete this block?'
     });
 
     if (response == 0) {
         deleteBlock(block);
-        BrowserWindow.fromId(event.sender.id).reload();
+        return true;
     }
+    return false;
 }
 
 function deleteBlock(block) {
     fs.rmSync(block.path, { recursive: true });
+}
+
+function loadGenerator() {
+    mainWindow.loadFile('generator.html');
+}
+
+function loadManageBlocks() {
+    mainWindow.loadFile('manageBlocks.html')
+}
+
+async function selectFolder() {
+    const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory']
+    })
+    if (canceled) {
+        return;
+    } else {
+        return filePaths[0];
+    }
+    ;
 }

@@ -4,5 +4,11 @@ document.getElementById('openInExplorer').addEventListener('click', () => {
 });
 
 document.getElementById('generateNewBlock').addEventListener('click', () => {
-    window.call.generateNewBlock();
+    window.call.loadGenerator();
+    window.close();
+})
+
+document.getElementById('finishGenerating').addEventListener('click', () => {
+    window.call.loadManageBlocks();
+    window.close();
 })

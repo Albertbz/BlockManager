@@ -6,7 +6,7 @@ async function populateBlocksDiv() {
     const blocksDiv = document.getElementById('blocksDiv');
 
     const blocks = await window.call.getAllBlocks();
-    
+
     // Add all blocks from defaultBlocksFolder
     const defaultBlocksFolder = blocks.defaultBlocksFolder;
     blocksDiv.appendChild(makeBlocksDiv(defaultBlocksFolder));
@@ -32,17 +32,15 @@ function makeBlockDiv(block) {
     const dropDownDiv = makeDropDownDiv(block);
     const contentDiv = makeContentDiv(block);
 
-    let canvasLoaded = false;
     dropDownDiv.addEventListener('click', (e) => {
         dropDownDiv.classList.toggle('toggled');
         contentDiv.classList.toggle('d-none');
+    });
 
-        if (!canvasLoaded) {
-            const canvas = contentDiv.querySelector('canvas');
-            loadCanvas(canvas, getTexturePaths(block));
-            canvasLoaded = true;
-        }
-    })
+    dropDownDiv.addEventListener('mousedown', (e) => {
+        const canvas = contentDiv.querySelector('canvas');
+        loadCanvas(canvas, getTexturePaths(block));
+    }, { once: true });
 
     div.appendChild(dropDownDiv);
     div.appendChild(contentDiv);
@@ -53,7 +51,7 @@ function makeBlockDiv(block) {
 function makeDropDownDiv(block) {
     const dropDownDiv = document.createElement('div');
     dropDownDiv.classList.add('header', 'box-horizontal', 'justify-between');
-    
+
     const leftDiv = document.createElement('div');
     leftDiv.classList.add('header', 'box-horizontal', 'justify-left');
 
@@ -187,7 +185,7 @@ function makeButtonDiv(block) {
     editButton.type = 'button';
     editButton.innerText = 'Edit';
     editButton.classList.add('btn');
-    
+
     buttonDiv.appendChild(editButton);
 
     const deleteButton = document.createElement('button');
@@ -195,8 +193,9 @@ function makeButtonDiv(block) {
     deleteButton.innerText = 'Delete';
     deleteButton.classList.add('btn');
 
-    deleteButton.addEventListener('click', (e) => {
-        window.call.displayDeleteDialog(block);
+    deleteButton.addEventListener('click', async (e) => {
+        const response = await window.call.displayDeleteDialog(block);
+        if (response) deleteButton.parentElement.parentElement.parentElement.remove();
     });
 
     buttonDiv.appendChild(deleteButton);
@@ -267,5 +266,5 @@ function booleanToYesNo(boolean) {
  * Add eventlistener to make new block
  */
 document.getElementById('makeNewBlock').addEventListener('click', (e) => {
-    window.call.openGenerator();
+    window.call.loadGenerator();
 });
