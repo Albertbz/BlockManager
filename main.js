@@ -35,7 +35,7 @@ function createWindow() {
 }
 
 let loadingWin;
-async function spawnLoadingBlockWindow() {
+function spawnLoadingBlockWindow() {
     loadingWin = new BrowserWindow({
         width: 250,
         height: 75,
@@ -53,7 +53,7 @@ async function spawnLoadingBlockWindow() {
 }
 
 let generatingWin;
-async function spawnGeneratingBlockWindow() {
+function spawnGeneratingBlockWindow() {
     generatingWin = new BrowserWindow({
         width: 250,
         height: 75,
@@ -71,12 +71,15 @@ async function spawnGeneratingBlockWindow() {
 }
 
 // As soon as the Electron app is ready, create the window.
-app.whenReady().then(async () => {
+app.whenReady().then(() => {
     createWindow();
 
-    await sleep(100);
-    spawnGeneratingBlockWindow();
+    // I spawn it twice because for some reason, the first popup after
+    // the main window can sometimes become black when shown. But it 
+    // only happens for the very first one, so I do this to "fix" it...
     spawnLoadingBlockWindow();
+    spawnLoadingBlockWindow();
+    spawnGeneratingBlockWindow();
 
     // iOS specific check. Honestly makes no sense that
     // I have this here as this program doesn't support
@@ -155,7 +158,7 @@ function getDefaultRecipeFileContent() {
 async function generateCustomBlock(event, location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
     showPopup(generatingWin);
     await sleep(100);
-    
+
     // Make folder for block
     if (!fs.existsSync(location)) {
         fs.mkdirSync(location);
@@ -286,11 +289,24 @@ function getAllBlocks() {
         defaultBlocksFolder: []
     };
 
-    /**
-     * Add all blocks in Blocks folder
-     */
+    
+    // Add all blocks in Blocks folder
     const blocksFolderPath = path.join(modsFolderPath, 'Blocks');
+    addBlocksTo(blocks.defaultBlocksFolder, blocksFolderPath);
 
+
+    // Add all blocks in mod folders
+    const modFolders = getAllModFolders();
+    for (let i = 0; i < modFolders.length; i++) {
+        const values = modFolders[i];
+
+    }
+
+
+    return blocks;
+}
+
+function addBlocksTo(blocks, blocksFolderPath) {
     // Get all folders of the blocks
     const blocksFolders = fs.readdirSync(blocksFolderPath, { withFileTypes: true })
         .filter((item) => item.isDirectory())
@@ -333,10 +349,8 @@ function getAllBlocks() {
             console.error(err);
         }
 
-        blocks.defaultBlocksFolder.push(block);
+        blocks.push(block);
     }
-
-    return blocks;
 }
 
 async function displayDeleteDialog(event, block) {

@@ -430,7 +430,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     if (categoryName.length != 0) propertiesFileContent.CategoryName = categoryName;
 
     // Give data to main, have it make the block
-    const location = `${saveLocation}\\${blockName}.${creatorName}`;
+    const location = `${saveLocation}\\${blockName}.${creatorName}.${uniqueID}`;
     const response = await window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc, 
         regularTextures, smallTextures, normalTextures, glowTextures);
     
@@ -600,18 +600,24 @@ document.getElementById('saveBlockManuallyInput').addEventListener('click', asyn
 /**
  * Handle Discard block buttons
  */
-document.querySelectorAll('button.discard').forEach(button => {
-    button.addEventListener('click', (e) => {
-        window.call.loadManageBlocks();
+function handleDiscardBlockButtons(isEditing) {
+    document.querySelectorAll('button.discard').forEach(button => {
+        if (isEditing) button.innerText = 'Discard changes';
+
+        button.addEventListener('click', (e) => {
+            window.call.loadManageBlocks();
+        });
     });
-});
+}
+
 
 /**
  * Load block in temp if there is one.
  */
 async function loadTemp() {
     const tempBlock = await window.call.getTemp();
-    if (tempBlock != undefined) {
+    const isEditing = tempBlock != undefined;
+    if (isEditing) {
         const formElem = document.forms['blockForm'];
         
         // Set all properties
@@ -647,9 +653,13 @@ async function loadTemp() {
         const recipePropertiesJSON = JSON.stringify({Recipe: tempBlock.properties.Recipe}, null, 4);
         formElem.elements['recipeProperties'].value = recipePropertiesJSON.substring(2, recipePropertiesJSON.length-2).replace('    ', '');
         document.getElementById('recipePictureImg').src = './temp/recipePreview.png';
+
+        // Change submit button text
+        document.getElementById('submitButton').innerText = 'Save changes'
     };
 
     addEventListenersToTextureSelectors();
+    handleDiscardBlockButtons(isEditing);
 }
 
 function updateUniqueIDToDropDiv() {
