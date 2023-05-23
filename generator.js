@@ -516,16 +516,16 @@ document.querySelectorAll('input[type=text]').forEach((input) => {
 let prevSaveButton = document.getElementById('blocksFolderInput');
 let saveLocation;
 
-document.getElementById('blocksFolderInput').addEventListener('click', updateSaveButton);
+document.getElementById('blocksFolderInput').addEventListener('click', (e) => updateSaveButton(e.target));
 
-function updateSaveButton(e) {
-    if (prevSaveButton == e.target) return;
+function updateSaveButton(button) {
+    if (prevSaveButton == button) return;
 
     prevSaveButton.classList.remove('btn-pressed');
-    e.target.classList.add('btn-pressed');
-    saveLocation = e.target.value;
+    button.classList.add('btn-pressed');
+    saveLocation = button.value;
 
-    prevSaveButton = e.target;
+    prevSaveButton = button;
 }
 
 /**
@@ -601,7 +601,7 @@ document.getElementById('saveBlockManuallyInput').addEventListener('click', asyn
     if (path == undefined) return;
     e.target.value = path;
 
-    updateSaveButton(e);
+    updateSaveButton(e.target);
 })
 
 /**
@@ -649,20 +649,32 @@ async function loadTemp() {
             formElem.elements['allowCrystalPlacement'].checked = tempBlock.properties.AllowCrystalAssistedBlockPlacement;
         }
     
-        // Set textures
+        // Set textures.
         const textures = await window.call.getTempTextures();
         addFilesToTextureFiles(textures.regular, textureFiles.regular);
         addFilesToTextureFiles(textures.small, textureFiles.small);
         addFilesToTextureFiles(textures.normal, textureFiles.normal);
         addFilesToTextureFiles(textures.glow, textureFiles.glow);
         
-        // Set recipe
+        // Set recipe.
         const recipePropertiesJSON = JSON.stringify({Recipe: tempBlock.properties.Recipe}, null, 4);
         formElem.elements['recipeProperties'].value = recipePropertiesJSON.substring(2, recipePropertiesJSON.length-2).replace('    ', '');
         document.getElementById('recipePictureImg').src = './temp/recipePreview.png';
 
-        // Change submit button text
-        document.getElementById('submitButton').innerText = 'Save changes'
+        // Change submit button text.
+        document.getElementById('submitButton').innerText = 'Save changes';
+
+        // Show save location (existing location) and put
+        // path in it.
+        const existingLocationDiv = document.getElementById('existingLocationDiv');
+        existingLocationDiv.classList.remove('d-none');
+
+        const existingLocationInput = document.getElementById('existingLocationInput');
+        existingLocationInput.value = tempBlock.path.substring(0, tempBlock.path.lastIndexOf("\\"));
+        
+        updateSaveButton(existingLocationInput);
+
+        existingLocationDiv.addEventListener('click', (e) => updateSaveButton(e.target));
     };
 
     addEventListenersToTextureSelectors();

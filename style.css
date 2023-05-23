@@ -139,6 +139,10 @@ input[type=range] {
 	padding: 0.75rem !important
 }
 
+.h-auto {
+	height: auto !important;
+}
+
 .btns {
 	display: flex;
 	justify-content: space-between;
