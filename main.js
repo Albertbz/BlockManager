@@ -392,10 +392,12 @@ function deleteBlock(block) {
 
 function loadGenerator() {
     mainWindow.loadFile('generator.html');
+    mainWindow.focus();
 }
 
 function loadManageBlocks() {
-    mainWindow.loadFile('manageBlocks.html')
+    mainWindow.loadFile('manageBlocks.html');
+    mainWindow.focus();
 }
 
 async function selectFolder() {

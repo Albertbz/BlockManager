@@ -430,7 +430,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     if (categoryName.length != 0) propertiesFileContent.CategoryName = categoryName;
 
     // Delete old block if editing
-    const tempBlock = window.call.getTemp();
+    const tempBlock = await window.call.getTemp();
     const isEditing = tempBlock != undefined;
     if (isEditing) {
         await window.call.deleteBlockInTemp();
