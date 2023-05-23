@@ -6,20 +6,38 @@ async function populateBlocksDiv() {
     const blocksDiv = document.getElementById('blocksDiv');
 
     const blocks = await window.call.getAllBlocks();
+    console.log(blocks)
 
-    // Add all blocks from defaultBlocksFolder
-    const defaultBlocksFolder = blocks.defaultBlocksFolder;
-    blocksDiv.appendChild(makeBlocksDiv(defaultBlocksFolder));
+    // Add all blocks
+    blocksDiv.appendChild(makeBlocksDiv(blocks));
 }
 
 function makeBlocksDiv(blocks) {
     const div = document.createElement('div');
     div.classList.add('box', 'scrollable');
 
-    for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i];
+    // Add all blocks from default Blocks folder
+    const defaultBlocksFolder = blocks.defaultBlocksFolder;
+    for (let i = 0; i < defaultBlocksFolder.length; i++) {
+        const block = defaultBlocksFolder[i];
         const horizontalDiv = makeBlockDiv(block);
         div.appendChild(horizontalDiv);
+    }
+
+    // Add all blocks from mods
+    const modFolders = blocks.modFolders;
+    for (let i = 0; i < modFolders.length; i++) {
+        const modFolder = modFolders[i];
+
+        for (let j = 0; j < modFolder.updates.length; j++) {
+            const update = modFolder.updates[j];
+            const blocksFolder = update.blocksFolder;
+            for (let k = 0; k < blocksFolder.length; k++) {
+                const block = blocksFolder[k];
+                const horizontalDiv = makeBlockDiv(block);
+                div.appendChild(horizontalDiv);
+            }
+        }
     }
 
     return div;

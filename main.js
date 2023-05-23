@@ -118,7 +118,8 @@ ipcMain.handle('selectFolder', selectFolder);
 ipcMain.handle('saveBlockInTemp', saveBlockInTemp);
 ipcMain.handle('clearTemp', clearTemp);
 ipcMain.handle('getTemp', getTemp);
-ipcMain.handle('getTempTextures', getTempTextures)
+ipcMain.handle('getTempTextures', getTempTextures);
+ipcMain.handle('deleteBlockInTemp', () => deleteBlock(temp));
 
 
 /*
@@ -161,7 +162,7 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
 
     // Make folder for block
     if (!fs.existsSync(location)) {
-        fs.mkdirSync(location);
+        fs.mkdirSync(location, { recursive: true });
     }
 
     // Make properties file
@@ -286,7 +287,8 @@ function openGenerationLocation() {
 function getAllBlocks() {
     const modsFolderPath = getModsFolderPath();
     let blocks = {
-        defaultBlocksFolder: []
+        defaultBlocksFolder: [],
+        modFolders: []
     };
 
     
@@ -299,14 +301,30 @@ function getAllBlocks() {
     const modFolders = getAllModFolders();
     for (let i = 0; i < modFolders.length; i++) {
         const values = modFolders[i];
-
+        let modFolder = {
+            name: values.name,
+            updates: []
+        }
+        for (let j = 0; j < values.updates.length; j++) {
+            const modFolderBlocksPath = path.join(modsFolderPath, 
+                `ModFolders\\${values.name}\\${values.updates[j]}\\Blocks`);
+            const update = {
+                name: values.updates[j],
+                blocksFolder: []
+            }
+            addBlocksTo(update.blocksFolder, modFolderBlocksPath);
+            modFolder.updates.push(update);
+        }
+        blocks.modFolders.push(modFolder);
     }
-
 
     return blocks;
 }
 
 function addBlocksTo(blocks, blocksFolderPath) {
+    // Check if given path even exists
+    if (!fs.existsSync(blocksFolderPath)) return;
+
     // Get all folders of the blocks
     const blocksFolders = fs.readdirSync(blocksFolderPath, { withFileTypes: true })
         .filter((item) => item.isDirectory())
