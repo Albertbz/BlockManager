@@ -204,7 +204,7 @@ function makeButtonDiv(block) {
 
     deleteButton.addEventListener('click', async (e) => {
         const success = await window.call.displayDeleteDialog(block);
-        if (success) deleteButton.parentElement.parentElement.parentElement.remove();
+        if (success) deleteButton.parentElement.parentElement.parentElement.parentElement.remove();
     });
 
     buttonSpan.appendChild(deleteButton);
