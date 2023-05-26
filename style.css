@@ -119,6 +119,10 @@ input[type=range] {
 	margin-bottom: 0.75rem;
 }
 
+.me-1 {
+	margin-right: 0.25rem;
+}
+
 .me-2 {
 	margin-right: 0.75rem;
 }
@@ -282,6 +286,35 @@ select {
 .justify-evently {
 	justify-content: space-evenly;
 }
+
+.filter {
+	width: 60%;
+	user-select: none;
+}
+
+.sort {
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	box-sizing: border-box;
+	border-radius: 50%;
+}
+
+.search {
+	width: 35px;
+	height: 22px;
+	padding: 0;
+	box-sizing: border-box;
+	border-radius: 999px;
+}
+
+.sort-img,
+.search-img {
+	width: 20px;
+	height: 20px;
+}
+
+
 
 /**
  * Textures

@@ -6,7 +6,6 @@ async function populateBlocksDiv() {
     const blocksDiv = document.getElementById('blocksDiv');
 
     const blocks = await window.call.getAllBlocks();
-    console.log(blocks)
 
     // Add all blocks
     blocksDiv.appendChild(makeBlocksDiv(blocks));

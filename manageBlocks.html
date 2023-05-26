@@ -15,8 +15,20 @@
     <div class="container box">
         <h1 class="text-center header">Manage Blocks</h1>
         <div class="content box">
-            <div class="header mb-2 text-center">
-                <!-- Insert sorting stuff here -->
+            <div class="filter header mb-1 box-horizontal align-center">
+                <div class="left">
+                    <button type="button" class="btn me-1 btn-pressed">All</button>
+                    <button type="button" class="btn me-1">Independent</button>
+                    <button type="button" class="btn me-1">Mods</button>
+                </div>
+                <div class="right">
+                    <button type="button" class="btn sort me-1">
+                        <img src="./images/sort.png" alt="Sort by" class="sort-img">
+                    </button>
+                    <button type="button" class="btn search">
+                        <img src="./images/search.png" alt="Search" class="search-img">
+                    </button>
+                </div>
             </div>
 
             <div class="box blocks align-center" id="blocksDiv"></div>
