@@ -90,6 +90,10 @@ input[type=range] {
 	justify-content: left !important;
 }
 
+.h-22 {
+	height: 22px !important;
+}
+
 .mx-auto {
 	margin-left: auto;
 	margin-right: auto;
@@ -292,12 +296,59 @@ select {
 	user-select: none;
 }
 
-.sort {
+.sort-button {
 	width: 22px;
 	height: 22px;
 	padding: 0;
 	box-sizing: border-box;
 	border-radius: 50%;
+}
+
+.dropdown {
+	position: relative;
+	display: flex;
+	height: 100%;
+}
+
+.dropdown-content {
+	position: absolute;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	width: 80px;
+	left: -29px;
+	top: 22px;
+	background-color: white;
+	z-index: 1;
+	border: 1px solid rgb(116, 116, 116);
+	border-radius: 5px;
+}
+
+.sort-text {
+	font-size: 0.75rem;
+	margin-top: 2px;
+	margin-bottom: 2px;
+}
+
+.btn-fill {
+	width: 100%;
+}
+
+.sort-arrow {
+	width: 14px;
+	height: 14px;
+	margin-top: 2px;
+	margin-bottom: 2px;
+}
+
+.sort-type-btn {
+	display: flex;
+	flex-flow: row;
+	justify-content: center;
+	width: 100%;
+	margin-left: 2px;
+	margin-right: 2px;
+	margin-bottom: 2px;
 }
 
 .search {
@@ -312,9 +363,8 @@ select {
 .search-img {
 	width: 20px;
 	height: 20px;
+	pointer-events: none;
 }
-
-
 
 /**
  * Textures

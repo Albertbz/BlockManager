@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
@@ -22,9 +23,23 @@
                     <button type="button" class="btn me-1">Mods</button>
                 </div>
                 <div class="right">
-                    <button type="button" class="btn sort me-1">
-                        <img src="./images/sort.png" alt="Sort by" class="sort-img">
-                    </button>
+
+                    <div class="dropdown">
+                        <button type="button" class="btn sort-button me-1" id="sortButton">
+                            <img src="./images/sort.png" alt="Sort by" class="sort-img">
+                        </button>
+                        <div class="dropdown-content d-none">
+                            <p class="sort-text">Sort by</p>
+                            <button type="button" class="btn btn-fill h-22 sort-type-btn">
+                                <p class="sort-text">Name</p>
+                                <img class="sort-arrow" src="./images/sort-down-arrow.png" alt="">
+                            </button>
+                            <button type="button" class="btn btn-fill h-22 sort-type-btn">
+                                <p class="sort-text">ID</p>
+                            </button>
+                        </div>
+                    </div>
+
                     <button type="button" class="btn search">
                         <img src="./images/search.png" alt="Search" class="search-img">
                     </button>
@@ -45,4 +60,5 @@
 </body>
 
 <script src="./manageBlocks.js" type="module"></script>
+
 </html>

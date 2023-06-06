@@ -295,3 +295,49 @@ document.getElementById('makeNewBlock').addEventListener('click', (e) => {
     window.call.clearTemp();
     window.call.loadGenerator();
 });
+
+
+/**
+ * Sort button open and close
+ */
+document.getElementById('sortButton').addEventListener('click', (e) => {
+    const dropDownContent = e.target.nextElementSibling;
+    dropDownContent.classList.toggle('d-none');
+});
+
+/**
+ * Handle all sorting
+ */
+let sortBy = {
+    type: 'Name',
+    order: 'Down'
+};
+
+document.querySelectorAll('button.sort-type-btn').forEach((button) => {
+    button.addEventListener('click', (e) => {
+        const type = button.firstElementChild.innerText;
+        const isSameType = sortBy.type == type;
+        if (isSameType) {
+            // Toggle order
+            sortBy.order == 'Down' ? sortBy.order = 'Up' : sortBy.order = 'Down';
+
+            // Set new image src
+            const img = button.lastElementChild;
+            img.src = `./images/sort-${sortBy.order.toLowerCase()}-arrow.png`;
+        }
+        else {
+            // Remove old image
+            button.parentElement.querySelector('img').remove();
+
+            sortBy.type = type;
+            sortBy.order = 'Down';
+
+            // Add new image
+            const img = document.createElement('img');
+            img.classList.add('sort-arrow');
+            img.src = `./images/sort-down-arrow.png`;
+            button.appendChild(img);
+        }
+        
+    });
+});
