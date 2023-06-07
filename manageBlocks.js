@@ -283,8 +283,22 @@ document.getElementById('makeNewBlock').addEventListener('click', (e) => {
  * Sort button open and close functionality
  */
 document.getElementById('sortButton').addEventListener('click', (e) => {
-    const dropDownContent = e.target.nextElementSibling;
-    dropDownContent.classList.toggle('d-none');
+    const sortButton = e.target;
+    const dropdownContentDiv = document.getElementById('dropdownContent');
+    const isVisible = !dropdownContentDiv.classList.toggle('d-none');
+
+    if (isVisible) {
+        function handleClickOutside(e) {
+            if (e.target == dropdownContentDiv || e.target == sortButton || dropdownContentDiv.contains(e.target)) return;
+    
+            dropdownContentDiv.classList.add('d-none');
+            document.removeEventListener('click', handleClickOutside);
+        }
+
+        document.addEventListener('click', handleClickOutside);
+    }
+
+    
 });
 
 /**
@@ -346,7 +360,7 @@ function updateBlocksSort() {
             blocks.sort(function (a, b) {
                 const aID = a.properties.UniqueID;
                 const bID = b.properties.UniqueID;
-                return sortBy.order == 'Down' ? aID-bID : bID-aID;
+                return sortBy.order == 'Down' ? aID - bID : bID - aID;
             });
             break;
     }
@@ -418,7 +432,7 @@ let searchValue = '';
 
 document.getElementById('searchButton').addEventListener('click', (e) => {
     const searchButton = e.target;
-    
+
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
     searchInput.placeholder = 'Search...';
