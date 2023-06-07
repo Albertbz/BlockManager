@@ -345,7 +345,8 @@ function updateBlocksSort() {
                 const aID = a.properties.UniqueID;
                 const bID = b.properties.UniqueID;
                 return sortBy.order == 'Down' ? aID-bID : bID-aID;
-            })
+            });
+            break;
     }
 }
 
@@ -403,6 +404,7 @@ document.querySelectorAll('button.filter-btn').forEach((button) => {
         filterBy = button.innerText;
 
         await updateBlocksFilter();
+        updateBlocksSort();
         populateBlocksDiv();
     })
 });
