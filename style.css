@@ -351,7 +351,7 @@ select {
 	margin-bottom: 2px;
 }
 
-.search {
+.search-btn {
 	width: 35px;
 	height: 22px;
 	padding: 0;
@@ -364,6 +364,14 @@ select {
 	width: 20px;
 	height: 20px;
 	pointer-events: none;
+}
+
+.search-input {
+	height: 22px;
+	width: 80px;
+	border: 1px solid rgb(125, 125, 125);
+	border-radius: 999px;
+	text-indent: 5px;
 }
 
 /**

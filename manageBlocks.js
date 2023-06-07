@@ -405,21 +405,62 @@ document.querySelectorAll('button.filter-btn').forEach((button) => {
         prevFilterButton = button;
         filterBy = button.innerText;
 
-        await updateBlocksFilter();
-        updateBlocksSort();
-        populateBlocksDiv();
+        updateBlocks();
     })
 });
 
+
+/**
+ * Handle search functionality
+ */
+// Change to text field when clicked
+let searchValue = '';
+
+document.getElementById('searchButton').addEventListener('click', (e) => {
+    const searchButton = e.target;
+    
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Search...';
+    searchInput.spellcheck = false;
+    searchInput.classList.add('search-input');
+
+    searchButton.replaceWith(searchInput);
+
+    searchInput.addEventListener('focusout', (e) => {
+        if (searchInput.value.length == 0) searchInput.replaceWith(searchButton);
+    });
+
+    searchInput.addEventListener('input', (e) => {
+        searchValue = searchInput.value;
+        updateBlocks();
+    })
+
+    searchInput.focus();
+});
+
+function updateBlocksSearch() {
+    if (searchValue == '') return;
+
+    for (let i = blocks.length - 1; i >= 0; i--) {
+        const block = blocks[i];
+        const name = block.properties.Name.toLowerCase();
+
+        if (!name.includes(searchValue)) {
+            blocks.splice(i, 1);
+        }
+    }
+}
 
 
 /**
  * Init stuff
  */
-async function init() {
+async function updateBlocks() {
     await updateBlocksFilter();
+    updateBlocksSearch();
     updateBlocksSort();
     populateBlocksDiv();
 }
 
-init();
+updateBlocks();
