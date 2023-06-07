@@ -21,6 +21,12 @@ function makeBlocksDiv() {
         div.appendChild(horizontalDiv);
     }
 
+    if (blocks.length == 0) {
+        const noBlocksFoundText = document.createElement('span');
+        noBlocksFoundText.innerText = 'No blocks found';
+        div.appendChild(noBlocksFoundText);
+    }
+
     return div;
 }
 
@@ -427,9 +433,9 @@ document.querySelectorAll('button.filter-btn').forEach((button) => {
 /**
  * Handle search functionality
  */
-// Change to text field when clicked
 let searchValue = '';
 
+// Change to text field when clicked
 document.getElementById('searchButton').addEventListener('click', (e) => {
     const searchButton = e.target;
 
