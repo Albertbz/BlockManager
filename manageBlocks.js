@@ -321,17 +321,34 @@ document.querySelectorAll('button.sort-type-btn').forEach((button) => {
             button.appendChild(img);
         }
 
+        updateBlocksSort();
+        populateBlocksDiv();
     });
 });
 
 // Update according to sort
-// function updateBlocksSort() {
-//     switch (sortBy.type) {
-//         case 'Name':
+function updateBlocksSort() {
+    switch (sortBy.type) {
+        case 'Name':
+            blocks.sort(function (a, b) {
+                if (a.properties.Name < b.properties.Name) {
+                    return sortBy.order == 'Down' ? -1 : 1;
+                }
+                if (a.properties.Name > b.properties.Name) {
+                    return sortBy.order == 'Down' ? 1 : -1;
+                }
+                return 0;
+            });
+            break;
+        case 'ID':
+            blocks.sort(function (a, b) {
+                const aID = a.properties.UniqueID;
+                const bID = b.properties.UniqueID;
+                return sortBy.order == 'Down' ? aID-bID : bID-aID;
+            })
+    }
+}
 
-//             break;
-//     }
-// }
 
 /**
  * Handle filtering for blocks
@@ -397,6 +414,7 @@ document.querySelectorAll('button.filter-btn').forEach((button) => {
  */
 async function init() {
     await updateBlocksFilter();
+    updateBlocksSort();
     populateBlocksDiv();
 }
 
