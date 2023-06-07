@@ -331,10 +331,12 @@ function updateBlocksSort() {
     switch (sortBy.type) {
         case 'Name':
             blocks.sort(function (a, b) {
-                if (a.properties.Name < b.properties.Name) {
+                const aName = a.properties.Name.toLowerCase();
+                const bName = b.properties.Name.toLowerCase();
+                if (aName < bName) {
                     return sortBy.order == 'Down' ? -1 : 1;
                 }
-                if (a.properties.Name > b.properties.Name) {
+                if (aName > bName) {
                     return sortBy.order == 'Down' ? 1 : -1;
                 }
                 return 0;
