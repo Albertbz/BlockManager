@@ -1,42 +1,24 @@
 import { loadCanvas } from "./blockPreview.js";
 
-populateBlocksDiv();
-
-async function populateBlocksDiv() {
+function populateBlocksDiv() {
     const blocksDiv = document.getElementById('blocksDiv');
-
-    const blocks = await window.call.getAllBlocks();
+    const hasChild = blocksDiv.firstElementChild != null;
+    if (hasChild) {
+        blocksDiv.removeChild(blocksDiv.firstElementChild);
+    }
 
     // Add all blocks
-    blocksDiv.appendChild(makeBlocksDiv(blocks));
+    blocksDiv.appendChild(makeBlocksDiv());
 }
 
-function makeBlocksDiv(blocks) {
+function makeBlocksDiv() {
     const div = document.createElement('div');
     div.classList.add('box', 'scrollable');
 
-    // Add all blocks from default Blocks folder
-    const defaultBlocksFolder = blocks.defaultBlocksFolder;
-    for (let i = 0; i < defaultBlocksFolder.length; i++) {
-        const block = defaultBlocksFolder[i];
+    for (let i = 0; i < blocks.length; i++) {
+        const block = blocks[i];
         const horizontalDiv = makeBlockDiv(block);
         div.appendChild(horizontalDiv);
-    }
-
-    // Add all blocks from mods
-    const modFolders = blocks.modFolders;
-    for (let i = 0; i < modFolders.length; i++) {
-        const modFolder = modFolders[i];
-
-        for (let j = 0; j < modFolder.updates.length; j++) {
-            const update = modFolder.updates[j];
-            const blocksFolder = update.blocksFolder;
-            for (let k = 0; k < blocksFolder.length; k++) {
-                const block = blocksFolder[k];
-                const horizontalDiv = makeBlockDiv(block);
-                div.appendChild(horizontalDiv);
-            }
-        }
     }
 
     return div;
@@ -298,7 +280,7 @@ document.getElementById('makeNewBlock').addEventListener('click', (e) => {
 
 
 /**
- * Sort button open and close
+ * Sort button open and close functionality
  */
 document.getElementById('sortButton').addEventListener('click', (e) => {
     const dropDownContent = e.target.nextElementSibling;
@@ -338,6 +320,84 @@ document.querySelectorAll('button.sort-type-btn').forEach((button) => {
             img.src = `./images/sort-down-arrow.png`;
             button.appendChild(img);
         }
-        
+
     });
 });
+
+// Update according to sort
+// function updateBlocksSort() {
+//     switch (sortBy.type) {
+//         case 'Name':
+
+//             break;
+//     }
+// }
+
+/**
+ * Handle filtering for blocks
+ */
+let filterBy = 'All';
+let blocks = [];
+
+// Update according to filter
+async function updateBlocksFilter() {
+    blocks = [];
+    const allBlocks = await window.call.getAllBlocks();
+    const modFolders = allBlocks.modFolders;
+    switch (filterBy) {
+        case 'All':
+            blocks = allBlocks.defaultBlocksFolder;
+
+            for (let i = 0; i < modFolders.length; i++) {
+                const modFolder = modFolders[i];
+
+                for (let j = 0; j < modFolder.updates.length; j++) {
+                    const update = modFolder.updates[j];
+                    blocks = blocks.concat(update.blocksFolder);
+                }
+            }
+            break;
+        case 'Independent':
+            blocks = allBlocks.defaultBlocksFolder;
+            break;
+        case 'Mods':
+            for (let i = 0; i < modFolders.length; i++) {
+                const modFolder = modFolders[i];
+
+                for (let j = 0; j < modFolder.updates.length; j++) {
+                    const update = modFolder.updates[j];
+                    blocks = blocks.concat(update.blocksFolder);
+                }
+            }
+            break;
+    }
+}
+
+// Change filtering method
+let prevFilterButton = document.getElementById('filterAll');
+document.querySelectorAll('button.filter-btn').forEach((button) => {
+    button.addEventListener('click', async (e) => {
+        if (prevFilterButton == button) return;
+
+        prevFilterButton.classList.remove('btn-pressed');
+        button.classList.add('btn-pressed');
+
+        prevFilterButton = button;
+        filterBy = button.innerText;
+
+        await updateBlocksFilter();
+        populateBlocksDiv();
+    })
+});
+
+
+
+/**
+ * Init stuff
+ */
+async function init() {
+    await updateBlocksFilter();
+    populateBlocksDiv();
+}
+
+init();
