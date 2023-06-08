@@ -120,6 +120,7 @@ ipcMain.handle('clearTemp', clearTemp);
 ipcMain.handle('getTemp', getTemp);
 ipcMain.handle('getTempTextures', getTempTextures);
 ipcMain.handle('deleteBlockInTemp', () => deleteBlock(temp));
+ipcMain.handle('removeBlockToDelete', removeBlockToDelete);
 
 
 /*
@@ -371,19 +372,31 @@ function addBlocksTo(blocks, blocksFolderPath) {
     }
 }
 
+let blockToDelete = undefined;
 async function displayDeleteDialog(event, block) {
-    const { response, checkboxChecked } = await dialog.showMessageBox(mainWindow, {
-        type: 'question',
-        buttons: ['Yes, delete it', 'Cancel'],
-        title: 'Delete block',
-        message: 'Are you sure you want to delete this block?'
+    blockToDelete = block;
+
+    const popupWin = new BrowserWindow({
+        width: 300,
+        height: 200,
+        center: true,
+        frame: false,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+        },
+        parent: mainWindow,
+        modal: true
     });
 
-    if (response == 0) {
-        deleteBlock(block);
-        return true;
-    }
-    return false;
+    popupWin.loadFile('deletionPopup.html');
+
+    const winPosition = mainWindow.getPosition();
+    const winSize = mainWindow.getSize();
+    popupWin.setPosition(winPosition[0] + Math.round(winSize[0] / 2) - 150, winPosition[1] + Math.round(winSize[1] / 2) - 100);
+}
+
+function removeBlockToDelete() {
+    deleteBlock(blockToDelete);
 }
 
 function deleteBlock(block) {

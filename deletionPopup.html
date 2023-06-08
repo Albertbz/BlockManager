@@ -6,12 +6,18 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
     <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
     <link rel="stylesheet" href="./style.css">
-    <title>Loading block</title>
+    <title>Deletion Popup</title>
 </head>
 
 <body>
     <div class="container box">
-        <h2 class="text-center outline">Loading block...</h2>
+        <h2 class="text-center header mt-1 outline">Are you sure that you want to delete this block?</h2>
+        <div class="box content">
+            <button class="btn content mb-2 btn-medium" id="deleteConfirm">Yes, delete it</button>
+            <button class="btn content mb-2 btn-medium" id="deleteCancel">No, cancel</button>
+        </div>
     </div>
 </body>
+
+<script src="./deletionPopup.js"></script>
 </html>

@@ -355,9 +355,11 @@ function updateRecipeMaterials() {
     const materialsArray = removeInvalidMaterials(recipeProperties.Array);
 
     const amountElem = document.createElement('span');
+    amountElem.classList.add('outline');
     amountElem.innerHTML = `<em>Total amount:</em> ${materialsArray.length}`;
 
     const materialsElem = document.createElement('span');
+    materialsElem.classList.add('outline');
     let materials = getMaterials(materialsArray);
     materialsElem.innerHTML = `<em>Specific materials:</em> ${materials}`;
 
@@ -746,10 +748,8 @@ document.getElementById('saveBlockManuallyInput').addEventListener('click', asyn
 /**
  * Handle Discard block buttons
  */
-function handleDiscardBlockButtons(isEditing) {
+function handleDiscardBlockButtons() {
     document.querySelectorAll('button.discard').forEach(button => {
-        if (isEditing) button.innerText = 'Discard changes';
-
         button.addEventListener('click', (e) => {
             window.call.loadManageBlocks();
         });
@@ -818,7 +818,7 @@ async function loadTemp() {
     };
 
     addEventListenersToTextureSelectors();
-    handleDiscardBlockButtons(isEditing);
+    handleDiscardBlockButtons();
 }
 
 function updateUniqueIDToDropDiv() {

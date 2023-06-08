@@ -23,6 +23,7 @@ function makeBlocksDiv() {
 
     if (blocks.length == 0) {
         const noBlocksFoundText = document.createElement('span');
+        noBlocksFoundText.classList.add('outline', 'ps-1');
         noBlocksFoundText.innerText = 'No blocks found.';
         div.appendChild(noBlocksFoundText);
     }
@@ -32,7 +33,7 @@ function makeBlocksDiv() {
 
 function makeBlockDiv(block) {
     const div = document.createElement('div');
-    div.classList.add('header', 'block');
+    div.classList.add('header', 'block', 'mb-1');
 
     const dropDownDiv = makeDropDownDiv(block);
     const contentDiv = makeContentDiv(block);
@@ -55,7 +56,7 @@ function makeBlockDiv(block) {
 
 function makeDropDownDiv(block) {
     const dropDownDiv = document.createElement('div');
-    dropDownDiv.classList.add('header', 'box-horizontal', 'justify-between');
+    dropDownDiv.classList.add('header', 'box-horizontal', 'justify-between', 'dropdown-top');
 
     const leftDiv = document.createElement('div');
     leftDiv.classList.add('header', 'box-horizontal', 'justify-left');
@@ -133,7 +134,7 @@ function makePropertiesDiv(block) {
 
 function makePreviewDiv() {
     const previewDiv = document.createElement('div');
-    previewDiv.classList.add('block-preview', 'right');
+    previewDiv.classList.add('block-preview', 'center');
 
     const canvas = document.createElement('canvas');
     canvas.width = 135;
@@ -208,8 +209,7 @@ function makeButtonDiv(block) {
     deleteButton.classList.add('btn');
 
     deleteButton.addEventListener('click', async (e) => {
-        const success = await window.call.displayDeleteDialog(block);
-        if (success) deleteButton.parentElement.parentElement.parentElement.parentElement.remove();
+        await window.call.displayDeleteDialog(block);
     });
 
     buttonSpan.appendChild(deleteButton);

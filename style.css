@@ -13,8 +13,12 @@
 
 body {
 	margin: 0;
-	background-color: rgb(242, 242, 242);
+	color: white;
+	background-color: rgb(33, 33, 33);
 	height: 100vh;
+	background-image: url('./images/background.jpg');
+	background-size: cover;
+	backdrop-filter: blur(1px);
 }
 
 .box {
@@ -52,17 +56,11 @@ body {
 }
 
 input:not(:focus):not(:placeholder-shown):invalid {
-	background-color: ivory;
-	border: 1px solid red;
-	border-radius: 3px;
-	padding: 2px 3px;
+	border-color: red;
 }
 
 .highlight-invalid {
-	background-color: ivory;
-	border: 1px solid red;
-	border-radius: 3px;
-	padding: 2px 3px;
+	border-color: red;
 }
 
 select:focus-visible,
@@ -103,6 +101,10 @@ input[type=range] {
 	padding-left: 0;
 }
 
+.ps-1 {
+	padding-left: 0.25rem;
+}
+
 .mt-3 {
 	margin-top: 2rem;
 }
@@ -140,7 +142,7 @@ input[type=range] {
 }
 
 .mx-2 {
-	margin: 0.75rem !important; 
+	margin: 0.75rem !important;
 }
 
 .px-2 {
@@ -175,27 +177,32 @@ input[type=range] {
 	justify-content: right;
 }
 
+.center {
+	display: flex;
+}
+
 .btn {
-	border: 1px solid rgb(125, 125, 125);
+	color: white;
+	border: 1px solid rgb(0, 0, 0, 0.8);
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 	border-radius: 4px;
-	background-color: rgb(240, 240, 240);
+	background-color: rgba(0, 0, 0, 0.3);
 	box-sizing: border-box;
 	height: auto;
 	transition: all 0.2s;
 }
 
 .btn:hover:not(:disabled) {
-	background-color: rgb(225, 225, 225);
-	border-color: rgb(110, 110, 110);
+	background-color: rgba(0, 0, 0, 0.5);
 }
 
 .btn:active:not(:disabled) {
-	background-color: rgb(240, 240, 240);
-	border-color: rgb(125, 125, 125);
+	background-color: rgba(0, 0, 0, 0.3);
 }
 
 .btn:disabled {
-	border-color: rgba(125, 125, 125, 0.5);
+	border-color: rgba(0, 0, 0, 0.1);
+	color: rgb(255, 255, 255, 0.8);
 }
 
 .btn-large {
@@ -207,9 +214,8 @@ input[type=range] {
 }
 
 .btn-pressed {
-	border-color: rgb(0, 94, 201) !important;
+	border-color: rgb(0, 74, 159) !important;
 	background-color: rgb(0, 117, 255) !important;
-	color: rgb(255, 255, 255);
 }
 
 .btn-path {
@@ -219,18 +225,36 @@ input[type=range] {
 
 input {
 	box-sizing: border-box;
-	border: 1px solid rgb(125, 125, 125);
+	border: 1px solid rgb(0, 0, 0, 0.8);
+	background-color: rgb(0, 0, 0, 0.1);
 	border-radius: 4px;
 	height: 22px;
+	color: white;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
+	text-indent: 2px;
+}
+
+input::placeholder {
+	color: white;
+	opacity: 0.5;
 }
 
 select {
 	height: 22px;
 	box-sizing: border-box;
+	color: white;
+	background-color: rgb(0, 0, 0, 0.4);
+	border: 1px solid rgb(0, 0, 0, 0.8);
+	border-radius: 4px;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 }
 
 .d-none {
 	display: none !important;
+}
+
+.outline {
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 }
 
 /**
@@ -238,17 +262,20 @@ select {
  */
 
 .block {
-	background-color: rgb(237, 237, 237);
-}
-
-.block:nth-child(odd) {
-	background-color: rgb(225, 225, 225);
+	background-color: rgba(0, 0, 0, 0.2);
 	border-radius: 5px;
+	border: 1px solid rgba(0, 0, 0, 0.6);
 }
 
 .blocks {
 	width: 60%;
 	user-select: none;
+}
+
+.block span {
+	color: white;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
+	padding-left: 1px;
 }
 
 .dropdown-arrow {
@@ -257,6 +284,14 @@ select {
 	margin-top: 7px;
 	margin-bottom: 7px;
 	transition: transform 0.2s;
+}
+
+.dropdown-top {
+	transition: background-color 0.2s;
+}
+
+.dropdown-top:hover {
+	background-color: rgb(0, 0, 0, 0.1);
 }
 
 .block-preview {
@@ -323,9 +358,9 @@ select {
 	width: 80px;
 	left: -29px;
 	top: 24px;
-	background-color: white;
+	background-color: rgb(125, 125, 125);
 	z-index: 1;
-	border: 1px solid rgb(116, 116, 116);
+	border: 1px solid rgb(0, 0, 0);
 	border-radius: 5px;
 }
 
@@ -372,11 +407,22 @@ select {
 }
 
 .search-input {
-	height: 22px;
 	width: 80px;
-	border: 1px solid rgb(125, 125, 125);
+	height: 22px;
 	border-radius: 999px;
 	text-indent: 5px;
+}
+
+.add-img {
+	width: 38px;
+	height: 38px;
+}
+
+.add-btn {
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	border-radius: 999px;
 }
 
 /**
@@ -402,7 +448,7 @@ select {
 	cursor: pointer;
 }
 
-.texture-img:hover + .trash-can {
+.texture-img:hover+.trash-can {
 	display: block;
 }
 
@@ -439,6 +485,10 @@ select {
  * Form steps
  */
 
+.scrollable::-webkit-scrollbar {
+	display: none !important;
+}
+
 .scrollable {
 	overflow-y: auto !important;
 }
@@ -455,6 +505,8 @@ select {
 	display: flex;
 	flex: 0 1 auto;
 	margin-bottom: 3px;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
+	text-indent: 1px;
 }
 
 .form-group {
@@ -505,10 +557,10 @@ input[type=checkbox] {
 .checkbox {
 	width: 35px;
 	height: 22px;
-	background: #717171;
+	background: rgb(113, 113, 113);
 	transition: background .3s ease;
 	position: relative;
-	border-radius: 50px;
+	border-radius: 999px;
 }
 
 .checkbox label {
@@ -526,11 +578,11 @@ input[type=checkbox] {
 	background: #ddd;
 }
 
-.checkbox input[type=checkbox]:checked + label {
+.checkbox input[type=checkbox]:checked+label {
 	left: 16px;
 }
 
-.checkbox:has(input[type=checkbox]:checked)  {
+.checkbox:has(input[type=checkbox]:checked) {
 	background: rgb(0, 117, 255);
 }
 
@@ -549,27 +601,25 @@ input[type=file] {
 	width: 80px;
 	height: 80px;
 	cursor: pointer;
-	border: 2px dashed rgb(190, 190, 190);
+	border: 2px dashed rgb(0, 0, 0);
 	border-radius: 6px;
-	background-color: rgb(245, 245, 245);
+	background-color: rgb(0, 0, 0, 0.2);
 	box-sizing: border-box;
 	text-align: center;
 	align-items: center;
 	margin-bottom: 22px;
-	color: rgb(165, 165, 165);
+	color: rgb(255, 255, 255, 0.8);
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 	transition: background-color 0.2s;
 }
 
 .custom-file-uploader:hover {
-	background-color: rgb(231, 231, 231) !important;
+	background-color: rgb(0, 0, 0, 0.4) !important;
 	cursor: pointer;
 }
 
-.highlight-invalid + .texture-selector-parent > .custom-file-uploader {
-	background-color: ivory;
+.highlight-invalid+.texture-selector-parent>.custom-file-uploader {
 	border: 2px dashed red;
-	border-radius: 6px;
-	padding: 2px 3px;
 }
 
 
@@ -581,16 +631,18 @@ input[type=file] {
 	display: flex;
 	flex: 0 0 auto;
 	height: 60px;
-	border: 2px dashed rgb(190, 190, 190);
+	border: 2px dashed rgb(0, 0, 0);
 	border-radius: 7px;
 	align-items: center;
 	justify-content: center;
-	color: rgb(165, 165, 165);
+	color: rgb(255, 255, 255, 0.8);
+	background-color: rgb(0, 0, 0, 0.2);
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 	transition: background-color 0.2s;
 }
 
 .manual-upload:hover {
-	background-color: rgb(231, 231, 231);
+	background-color: rgb(0, 0, 0, 0.4);
 	cursor: pointer;
 }
 
@@ -602,6 +654,7 @@ input[type=file] {
 .recipe-picture-preview {
 	width: 180px;
 	height: 180px;
+	border-radius: 6px;
 }
 
 .recipe-properties-preview {
@@ -622,6 +675,7 @@ ul.form-stepper {
 
 ul.form-stepper .form-stepper-circle {
 	position: relative;
+	border: 1px solid black;
 }
 
 ul.form-stepper .form-stepper-circle span {
@@ -637,12 +691,12 @@ ul.form-stepper .form-stepper-circle span {
 	justify-content: space-between;
 }
 
-ul.form-stepper > li:not(:last-of-type) {
+ul.form-stepper>li:not(:last-of-type) {
 	margin-bottom: 0.625rem;
 	transition: margin-bottom 0.4s;
 }
 
-.form-stepper-horizontal > li:not(:last-of-type) {
+.form-stepper-horizontal>li:not(:last-of-type) {
 	margin-bottom: 0 !important;
 }
 
@@ -659,7 +713,7 @@ ul.form-stepper > li:not(:last-of-type) {
 	flex: 1;
 	height: 2px;
 	content: "";
-	top: 32%;
+	top: 28%;
 }
 
 .form-stepper-horizontal li:after {
@@ -667,59 +721,102 @@ ul.form-stepper > li:not(:last-of-type) {
 }
 
 .form-stepper-horizontal li.form-stepper-completed:after {
-    background-color: #4da3ff;
+	background-color: rgb(0, 117, 255);
 }
 
 .form-stepper-horizontal li:last-child {
-    flex: unset;
+	flex: unset;
 }
 
 ul.form-stepper li a .form-stepper-circle {
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    margin-right: 0;
-    line-height: 1.7rem;
-    text-align: center;
-    background: rgba(0, 0, 0, 0.38);
-    border-radius: 50%;
+	display: inline-block;
+	width: 40px;
+	height: 40px;
+	margin-right: 0;
+	line-height: 1.7rem;
+	text-align: center;
+	background: rgba(0, 0, 0, 0.38);
+	border-radius: 50%;
 }
 
 .form-stepper .form-stepper-active .form-stepper-circle {
-    background-color: rgb(0, 117, 255) !important;
-    color: #fff;
+	background-color: rgb(0, 117, 255) !important;
+	color: #fff;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 }
 
 .form-stepper .form-stepper-active .label {
-    color: rgb(0, 117, 255) !important;
+	color: rgb(0, 117, 255) !important;
+	text-shadow: -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black, 1px 1px 0px black;
 }
 
 .form-stepper .form-stepper-unfinished .form-stepper-circle {
-    background-color: #f8f7ff;
+	background-color: #f8f7ff;
+	color: black;
 }
 
 .form-stepper .form-stepper-completed .form-stepper-circle {
-    background-color: #223ebc !important;
-    color: #fff;
+	background-color: rgb(38, 68, 206) !important;
+	color: #fff;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 }
 
 .form-stepper .form-stepper-completed .label {
-    color: #223ebc !important;
+	color: rgb(38, 68, 206) !important;
+	text-shadow: -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black, 1px 1px 0px black;
 }
 
 .form-stepper .form-stepper-active span.text-muted {
-    color: #fff !important;
+	color: #fff !important;
 }
 
 .form-stepper .form-stepper-completed span.text-muted {
-    color: #fff !important;
+	color: #fff !important;
 }
 
 .form-stepper .label {
-    font-size: 1rem;
-    margin-top: 0.5rem;
+	font-size: 1rem;
+	margin-top: 0.5rem;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 }
 
 .form-stepper a {
-    cursor: default;
+	cursor: default;
+}
+
+.direction-arrow {
+	width: 26px;
+	height: 26px;
+}
+
+.btn:has(.direction-arrow) {
+	height: 32px;
+	padding: 0;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+}
+
+.rotate-180 {
+	rotate: 180deg;
+}
+
+.prev-btn {
+	padding-right: 7px !important;
+}
+
+.next-btn {
+	padding-left: 7px !important;
+}
+
+.cancel-img {
+	width: 38px;
+	height: 38px;
+}
+
+.cancel-btn {
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	border-radius: 999px;
 }
