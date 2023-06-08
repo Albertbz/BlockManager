@@ -472,7 +472,6 @@ select {
 	display: flex;
 	flex: 0 0 auto;
 	justify-content: center;
-	transition: width 0.2s ease-in-out;
 }
 
 .form-group .form-control {
@@ -496,6 +495,9 @@ select {
 	margin-bottom: 3px;
 }
 
+.shrink-anim {
+	transition: width 0.2s ease-in-out;
+}
 
 /**
  * Custom checkboxes
