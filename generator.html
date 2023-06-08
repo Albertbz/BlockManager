@@ -106,15 +106,21 @@
                                 <input class="form-control mb-2" type="text" name="categoryName" id="categoryNameInput"
                                     placeholder="e.g., Marble">
 
-                                <label class="form-label">Block to drop (ID):</label>
-                                <div class="form-group mb-2" id="uniqueIDToDropDiv">
-                                    <input class="form-control-tight btn btn-pressed" type="button" value="Itself"
-                                        id="uniqueIDToDropItselfInput">
-                                    <input class="form-control-tight btn" type="button" value="Nothing">
-                                    <input class="form-control-tight btn" type="button" value="Custom">
-                                    <input class="form-control" type="number" name="uniqueIDToDrop"
-                                        id="uniqueIDToDropInput" readonly placeholder="e.g., 89794" min="-2"
-                                        max="2147483648" value="-2">
+                                <label class="form-label">Block to drop:</label>
+                                <div class="form-group mb-2 h-22" id="uniqueIDToDropDiv">
+                                    <div class="form-group form-control">
+                                        <input class="form-control btn btn-pressed" type="button" value="Itself"
+                                            id="uniqueIDToDropItselfInput">
+                                        <input class="form-control btn" type="button" value="Nothing"
+                                            id="uniqueIDToDropNothingInput">
+                                    </div>
+                                    <div class="form-group form-control" id="customBlockDropDiv">
+                                        <input class="form-control btn" type="button" value="Custom"
+                                            id="uniqueIDToDropCustomInput">
+                                        <input class="form-control hide" type="number" name="uniqueIDToDrop"
+                                            id="uniqueIDToDropInput" readonly placeholder="e.g., 89794" min="-2"
+                                            max="2147483648" value="-2">
+                                    </div>
                                 </div>
 
                                 <label class="form-label">Allow movement after placement:</label>
@@ -240,7 +246,7 @@
                                     id="generateRecipePictureInput" disabled>
 
                                 <label class="form-label">Select recipe picture manually [512x512]:</label>
-                                <input type="file" name="uploadRecipePicture" id="uploadRecipePictureInput">
+                                <input type="file" name="uploadRecipePicture" id="uploadRecipePictureInput" accept=".png,.jpg,.jpeg">
                                 <label for="uploadRecipePictureInput" class="manual-upload">Click here to browse</label>
                             </div>
                         </div>

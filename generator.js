@@ -479,14 +479,15 @@ document.getElementById('uniqueIDToDropDiv').querySelectorAll('input.btn').forEa
 
         prevButton = button;
 
-
-        const numberInput = button.parentElement.lastElementChild;
+        const numberInput = document.getElementById('uniqueIDToDropInput');
         if (button.value == 'Custom') {
+            numberInput.classList.remove('hide');
             numberInput.readOnly = false;
             numberInput.required = true;
             numberInput.value = '';
         }
         else {
+            numberInput.classList.add('hide');
             numberInput.readOnly = true;
             numberInput.required = false;
             removeInvalidHighlight(numberInput);
@@ -682,8 +683,7 @@ async function loadTemp() {
 }
 
 function updateUniqueIDToDropDiv() {
-    const uniqueIDToDropDiv = document.getElementById('uniqueIDToDropDiv');
-    const value = uniqueIDToDropDiv.lastElementChild.value;
+    const value = document.getElementById('uniqueIDToDropInput').value;
 
     switch (value) {
         case -2:
@@ -692,13 +692,14 @@ function updateUniqueIDToDropDiv() {
         case -1:
         case '-1':
             prevButton.classList.remove('btn-pressed');
-            prevButton = uniqueIDToDropDiv.firstElementChild.nextElementSibling
+            prevButton = document.getElementById('uniqueIDToDropNothingInput');
             prevButton.classList.add('btn-pressed');
             break;
         default:
             prevButton.classList.remove('btn-pressed');
-            prevButton = uniqueIDToDropDiv.lastElementChild.previousElementSibling
+            prevButton = document.getElementById('uniqueIDToDropCustomInput');
             prevButton.classList.add('btn-pressed');
+            document.getElementById('uniqueIDToDropInput').classList.remove('hide');
             break;
     }
 }

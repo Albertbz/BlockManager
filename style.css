@@ -151,6 +151,13 @@ input[type=range] {
 	height: auto !important;
 }
 
+.hide {
+	width: 0px !important;
+	padding: 0 !important;
+	border-width: 0px !important;
+	transition: width 0.2s ease-in-out, border-width 0s 0.19s, padding 0s 0.19s !important;
+}
+
 .btns {
 	display: flex;
 	justify-content: space-between;
@@ -212,6 +219,9 @@ input[type=range] {
 
 input {
 	box-sizing: border-box;
+	border: 1px solid rgb(125, 125, 125);
+	border-radius: 4px;
+	height: 22px;
 }
 
 select {
@@ -317,7 +327,7 @@ select {
 	justify-content: center;
 	width: 80px;
 	left: -29px;
-	top: 22px;
+	top: 24px;
 	background-color: white;
 	z-index: 1;
 	border: 1px solid rgb(116, 116, 116);
@@ -462,6 +472,7 @@ select {
 	display: flex;
 	flex: 0 0 auto;
 	justify-content: center;
+	transition: width 0.2s ease-in-out;
 }
 
 .form-group .form-control {
