@@ -342,6 +342,142 @@ async function setDefaultRecipePreview() {
     const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const defaultRecipeFileContent = await window.call.getDefaultRecipeFileContent();
     recipePropertiesTextarea.value = defaultRecipeFileContent;
+    updateRecipeMaterials();
+}
+
+function updateRecipeMaterials() {
+    const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
+    const recipeMaterialsDiv = document.getElementById('recipeMaterialsDiv');
+
+    const recipePropertiesRaw = recipePropertiesTextarea.value;
+    const recipeProperties = JSON.parse(recipePropertiesRaw.replace('"Recipe": ', '').replace('},', '}'));
+
+    const materialsArray = removeInvalidMaterials(recipeProperties.Array);
+
+    const amountElem = document.createElement('span');
+    amountElem.innerHTML = `<em>Total amount:</em> ${materialsArray.length}`;
+
+    const materialsElem = document.createElement('span');
+    let materials = getMaterials(materialsArray);
+    materialsElem.innerHTML = `<em>Specific materials:</em> ${materials}`;
+
+    recipeMaterialsDiv.replaceChildren(amountElem, materialsElem);
+}
+
+function removeInvalidMaterials(materialsArray) {
+    return materialsArray.filter(function(material) {
+        return material !== 11; // 11 means invalid/nothing.
+    })
+}
+
+function getMaterials(materialsArray) {
+    if (materialsArray.length == 0) return 'None'
+
+    let materialsMap = new Map();
+    for (let i = 0; i < materialsArray.length; i++) {
+        const material = materialsArray[i];
+        if (materialsMap.has(material)) {
+            const currentValue = materialsMap.get(material);
+            materialsMap.set(material, currentValue + 1);
+        } else {
+            materialsMap.set(material, 1);
+        }
+    }
+
+    let materials = undefined;
+    for (let [material, amount] of materialsMap) {
+        const materialName = getMaterialName(material, amount);
+
+        if (materials == undefined) {
+            materials = `${amount} ${materialName}`;
+        } else {
+            materials = `${materials}, ${amount} ${materialName}`
+        }
+    }
+    
+    return materials;
+}
+
+function getMaterialName(materialAsNumber, amount) {
+    const isPlural = amount > 1;
+    switch (materialAsNumber) {
+        case 1:
+            return 'grass';
+        case 2:
+            return 'dirt';
+        case 6:
+            return 'dark wood';
+        case 10:
+            return 'sand';
+        case 22:
+            return isPlural ? 'copper nuggets' : 'copper nugget';
+        case 23:
+            return isPlural ? 'gold nuggets' : 'gold nugget';
+        case 24:
+            return 'coal';
+        case 32:
+            return 'light wood';
+        case 33:
+            return isPlural ? 'light wood planks' : 'light wood plank';
+        case 34:
+            return isPlural ? 'dark wood planks' : 'dark wood plank';
+        case 35:
+            return 'stone';
+        case 38:
+            return 'blue dye';
+        case 41:
+            return 'green dye';
+        case 46:
+            return 'wallstone';
+        case 47:
+            return 'flagstone';
+        case 48:
+            return 'red dye';
+        case 52:
+            return 'wood scaffolding';
+        case 62:
+            return 'rainbow dye';
+        case 64:
+            return 'white dye';
+        case 68:
+            return isPlural ? 'crystals' : 'crystal';
+        case 72:
+            return 'dry grass';
+        case 73:
+            return isPlural ? 'iron ingots' : 'iron ingot';
+        case 89:
+            return isPlural ? 'glass blocks' : 'glass block';
+        case 91:
+            return isPlural ? 'glass ingots' : 'glass ingot';
+        case 96:
+            return 'blue shimmerstone';
+        case 97:
+            return 'gold shimmerstone';
+        case 98:
+            return 'white shimmerstone';
+        case 99:
+            return 'green shimmerstone';
+        case 100:
+            return 'blue starstone';
+        case 101:
+            return 'gold starstone';
+        case 102:
+            return 'green starstone';
+        case 103:
+            return 'blue shimmertile';
+        case 104:
+            return 'gold shimmertile';
+        case 105:
+            return 'white shimmertile';
+        case 106:
+            return 'green shimmertile';
+        case 112:
+            return 'cloakstone';
+        case 113:
+            return isPlural ? 'cloakstone nuggets' : 'cloakstone nugget';
+        default:
+            return 'MISSING (please let me know)'
+    }
 }
 
 // Manually upload
@@ -353,6 +489,7 @@ document.getElementById('uploadRecipeInput').addEventListener('change', function
 
     reader.addEventListener('load', function () {
         recipePropertiesTextarea.value = reader.result;
+        updateRecipeMaterials();
     });
 
     reader.readAsText(recipePropertiesFile);
@@ -363,6 +500,7 @@ document.getElementById('loadRecipeInput').addEventListener('click', async funct
     const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const generatedRecipeFileContent = await window.call.getGeneratedRecipeFileContent();
     recipePropertiesTextarea.value = generatedRecipeFileContent;
+    updateRecipeMaterials();
 });
 
 /**
@@ -660,6 +798,7 @@ async function loadTemp() {
         // Set recipe.
         const recipePropertiesJSON = JSON.stringify({Recipe: tempBlock.properties.Recipe}, null, 4);
         formElem.elements['recipeProperties'].value = recipePropertiesJSON.substring(2, recipePropertiesJSON.length-2).replace('    ', '');
+        updateRecipeMaterials();
         document.getElementById('recipePictureImg').src = './temp/recipePreview.png';
 
         // Change submit button text.

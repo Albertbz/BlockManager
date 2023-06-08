@@ -255,8 +255,13 @@
 
                             <div class="scrollable content box">
                                 <!-- Insert crafting materials, etc -->
-                                <label class="form-label">Recipe properties:</label>
-                                <textarea class="recipe-properties-preview mb-2" name="recipeProperties"
+                                <label class="form-label">Recipe materials:</label>
+                                <div class="box mb-2 h-auto" id="recipeMaterialsDiv">
+
+                                </div>
+
+                                <!-- Used to store the recipe (not visible to the user) -->
+                                <textarea class="recipe-properties-preview mb-2 d-none" name="recipeProperties"
                                     id="recipePropertiesTextarea" rows="6" required spellcheck="false"></textarea>
 
                                 <!-- Insert recipe preview -->

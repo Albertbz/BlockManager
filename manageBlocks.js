@@ -23,7 +23,7 @@ function makeBlocksDiv() {
 
     if (blocks.length == 0) {
         const noBlocksFoundText = document.createElement('span');
-        noBlocksFoundText.innerText = 'No blocks found';
+        noBlocksFoundText.innerText = 'No blocks found.';
         div.appendChild(noBlocksFoundText);
     }
 
@@ -64,11 +64,11 @@ function makeDropDownDiv(block) {
     arrow.classList.add('dropdown-arrow', 'align-center', 'me-2', 'ms-2');
     arrow.src = './images/arrow.png';
 
-    const name = document.createElement('p');
+    const name = document.createElement('span');
     name.classList.add('align-center');
     name.innerText = block.properties.Name;
 
-    const id = document.createElement('p');
+    const id = document.createElement('span');
     id.classList.add('me-2', 'align-center');
     id.innerText = `[${block.properties.UniqueID}]`;
 
@@ -100,31 +100,31 @@ function makePropertiesDiv(block) {
     const propertiesDiv = document.createElement('div');
     propertiesDiv.classList.add('box', 'ms-2', 'left');
 
-    const creatorElem = document.createElement('p');
+    const creatorElem = document.createElement('span');
     creatorElem.innerHTML = '<b>Creator:</b> ' + block.properties.CreatorName;
     propertiesDiv.appendChild(creatorElem);
 
-    const yieldElem = document.createElement('p');
+    const yieldElem = document.createElement('span');
     yieldElem.innerHTML = '<b>Yield:</b> ' + block.properties.Yield;
     propertiesDiv.appendChild(yieldElem);
 
-    const brokenByElem = document.createElement('p');
+    const brokenByElem = document.createElement('span');
     brokenByElem.innerHTML = '<b>Broken by:</b> ' + getBrokenBy(block.properties.SimilarTo);
     propertiesDiv.appendChild(brokenByElem);
 
-    const categoryElem = document.createElement('p');
+    const categoryElem = document.createElement('span');
     categoryElem.innerHTML = '<b>Category:</b> ' + getCategory(block.properties.CategoryName);
     propertiesDiv.appendChild(categoryElem);
 
-    const dropsElem = document.createElement('p');
+    const dropsElem = document.createElement('span');
     dropsElem.innerHTML = '<b>Drops:</b> ' + getDrop(block.properties.UniqueIDToDrop);
     propertiesDiv.appendChild(dropsElem);
 
-    const movableElem = document.createElement('p');
+    const movableElem = document.createElement('span');
     movableElem.innerHTML = '<b>Movable:</b> ' + getMovable(block.properties.AllowMove);
     propertiesDiv.appendChild(movableElem);
 
-    const crystalAssistElem = document.createElement('p');
+    const crystalAssistElem = document.createElement('span');
     crystalAssistElem.innerHTML = '<b>Crystal assist:</b> ' + getCrystalAssist(block.properties.AllowCrystalAssistedBlockPlacement);
     propertiesDiv.appendChild(crystalAssistElem);
 
