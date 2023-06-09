@@ -33,7 +33,7 @@ function makeBlocksDiv() {
 
 function makeBlockDiv(block) {
     const div = document.createElement('div');
-    div.classList.add('header', 'block', 'mb-1');
+    div.classList.add('header', 'block');
 
     const dropDownDiv = makeDropDownDiv(block);
     const contentDiv = makeContentDiv(block);

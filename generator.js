@@ -232,7 +232,7 @@ function hasInvalidInputs(button) {
         updateValidity(div);
     });
 
-    const currentStep = button.parentElement.parentElement.previousElementSibling;
+    const currentStep = button.parentElement.parentElement.parentElement.previousElementSibling;
     const invalidInputs = currentStep.querySelectorAll(':invalid');
 
     // Highlight all inputs that are invalid

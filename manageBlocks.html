@@ -14,44 +14,49 @@
 
 <body>
     <div class="container box">
-        <h1 class="text-center header outline">Manage Blocks</h1>
+        <h1 class="text-center header outline mb-2 blur w-fit align-center">Manage Blocks</h1>
         <div class="content box">
-            <div class="filter header mb-1 box-horizontal align-center">
-                <div class="left">
-                    <button type="button" class="btn me-1 btn-pressed filter-btn" id="filterAll">All</button>
-                    <button type="button" class="btn me-1 filter-btn">Independent</button>
-                    <button type="button" class="btn me-1 filter-btn">Mods</button>
-                </div>
-                <div class="right">
+            <div class="header box blur w-60 align-center">
 
-                    <div class="dropdown">
-                        <button type="button" class="btn sort-button me-1" id="sortButton">
-                            <img src="./images/sort.png" alt="Sort by" class="sort-img">
-                        </button>
-                        <div class="dropdown-content d-none" id="dropdownContent">
-                            <p class="sort-text outline">Sort by</p>
-                            <button type="button" class="btn btn-fill h-22 sort-type-btn">
-                                <p class="sort-text">Name</p>
-                                <img class="sort-arrow" src="./images/sort-down-arrow.png" alt="">
-                            </button>
-                            <button type="button" class="btn btn-fill h-22 sort-type-btn">
-                                <p class="sort-text">ID</p>
-                            </button>
-                        </div>
+                <div class="filter header box-horizontal">
+                    <div class="left">
+                        <button type="button" class="btn me-1 btn-pressed filter-btn" id="filterAll">All</button>
+                        <button type="button" class="btn me-1 filter-btn">Independent</button>
+                        <button type="button" class="btn me-1 filter-btn">Mods</button>
                     </div>
-
-                    <button type="button" class="btn search-btn" id="searchButton">
-                        <img src="./images/search.png" alt="Search" class="search-img">
-                    </button>
+                    <div class="right">
+    
+                        <div class="dropdown">
+                            <button type="button" class="btn sort-button me-1" id="sortButton">
+                                <img src="./images/sort.png" alt="Sort by" class="sort-img">
+                            </button>
+                            <div class="dropdown-content d-none" id="dropdownContent">
+                                <p class="sort-text outline">Sort by</p>
+                                <button type="button" class="btn btn-fill h-22 sort-type-btn">
+                                    <p class="sort-text">Name</p>
+                                    <img class="sort-arrow" src="./images/sort-down-arrow.png" alt="">
+                                </button>
+                                <button type="button" class="btn btn-fill h-22 sort-type-btn">
+                                    <p class="sort-text">ID</p>
+                                </button>
+                            </div>
+                        </div>
+    
+                        <button type="button" class="btn search-btn" id="searchButton">
+                            <img src="./images/search.png" alt="Search" class="search-img">
+                        </button>
+                    </div>
                 </div>
+    
+                <div class="box blocks" id="blocksDiv"></div>
             </div>
 
-            <div class="box blocks align-center" id="blocksDiv"></div>
+
         </div>
 
         <div class="footer btns">
             <span class="left"></span>
-            <span class="center">
+            <span class="center blur">
                 <button class="btn btn-large add-btn" type="button" id="makeNewBlock">
                     <img class="add-img" src="./images/add.png" alt="">
                 </button>

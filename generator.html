@@ -12,9 +12,9 @@
 
 <body>
     <div class="container box">
-        <div class="header">
+        <div class="header blur">
             <!-- Form steps -->
-            <ul class="form-stepper form-stepper-horizontal text-center mx-auto pl-0">
+            <ul class="form-stepper form-stepper-horizontal text-center pl-0 mb-0">
                 <!-- Step 1 -->
                 <li class="form-stepper-active form-stepper-list" step="1">
                     <a>
@@ -58,11 +58,10 @@
             <form class="box" action="" id="blockForm">
                 <!-- Step 1 -->
                 <section id="step-1" class="form-step content box">
-                    <h2 class="text-center mt-0 header outline">Properties</h2>
+                    <h2 class="align-center fit outline blur">Properties</h2>
 
                     <div class="content box-horizontal">
-                        <div class="form-part content box">
-                            <h3 class="text-center header outline">Required</h3>
+                        <div class="form-part header blur">
 
                             <div class="scrollable content box">
                                 <label class="form-label">Name of block:</label>
@@ -98,8 +97,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="form-part content box">
-                            <h3 class="text-center header outline">Optional</h3>
+                        <div class="form-part content box blur">
 
                             <div class="scrollable content box">
                                 <label class="form-label">Category name:</label>
@@ -132,7 +130,7 @@
 
                                 <label class="form-label">Allow crystal assisted block
                                     placement:</label>
-                                <div class="checkbox mb-2">
+                                <div class="checkbox">
                                     <input class="form-control" type="checkbox" name="allowCrystalPlacement"
                                         id="allowCrystalPlacementInput" checked>
                                     <label for="allowCrystalPlacementInput"></label>
@@ -142,25 +140,27 @@
                     </div>
                     <div class="btns footer">
                         <span class="left"></span>
-                        <span class="center">
+                        <span class="center blur">
                             <button class="btn btn-large discard cancel-btn" type="button">
                                 <img class="cancel-img" src="./images/cancel.png" alt="">
                             </button>
                         </span>
                         <span class="right">
-                            <button class="btn-navigate-form-step btn btn-large next-btn" type="button" step_number="2">
-                                <span>Next</span>
-                                <img class="direction-arrow" src="./images/arrow.png" alt="">
-                            </button>
+                            <div class="blur">
+                                <button class="btn-navigate-form-step btn btn-large next-btn" type="button"
+                                    step_number="2">
+                                    <span>Next</span>
+                                    <img class="direction-arrow" src="./images/arrow.png" alt="">
+                                </button>
+                            </div>
                         </span>
                     </div>
                 </section>
                 <!-- Step 2 -->
                 <section id="step-2" class="form-step content box d-none">
-                    <h2 class="text-center mt-0 header outline">Textures</h2>
+                    <h2 class="align-center fit outline blur">Textures</h2>
                     <div class="content box-horizontal">
-                        <div class="form-part content box">
-                            <h3 class="text-center header outline">Required</h3>
+                        <div class="form-part content box blur">
 
                             <div class="scrollable content box">
                                 <!-- Regular texture files -->
@@ -176,9 +176,8 @@
 
                         </div>
                         <div class="form-part content box">
-                            <h3 class="text-center header outline">Optional</h3>
 
-                            <div class="scrollable content box">
+                            <div class="scrollable content box blur">
                                 <!-- Small texture files -->
                                 <label class="form-label">Small texture file(s)
                                     [512x512]:</label>
@@ -216,29 +215,36 @@
                     </div>
                     <div class="btns footer">
                         <span class="left">
-                            <button class="btn-navigate-form-step btn-large btn prev-btn" type="button" step_number="1">
-                                <img class="direction-arrow rotate-180" src="./images/arrow.png" alt="">
-                                <span>Previous</span>
-                            </button>
+                            <div class="blur">
+                                <button class="btn-navigate-form-step btn-large btn prev-btn" type="button"
+                                    step_number="1">
+                                    <img class="direction-arrow rotate-180" src="./images/arrow.png" alt="">
+                                    <span>Previous</span>
+                                </button>
+                            </div>
                         </span>
-                        <span class="center">
+                        <span class="center blur">
                             <button class="btn btn-large discard cancel-btn" type="button">
                                 <img class="cancel-img" src="./images/cancel.png" alt="">
                             </button>
                         </span>
                         <span class="right">
-                            <button class="btn-navigate-form-step btn-large btn next-btn" type="button" step_number="3">
-                                <span>Next</span>
-                                <img class="direction-arrow" src="./images/arrow.png" alt="">
-                            </button>
+                            <div class="blur">
+                                <button class="btn-navigate-form-step btn-large btn next-btn" type="button"
+                                    step_number="3">
+                                    <span>Next</span>
+                                    <img class="direction-arrow" src="./images/arrow.png" alt="">
+                                </button>
+
+                            </div>
                         </span>
                     </div>
                 </section>
                 <!-- Step 3 -->
                 <section id="step-3" class="form-step content box d-none">
-                    <h2 class="text-center mt-0 header outline">Recipe</h2>
+                    <h2 class="align-center fit outline blur">Recipe</h2>
                     <div class="content box-horizontal">
-                        <div class="form-part content box">
+                        <div class="form-part content box blur">
                             <h3 class="text-center header outline">Choose recipe</h3>
 
                             <div class="scrollable content box">
@@ -261,7 +267,7 @@
                                 <label for="uploadRecipePictureInput" class="manual-upload">Click here to browse</label>
                             </div>
                         </div>
-                        <div class="form-part content box">
+                        <div class="form-part content box blur">
                             <h3 class="text-center header outline">Preview</h3>
 
                             <div class="scrollable content box">
@@ -286,29 +292,33 @@
                     </div>
                     <div class="btns footer">
                         <span class="left">
-                            <button class="btn-navigate-form-step btn-large btn prev-btn" type="button" step_number="2">
-                                <img class="direction-arrow rotate-180" src="./images/arrow.png" alt="">
-                                <span>Previous</span>
-                            </button>
+                            <div class="blur">
+                                <button class="btn-navigate-form-step btn-large btn prev-btn" type="button" step_number="2">
+                                    <img class="direction-arrow rotate-180" src="./images/arrow.png" alt="">
+                                    <span>Previous</span>
+                                </button>
+                            </div>
                         </span>
-                        <span class="center">
+                        <span class="center blur">
                             <button class="btn btn-large discard cancel-btn" type="button">
                                 <img class="cancel-img" src="./images/cancel.png" alt="">
                             </button>
                         </span>
                         <span class="right">
-                            <button class="btn-navigate-form-step btn-large btn next-btn" type="button" step_number="4">
-                                <span>Next</span>
-                                <img class="direction-arrow" src="./images/arrow.png" alt="">
-                            </button>
+                            <div class="blur">
+                                <button class="btn-navigate-form-step btn-large btn next-btn" type="button" step_number="4">
+                                    <span>Next</span>
+                                    <img class="direction-arrow" src="./images/arrow.png" alt="">
+                                </button>
+                            </div>
                         </span>
                     </div>
                 </section>
                 <!-- Step 4 -->
                 <section id="step-4" class="form-step content box d-none">
-                    <h2 class="text-center mt-0 header outline">Finalization</h2>
+                    <h2 class="align-center fit outline blur">Finalization</h2>
                     <div class="content box-horizontal">
-                        <div class="form-part-wide content box">
+                        <div class="form-part form-part-wide content box blur">
                             <h3 class="text-center header outline">Choose where to save the block</h3>
 
                             <div class="scrollable content box">
@@ -338,18 +348,22 @@
                     </div>
                     <div class="btns footer">
                         <span class="left">
-                            <button class="btn-navigate-form-step btn-large btn prev-btn" type="button" step_number="3">
-                                <img class="direction-arrow rotate-180" src="./images/arrow.png" alt="">
-                                <span>Previous</span>
-                            </button>
+                            <div class="blur">
+                                <button class="btn-navigate-form-step btn-large btn prev-btn" type="button" step_number="3">
+                                    <img class="direction-arrow rotate-180" src="./images/arrow.png" alt="">
+                                    <span>Previous</span>
+                                </button>
+                            </div>
                         </span>
-                        <span class="center">
+                        <span class="center blur">
                             <button class="btn btn-large discard cancel-btn" type="button">
                                 <img class="cancel-img" src="./images/cancel.png" alt="">
                             </button>
                         </span>
                         <span class="right">
-                            <button class="btn-large btn" type="submit" id="submitButton">Generate</button>
+                            <div class="blur">
+                                <button class="btn-large btn" type="submit" id="submitButton">Generate</button>
+                            </div>
                         </span>
                     </div>
                 </section>
