@@ -530,6 +530,8 @@ document.getElementById('uploadRecipeInput').addEventListener('change', function
     });
 
     reader.readAsText(recipePropertiesFile);
+
+    e.target.value = null;
 });
 
 // Load from appdata
@@ -710,13 +712,12 @@ function updateSaveButton(button) {
         button.classList.add('btn-pressed');
     };
     
-
-    if (button.classList.contains('btn-red')) {
-        saveLocation = undefined;
-    } else {
-        saveLocation = button.value;
+    const submitButton = document.getElementById('submitButton');
+    if (submitButton.disabled) {
+        submitButton.disabled = false;
     }
 
+    saveLocation = button.value;
     prevSaveButton = button;
 }
 
@@ -732,6 +733,9 @@ async function putPathToBlocksFolderInButton(button) {
         button.disabled = true;
         saveLocation = undefined;
         button.classList.remove('btn-pressed');
+
+        const submitButton = document.getElementById('submitButton');
+        submitButton.disabled = true;
     }
     else {
         const blocksFolderPath = modsFolderPath + '\\Blocks';

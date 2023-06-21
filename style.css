@@ -243,11 +243,6 @@ input[type=range] {
 	cursor: default !important;
 }
 
-.btn-pressed.btn-red {
-	border-color: rgb(179, 0, 0) !important;
-	background-color: rgb(230, 0, 0) !important;
-}
-
 .btn-path {
 	white-space: normal;
 	height: 44px;
