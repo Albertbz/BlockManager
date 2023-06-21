@@ -1,5 +1,5 @@
 .container {
-	padding-top: 2%;
+	padding-top: 1%;
 	padding-bottom: 1%;
 	padding-left: 5%;
 	padding-right: 5%;
@@ -18,7 +18,6 @@ body {
 	height: 100vh;
 	background-image: url('./images/background.jpg');
 	background-size: cover;
-	/* backdrop-filter: blur(1px); */
 }
 
 .box {
@@ -26,6 +25,7 @@ body {
 	flex-flow: column;
 	height: 100%;
 	overflow: hidden;
+	box-sizing: border-box;
 }
 
 .box .header {
@@ -46,7 +46,7 @@ body {
 
 .box .footer {
 	flex: 0 1 auto;
-	margin-top: 0.75rem;
+	margin-top: 0.40rem;
 }
 
 .box-horizontal {
@@ -123,11 +123,19 @@ input[type=range] {
 }
 
 .mt-3 {
-	margin-top: 2rem;
+	margin-top: 2rem !important;
+}
+
+.mt-2 {
+	margin-top: 0.75rem;
 }
 
 .mt-0 {
 	margin-top: 0;
+}
+
+.mt-1 {
+	margin-top: 0.25rem;
 }
 
 .mb-0 {
@@ -152,10 +160,6 @@ input[type=range] {
 
 .ms-2 {
 	margin-left: 0.75rem;
-}
-
-.mt-2 {
-	margin-top: 0.75rem;
 }
 
 .mx-2 {
@@ -213,6 +217,7 @@ input[type=range] {
 
 .btn:hover:not(:disabled) {
 	background-color: rgba(0, 0, 0, 0.4);
+	cursor: pointer;
 }
 
 .btn:active:not(:disabled) {
@@ -235,6 +240,12 @@ input[type=range] {
 .btn-pressed {
 	border-color: rgb(0, 74, 159) !important;
 	background-color: rgb(0, 117, 255) !important;
+	cursor: default !important;
+}
+
+.btn-pressed.btn-red {
+	border-color: rgb(179, 0, 0) !important;
+	background-color: rgb(230, 0, 0) !important;
 }
 
 .btn-path {
@@ -288,6 +299,11 @@ select {
 	backdrop-filter: blur(30px);
 	border-radius: 10px;
 	padding: 5px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.blur.blur-circle {
+	border-radius: 50%;
 }
 
 .blur-s {
@@ -398,7 +414,7 @@ select {
 	width: 80px;
 	left: -29px;
 	top: 24px;
-	background-color: rgb(125, 125, 125);
+	background-color: rgb(0, 0, 0, 0.2);
 	z-index: 1;
 	border: 1px solid rgb(0, 0, 0);
 	border-radius: 5px;
@@ -534,12 +550,8 @@ select {
 }
 
 .form-part {
-	width: 40%;
-	height: fit-content;
-	/* background-color: rgb(0, 0, 0, 0.2);
-	box-shadow: 0 0 10px 5px rgb(0, 0, 0, 0.5); */
+	width: 45%;
 	border-radius: 5px;
-	padding: 5px;
 }
 
 .form-part-wide {
@@ -719,19 +731,35 @@ input[type=file] {
 ul.form-stepper {
 	counter-reset: section;
 	margin-top: 0;
+	padding: 5px;
 	user-select: none;
 }
 
-ul.form-stepper .form-stepper-circle {
-	position: relative;
+ul.form-stepper .form-stepper-title {
+	display: flex;
 	border: 1px solid black;
+	border-radius: 999px;
+	padding: 5px 0px;
+	text-align: center;
+	justify-content: center;
+	width: 100px;
 }
 
-ul.form-stepper .form-stepper-circle span {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translateY(-50%) translateX(-50%);
+ul.form-stepper .form-stepper-active .form-stepper-title {
+	background-color: rgb(0, 117, 255);
+	color: white;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
+}
+
+ul.form-stepper .form-stepper-completed .form-stepper-title {
+	background-color: rgb(31, 54, 160);
+	color: rgb(200, 200, 200);
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
+}
+
+ul.form-stepper .form-stepper-unfinished .form-stepper-title {
+	background-color: rgb(248, 247, 255);
+	color: black;
 }
 
 .form-stepper-horizontal {
@@ -761,8 +789,10 @@ ul.form-stepper>li:not(:last-of-type) {
 	position: relative;
 	flex: 1;
 	height: 2px;
+	margin-left: 5px;
+	margin-right: 5px;
 	content: "";
-	top: 28%;
+	top: 50%;
 }
 
 .form-stepper-horizontal li:after {
@@ -777,56 +807,12 @@ ul.form-stepper>li:not(:last-of-type) {
 	flex: unset;
 }
 
-ul.form-stepper li a .form-stepper-circle {
-	display: inline-block;
-	width: 40px;
-	height: 40px;
-	margin-right: 0;
-	line-height: 1.7rem;
-	text-align: center;
-	background: rgba(0, 0, 0, 0.38);
-	border-radius: 50%;
-}
-
-.form-stepper .form-stepper-active .form-stepper-circle {
-	background-color: rgb(0, 117, 255) !important;
-	color: #fff;
-	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
-}
-
-.form-stepper .form-stepper-active .label {
-	color: rgb(0, 117, 255) !important;
-	text-shadow: -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black, 1px 1px 0px black;
-}
-
-.form-stepper .form-stepper-unfinished .form-stepper-circle {
-	background-color: #f8f7ff;
-	color: black;
-}
-
-.form-stepper .form-stepper-completed .form-stepper-circle {
-	background-color: rgb(38, 68, 206) !important;
-	color: #fff;
-	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
-}
-
-.form-stepper .form-stepper-completed .label {
-	color: rgb(38, 68, 206) !important;
-	text-shadow: -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black, 1px 1px 0px black;
-}
-
 .form-stepper .form-stepper-active span.text-muted {
 	color: #fff !important;
 }
 
 .form-stepper .form-stepper-completed span.text-muted {
 	color: #fff !important;
-}
-
-.form-stepper .label {
-	font-size: 1rem;
-	margin-top: 0.5rem;
-	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 }
 
 .form-stepper a {

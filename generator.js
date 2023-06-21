@@ -337,12 +337,47 @@ yieldNumberInput.addEventListener('input', function (e) {
  * Handle recipe info
  */
 setDefaultRecipePreview();
+addEventListenerToRefreshButton();
+checkIfRecipeButtonWillWorkAndUpdate();
 
 async function setDefaultRecipePreview() {
     const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const defaultRecipeFileContent = await window.call.getDefaultRecipeFileContent();
     recipePropertiesTextarea.value = defaultRecipeFileContent;
     updateRecipeMaterials();
+}
+
+async function checkIfRecipeButtonWillWorkAndUpdate() {
+    const res = await window.call.getGeneratedRecipeFileContent();
+    if (res == undefined) {
+        disableLoadRecipeButton();
+    } else {
+        enableLoadRecipeButton();
+    }
+}
+
+function disableLoadRecipeButton() {
+    const button = document.getElementById('loadRecipeInput');
+    button.disabled = true;
+    button.value = 'Could not find file';
+
+    const refreshButton = document.getElementById('refreshLoadRecipeInput');
+    refreshButton.classList.remove('d-none');
+}
+
+function enableLoadRecipeButton() {
+    const button = document.getElementById('loadRecipeInput');
+    button.disabled = false;
+    button.value = 'Load';
+
+    const refreshButton = document.getElementById('refreshLoadRecipeInput');
+    refreshButton.classList.add('d-none');
+}
+
+function addEventListenerToRefreshButton() {
+    document.getElementById('refreshLoadRecipeInput').addEventListener('click', (e) => {
+        checkIfRecipeButtonWillWorkAndUpdate();
+    });
 }
 
 function updateRecipeMaterials() {
@@ -498,11 +533,16 @@ document.getElementById('uploadRecipeInput').addEventListener('change', function
 });
 
 // Load from appdata
-document.getElementById('loadRecipeInput').addEventListener('click', async function () {
+document.getElementById('loadRecipeInput').addEventListener('click', async function (e) {
     const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const generatedRecipeFileContent = await window.call.getGeneratedRecipeFileContent();
-    recipePropertiesTextarea.value = generatedRecipeFileContent;
-    updateRecipeMaterials();
+
+    if (generatedRecipeFileContent == undefined) {
+        checkIfRecipeButtonWillWorkAndUpdate();
+    } else {
+        recipePropertiesTextarea.value = generatedRecipeFileContent;
+        updateRecipeMaterials();
+    }
 });
 
 /**
@@ -576,8 +616,13 @@ document.getElementById('blockForm').addEventListener('submit', async function (
         await window.call.deleteBlockInTemp();
     }
 
-    // Give data to main, have it make the block
+    // Format location
+    if (saveLocation == undefined) {
+        return;
+    }
+
     const location = `${saveLocation}\\${blockName}.${creatorName}.${uniqueID}`;
+    // Give data to main, have it make the block
     const response = await window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc, 
         regularTextures, smallTextures, normalTextures, glowTextures);
     
@@ -660,11 +705,17 @@ let saveLocation;
 document.getElementById('blocksFolderInput').addEventListener('click', (e) => updateSaveButton(e.target));
 
 function updateSaveButton(button) {
-    if (prevSaveButton == button) return;
+    if (prevSaveButton != button) {
+        prevSaveButton.classList.remove('btn-pressed');
+        button.classList.add('btn-pressed');
+    };
+    
 
-    prevSaveButton.classList.remove('btn-pressed');
-    button.classList.add('btn-pressed');
-    saveLocation = button.value;
+    if (button.classList.contains('btn-red')) {
+        saveLocation = undefined;
+    } else {
+        saveLocation = button.value;
+    }
 
     prevSaveButton = button;
 }
@@ -676,9 +727,17 @@ putPathToBlocksFolderInButton(document.getElementById('blocksFolderInput'));
 
 async function putPathToBlocksFolderInButton(button) {
     const modsFolderPath = await window.call.getModsFolderPath();
-    const blocksFolderPath = modsFolderPath + '\\Blocks';
-    button.value = blocksFolderPath;
-    saveLocation = blocksFolderPath;
+    if (modsFolderPath == undefined) {
+        button.value = 'Could not find blocks folder';
+        button.disabled = true;
+        saveLocation = undefined;
+        button.classList.remove('btn-pressed');
+    }
+    else {
+        const blocksFolderPath = modsFolderPath + '\\Blocks';
+        button.value = blocksFolderPath;
+        saveLocation = blocksFolderPath;
+    }
 } 
 
 /**
@@ -694,7 +753,11 @@ async function populateModFolderPicker() {
         modFolderDiv.appendChild(createInputGroup(modFolders[i]));
     }
     if (modFolders.length == 0) {
-        modFolderDiv.innerText = 'No mod folders found.'
+        const span = document.createElement('span');
+        span.classList.add('outline');
+        span.innerText = 'No mod folders found.'
+
+        modFolderDiv.appendChild(span);
     }
 }
 

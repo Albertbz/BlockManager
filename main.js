@@ -141,8 +141,9 @@ function getGeneratedRecipeFileContent() {
     try {
         const data = fs.readFileSync(recipePath, 'utf-8');
         return data;
-    } catch {
+    } catch (err) {
         console.error(err);
+        return undefined;
     }
 }
 
@@ -152,7 +153,7 @@ function getDefaultRecipeFileContent() {
     try {
         const data = fs.readFileSync(recipePath, 'utf-8');
         return data;
-    } catch {
+    } catch (err) {
         console.error(err);
     }
 }
@@ -224,13 +225,21 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
 }
 
 function getModsFolderPath() {
-    const cyubeVRPath = getGamePath(619500).game.path;
-    const modsFolderPath = path.join(cyubeVRPath, 'cyubeVR\\Mods');
-    return modsFolderPath;
+    try {
+        const cyubeVRPath = getGamePath(619500).game.path;
+        const modsFolderPath = path.join(cyubeVRPath, 'cyubeVR\\Mods');
+        return modsFolderPath;
+    }
+    catch {
+        return undefined;
+    }
 }
 
 function getAllModFolders() {
     const modsFolderPath = getModsFolderPath();
+
+    if (modsFolderPath == undefined) return [];
+
     const modFoldersPath = path.join(modsFolderPath, 'ModFolders');
 
     let res = [];
@@ -287,11 +296,13 @@ function openGenerationLocation() {
 
 function getAllBlocks() {
     const modsFolderPath = getModsFolderPath();
+
     let blocks = {
         defaultBlocksFolder: [],
         modFolders: []
     };
 
+    if (modsFolderPath == undefined) return blocks;
     
     // Add all blocks in Blocks folder
     const blocksFolderPath = path.join(modsFolderPath, 'Blocks');
