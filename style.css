@@ -286,8 +286,8 @@ select {
  * Manage Blocks
  */
 
-.w-60 {
-	width: 60%;
+.w-70 {
+	width: 70%;
 }
 
 .blur {
@@ -550,7 +550,7 @@ select {
 }
 
 .form-part-wide {
-	width: 60% !important;
+	width: 70% !important;
 }
 
 .form-label {
