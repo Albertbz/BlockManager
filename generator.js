@@ -14,7 +14,7 @@ const navigateToFormStep = (stepNumber) => {
      */
     document.querySelectorAll(".form-stepper-list").forEach((formStepHeader) => {
         formStepHeader.classList.add("form-stepper-unfinished");
-        formStepHeader.classList.remove("form-stepper-active", "form-stepper-completed");
+        formStepHeader.classList.remove("form-stepper-active", "form-stepper-completed", 'form-stepper-skipped');
     });
     /**
      * Show the current form step (as passed to the function).
@@ -48,10 +48,23 @@ const navigateToFormStep = (stepNumber) => {
              * Mark the form step as completed.
              */
             formStepCircle.classList.remove("form-stepper-unfinished", "form-stepper-active");
-            formStepCircle.classList.add("form-stepper-completed");
+            if (formStepSkipped(index)) {
+                formStepCircle.classList.add('form-stepper-skipped');
+            } else {
+                formStepCircle.classList.add("form-stepper-completed");
+            }
         }
     }
+
+    updateSubmitButtonState();
 };
+
+function formStepSkipped(stepNumber) {
+    const formStep = document.getElementById(`step-${stepNumber}`);
+    const hasInvalidInput = formStep.querySelectorAll(':invalid').length != 0;
+    return hasInvalidInput;
+}
+
 /**
  * Select all form navigation buttons, and loop through them.
  */
@@ -67,13 +80,24 @@ document.querySelectorAll(".btn-navigate-form-step").forEach((formNavigationBtn)
         /**
          * Get the value of the step.
          */
-        const stepNumber = parseInt(formNavigationBtn.getAttribute("step_number"));
+        const stepNumber = formNavigationBtn.getAttribute("step_number");
         /**
          * Call the function to navigate to the target form step.
          */
         navigateToFormStep(stepNumber);
     });
 });
+
+/**
+ * Make form stepper titles clickable
+ */
+document.querySelectorAll('span.form-stepper-title').forEach((span) => {
+    const step = span.getAttribute("step_number");
+
+    span.addEventListener('click', (e) => {
+        navigateToFormStep(step);
+    })
+})
 
 /**
  * Generate random number and put it into the uniqueID
@@ -699,6 +723,25 @@ document.querySelectorAll('input[type=text]').forEach((input) => {
 })
 
 /**
+ * Handle submit button state
+ */
+function updateSubmitButtonState() {
+    const submitButton = document.getElementById('submitButton');
+    if (isFormValid()) {
+        submitButton.disabled = false;
+    } else {
+        submitButton.disabled = true;
+    }
+}
+
+function isFormValid() {
+    if (saveLocation == undefined) return false;
+
+    const formElem = document.forms['blockForm'];
+    return formElem.checkValidity();
+}
+
+/**
  * Handle where to save
  */
 let prevSaveButton = document.getElementById('blocksFolderInput');
@@ -712,13 +755,11 @@ function updateSaveButton(button) {
         button.classList.add('btn-pressed');
     };
     
-    const submitButton = document.getElementById('submitButton');
-    if (submitButton.disabled) {
-        submitButton.disabled = false;
-    }
-
+    
     saveLocation = button.value;
     prevSaveButton = button;
+
+    updateSubmitButtonState();
 }
 
 /**
