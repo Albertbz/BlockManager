@@ -1,3 +1,5 @@
+import { loadCanvas } from "./blockPreview.js";
+
 /**
  * Define a function to navigate betweens form steps.
  * It accepts one parameter. That is - step number.
@@ -594,7 +596,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     const blockName = formData.get('name');
     const creatorName = formData.get('creatorName');
     const uniqueID = parseInt(formData.get('uniqueID'));
-    const yield = parseInt(formData.get('yieldNumber'));
+    const yieldAmount = parseInt(formData.get('yieldNumber'));
     const similarTo = parseInt(formData.get('similarTo'));
     const categoryName = formData.get('categoryName');
     const uniqueIDToDrop = parseInt(formData.get('uniqueIDToDrop'));
@@ -622,7 +624,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
         CreatorName: creatorName,
         UniqueID: uniqueID,
         Recipe: recipeProperties,
-        Yield: yield,
+        Yield: yieldAmount,
         SimilarTo: similarTo,
         Textures: {
             Mode: mode,
@@ -975,3 +977,61 @@ function addFilesToTextureFiles(newFiles, existingFiles) {
             break;
     }
 }
+
+/**
+ * Handle block preview generation
+ */
+document.getElementById('generatePreview').addEventListener('click', async (e) => {
+    const blockPreviewDiv = document.getElementById('blockPreviewDiv');
+    if (blockPreviewDiv.firstElementChild) blockPreviewDiv.firstElementChild.remove();
+
+    const textures = getTexturesSrcAndValue(document.getElementById('textureFilesInput'));
+
+    if (textures.length == 0) return;
+
+    const texturesDDS = await window.call.generatePreviewBlock(textures);
+
+    let texturePaths = [];
+
+    console.log(texturesDDS)
+
+    switch (Object.keys(texturesDDS).length) {
+        case 1:
+            for (let i = 0; i < 6; i++) {
+                texturePaths[i] = texturesDDS.all;
+            }
+            break;
+        case 2:
+            texturePaths[0] = texturesDDS.sides;
+            texturePaths[1] = texturesDDS.sides;
+            texturePaths[2] = texturesDDS.updown;
+            texturePaths[3] = texturesDDS.updown;
+            texturePaths[4] = texturesDDS.sides;
+            texturePaths[5] = texturesDDS.sides;
+            break;
+        case 3:
+            texturePaths[0] = texturesDDS.sides;
+            texturePaths[1] = texturesDDS.sides;
+            texturePaths[2] = texturesDDS.up;
+            texturePaths[3] = texturesDDS.down;
+            texturePaths[4] = texturesDDS.sides;
+            texturePaths[5] = texturesDDS.sides;
+            break;
+        case 6:
+            texturePaths[0] = texturesDDS.front;
+            texturePaths[1] = texturesDDS.back;
+            texturePaths[2] = texturesDDS.up;
+            texturePaths[3] = texturesDDS.down;
+            texturePaths[4] = texturesDDS.right;
+            texturePaths[5] = texturesDDS.left;
+            break;
+    }
+
+    console.log(texturePaths)
+    const canvas = document.createElement('canvas');
+    canvas.width = 135;
+    canvas.height = 135;
+    blockPreviewDiv.appendChild(canvas);
+
+    loadCanvas(canvas, texturePaths);
+})

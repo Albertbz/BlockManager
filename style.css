@@ -204,6 +204,10 @@ input[type=range] {
 	display: flex;
 }
 
+.box-center {
+	justify-content: center;
+}
+
 .btn {
 	color: white;
 	border: 1px solid rgb(0, 0, 0, 0.8);

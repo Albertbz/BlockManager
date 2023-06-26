@@ -121,6 +121,7 @@ ipcMain.handle('getTemp', getTemp);
 ipcMain.handle('getTempTextures', getTempTextures);
 ipcMain.handle('deleteBlockInTemp', () => deleteBlock(temp));
 ipcMain.handle('removeBlockToDelete', removeBlockToDelete);
+ipcMain.handle('generatePreviewBlock', generatePreviewBlock);
 
 
 /*
@@ -509,4 +510,25 @@ function showPopup(popupWin) {
     popupWin.setPosition(winPosition[0] + Math.round(winSize[0] / 2) - Math.round(popupWin.getSize()[0] / 2), winPosition[1] + Math.round(winSize[1] / 2) - Math.round(popupWin.getSize()[1] / 2));
 
     popupWin.show();
+}
+
+async function generatePreviewBlock(event, textures) {
+    showPopup(generatingWin);
+    await sleep(100);
+
+    let texturesDDS = {};
+
+    const texturesPath = path.join(__dirname, 'preview');
+    fs.readdirSync(texturesPath).forEach(f => fs.rmSync(`${texturesPath}\\${f}`, { recursive: true }));
+
+    for (i = 0; i < textures.length; i++) {
+        const [src, name] = textures[i];
+        outputPath = `${texturesPath}\\${name}.dds`;
+        createDDSImage(src, outputPath, 'BC3');
+        texturesDDS[name] = outputPath;
+    }
+
+    generatingWin.hide();
+
+    return texturesDDS;
 }

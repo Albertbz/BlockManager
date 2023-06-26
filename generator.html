@@ -7,6 +7,8 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
     <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
     <link rel="stylesheet" href="./style.css">
+    <script src="./glmatrix/gl-matrix-min.js"></script>
+    <script src="./blockPreview.js" type="module"></script>
     <title>Block Manager for cyubeVR</title>
 </head>
 
@@ -166,6 +168,11 @@
                                 <div class="texture-selector-parent" data-required="true" id="regularTexturesDiv">
                                     <!-- Textures are automatically added here -->
                                     <label for="textureFilesInput" class="custom-file-uploader">Select file(s)</label>
+                                </div>
+
+                                <button type="button" class="btn form-control mb-2" id="generatePreview">Generate preview of block</button>
+                                <div class="block-preview align-center" id="blockPreviewDiv">
+                                    
                                 </div>
 
                             </div>
@@ -376,6 +383,6 @@
         </div>
     </div>
 </body>
-<script src="./generator.js"></script>
+<script src="./generator.js" type="module"></script>
 
 </html>
