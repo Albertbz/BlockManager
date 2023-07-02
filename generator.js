@@ -820,7 +820,7 @@ function createInputGroup(values) {
     const select = document.createElement('select');
     select.classList.add('form-control-tight');
 
-    for (i = 0; i < values.updates.length; i++) {
+    for (let i = 0; i < values.updates.length; i++) {
         const option = document.createElement('option');
         option.value = values.updates[i];
         option.innerText = values.updates[i];
