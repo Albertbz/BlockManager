@@ -916,19 +916,23 @@ async function loadTemp() {
 
         // Show save location (existing location) and put
         // path in it.
-        const existingLocationDiv = document.getElementById('existingLocationDiv');
-        existingLocationDiv.classList.remove('d-none');
+        showExistingLocation();
 
         const existingLocationInput = document.getElementById('existingLocationInput');
         existingLocationInput.value = tempBlock.path.substring(0, tempBlock.path.lastIndexOf("\\"));
         
         updateSaveButton(existingLocationInput);
 
-        existingLocationDiv.addEventListener('click', (e) => updateSaveButton(e.target));
+        existingLocationInput.addEventListener('click', (e) => updateSaveButton(existingLocationInput));
     };
 
     addEventListenersToTextureSelectors();
     handleDiscardBlockButtons();
+}
+
+function showExistingLocation() {
+    document.getElementById('existingLocationLabel').classList.remove('d-none');
+    document.getElementById('existingLocationInput').classList.remove('d-none');
 }
 
 function updateUniqueIDToDropDiv() {
@@ -1034,4 +1038,34 @@ document.getElementById('generatePreview').addEventListener('click', async (e) =
     blockPreviewDiv.appendChild(canvas);
 
     loadCanvas(canvas, texturePaths);
+})
+
+/**
+ * Handle all tooltips
+ */
+document.querySelectorAll('div.tooltip').forEach((tooltipDiv) => {
+    const tooltipContent = tooltipDiv.querySelector('div.tooltip-content');
+
+
+    tooltipDiv.addEventListener('mouseover', (e) => {
+        let formPart = tooltipDiv.parentElement.parentElement.parentElement;
+
+        const width = formPart.clientWidth;
+
+        tooltipContent.style.width = (width * 0.5) + "px";
+
+        const offset = tooltipDiv.offsetLeft;
+        
+        if (offset + width * 0.5 + 22 > width) {
+            tooltipContent.style.left = width - (offset + width * 0.5 + 27) + 'px';
+        } else {
+            tooltipContent.style.left = '';
+        }
+
+        tooltipContent.classList.remove('d-none');
+    });
+
+    tooltipDiv.addEventListener('mouseout', (e) => {
+        tooltipContent.classList.add('d-none');
+    });
 })

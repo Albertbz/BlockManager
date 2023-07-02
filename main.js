@@ -281,10 +281,15 @@ async function generationCompletePopup(event, location) {
             preload: path.join(__dirname, 'preload.js'),
         },
         parent: mainWindow,
-        modal: true
+        modal: true,
+        show: false
     });
 
     popupWin.loadFile('generationPopup.html');
+
+    popupWin.once('ready-to-show', () => {
+        popupWin.show();
+    })
 
     const winPosition = mainWindow.getPosition();
     const winSize = mainWindow.getSize();
@@ -397,10 +402,15 @@ async function displayDeleteDialog(event, block) {
             preload: path.join(__dirname, 'preload.js'),
         },
         parent: mainWindow,
-        modal: true
+        modal: true,
+        show: false
     });
 
     popupWin.loadFile('deletionPopup.html');
+
+    popupWin.once('ready-to-show', () => {
+        popupWin.show();
+    })
 
     const winPosition = mainWindow.getPosition();
     const winSize = mainWindow.getSize();

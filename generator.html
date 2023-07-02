@@ -62,15 +62,42 @@
                         <div class="form-part content box blur">
                             <h3 class="text-center header mb-1 outline">Required</h3>
                             <div class="scrollable content box">
-                                <label class="form-label">Name of block:</label>
+                                <label class="form-label">
+                                    Name of block
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This is the name of the block that will
+                                            show up in the game.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input class="form-control mb-2" type="text" name="name" id="nameInput"
                                     placeholder="e.g., White marble" required>
 
-                                <label class="form-label">Name of creator:</label>
+                                <label class="form-label">
+                                    Name of creator
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This should most likely be your own name.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input class="form-control mb-2" type="text" name="creatorName" id="creatorNameInput"
                                     placeholder="e.g., Albertbz" required>
 
-                                <label class="form-label">ID of block:</label>
+                                <label class="form-label">
+                                    ID of block
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This ID has to be unique. Can be anything
+                                            between 1 and 2147483648. Pressing "Random"
+                                            gives you a random number in this range.
+                                        </div>
+                                    </div>
+                                </label>
                                 <div class="form-group mb-2">
                                     <input class="form-control" type="number" name="uniqueID" id="uniqueIDInput" min="1"
                                         max="2147483648" placeholder="e.g., 325235" required>
@@ -78,7 +105,17 @@
                                         id="uniqueIDButton">Random</button>
                                 </div>
 
-                                <label class="form-label">Yield:</label>
+                                <label class="form-label">
+                                    Yield
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This is the amount of blocks that the player
+                                            will receive when crafting the block. Can
+                                            be between 1 and 50.
+                                        </div>
+                                    </div>
+                                </label>
                                 <div class="form-group mb-2">
                                     <input class="form-control" type="range" name="yieldSlider" id="yieldSliderInput"
                                         min="1" max="50" value="10">
@@ -86,7 +123,17 @@
                                         id="yieldNumberInput" min="1" max="50" value="10" required>
                                 </div>
 
-                                <label class="form-label">Tool used to break:</label>
+                                <label class="form-label">
+                                    Tool used to break
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This determines what tools can break the
+                                            block. If choosing pickaxe or axe, then
+                                            a sledgehammer will also work.
+                                        </div>
+                                    </div>
+                                </label>
                                 <select class="form-control" name="similarTo" id="similarToInput" required>
                                     <option value="1">Pickaxe</option>
                                     <option value="2">Axe</option>
@@ -98,11 +145,32 @@
                         <div class="form-part content box blur">
                             <h3 class="text-center header mb-1 outline">Optional</h3>
                             <div class="scrollable content box">
-                                <label class="form-label">Category name:</label>
+                                <label class="form-label">
+                                    Category name
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This can be used to group blocks in a
+                                            category that is then shown in the recipes
+                                            tab in the game.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input class="form-control mb-2" type="text" name="categoryName" id="categoryNameInput"
                                     placeholder="e.g., Marble">
 
-                                <label class="form-label">Block to drop:</label>
+                                <label class="form-label">
+                                    Block to drop
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This defines what block is dropped when
+                                            the block is broken. If choosing "Custom",
+                                            then you must provide the ID of the block
+                                            to drop.
+                                        </div>
+                                    </div>
+                                </label>
                                 <div class="form-group mb-2 h-22" id="uniqueIDToDropDiv">
                                     <div class="form-group form-control">
                                         <input class="form-control btn btn-pressed" type="button" value="Itself"
@@ -119,15 +187,36 @@
                                     </div>
                                 </div>
 
-                                <label class="form-label">Allow movement after placement:</label>
+                                <label class="form-label">
+                                    Allow movement after placement
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            Whether to allow movement after the block
+                                            has been placed. Useful when making blocks
+                                            for a VoxelAPI mod that should not be allowed
+                                            to move.
+                                        </div>
+                                    </div>
+                                </label>
                                 <div class="checkbox mb-2">
                                     <input class="form-control" type="checkbox" name="allowMove" id="allowMoveInput"
                                         checked>
                                     <label for="allowMoveInput"></label>
                                 </div>
 
-                                <label class="form-label">Allow crystal assisted block
-                                    placement:</label>
+                                <label class="form-label">
+                                    Allow crystal assisted block placement
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            Whether to allow the use of crystal assisted
+                                            block placement for the block. Useful if you
+                                            want to make sure that only a single block can
+                                            be placed at a time.
+                                        </div>
+                                    </div>
+                                </label>
                                 <div class="checkbox">
                                     <input class="form-control" type="checkbox" name="allowCrystalPlacement"
                                         id="allowCrystalPlacementInput" checked>
@@ -162,7 +251,17 @@
                             <h3 class="text-center header mb-1 outline">Required</h3>
                             <div class="scrollable content box">
                                 <!-- Regular texture files -->
-                                <label class="form-label">Texture file(s) [2048x2048]:</label>
+                                <label class="form-label">
+                                    Texture file(s) [2048x2048]
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            Here you must provide the texture files
+                                            (in .png or .jpg format) for the block.
+                                            These must be 2048x2048 pixels.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input type="file" name="textureFiles" id="textureFilesInput" multiple
                                     accept=".png,.jpg,.jpeg">
                                 <div class="texture-selector-parent" data-required="true" id="regularTexturesDiv">
@@ -170,9 +269,10 @@
                                     <label for="textureFilesInput" class="custom-file-uploader">Select file(s)</label>
                                 </div>
 
-                                <button type="button" class="btn form-control mb-2" id="generatePreview">Generate preview of block</button>
+                                <button type="button" class="btn form-control mb-2" id="generatePreview">Generate
+                                    preview of block</button>
                                 <div class="block-preview align-center" id="blockPreviewDiv">
-                                    
+
                                 </div>
 
                             </div>
@@ -182,8 +282,19 @@
                             <h3 class="text-center header mb-1 outline">Optional</h3>
                             <div class="scrollable content box">
                                 <!-- Small texture files -->
-                                <label class="form-label">Small texture file(s)
-                                    [512x512]:</label>
+                                <label class="form-label">
+                                    Small texture file(s) [512x512]
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            These textures determine how snow accumulates
+                                            on the block. The brighter the texture, the less
+                                            snow accumulates. If not provided, then these will be
+                                            autogenerated from the normal texture files.
+                                            These must be 512x512 pixels.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input type="file" name="smallTextureFiles" id="smallTextureFilesInput" multiple
                                     accept=".png,.jpg,.jpeg">
                                 <div class="texture-selector-parent mb-2">
@@ -193,8 +304,19 @@
                                 </div>
 
                                 <!-- Normal map files -->
-                                <label class="form-label">Normal map file(s)
-                                    [2048x2048]:</label>
+                                <label class="form-label">
+                                    Normal map file(s) [2048x2048]
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            If you want the block to have depth, then provide
+                                            the normal map files here. Keep in mind that depth
+                                            can only be seen in sunlight and is not visible
+                                            when e.g. a torch is the only light source.
+                                            These must be 2048x2048 pixels.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input type="file" name="normalTextureFiles" id="normalTextureFilesInput" multiple
                                     accept=".png,.jpg,.jpeg">
                                 <div class="texture-selector-parent mb-2">
@@ -204,8 +326,19 @@
                                 </div>
 
                                 <!-- Glow map files -->
-                                <label class="form-label">Glow map file(s)
-                                    [1024x1024]:</label>
+                                <label class="form-label">
+                                    Glow map file(s) [1024x1024]
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            If you want your texture to glow at all times,
+                                            then provide textures with the parts that you
+                                            want to glow here. Keep in mind that this glow
+                                            will not light up the surrounding area.
+                                            These must be 1024x1024 pixels.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input type="file" name="glowTextureFiles" id="glowTextureFilesInput" multiple
                                     accept=".png,.jpg,.jpeg">
                                 <div class="texture-selector-parent">
@@ -252,8 +385,20 @@
 
                             <div class="scrollable content box">
 
-                                <label class="form-label">Load most recently generated
-                                    recipe:</label>
+                                <label class="form-label">
+                                    Load most recently generated recipe
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This will load the most recently generated recipe
+                                            that was made in the game. To make one of these,
+                                            put the recipe together the way that you want it,
+                                            and then press the "Generate Recipe" button in the
+                                            "Stats" tab in the settings on the briefcase. The
+                                            button is at the bottom of the tab.
+                                        </div>
+                                    </div>
+                                </label>
                                 <div class="form-group mb-2">
                                     <input type="button" value="Load" class="form-control btn" id="loadRecipeInput">
 
@@ -261,7 +406,18 @@
                                         id="refreshLoadRecipeInput">
                                 </div>
 
-                                <label class="form-label">Select recipe manually:</label>
+                                <label class="form-label">
+                                    Select recipe manually
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            If you would rather select the recipe file
+                                            generated by the game manually, then do so here.
+                                            Keep in mind that this still has to be a valid recipe
+                                            file generated by the game.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input type="file" name="uploadRecipe" id="uploadRecipeInput" accept=".txt">
                                 <label for="uploadRecipeInput" class="manual-upload mb-2">Click here to browse</label>
 
@@ -270,7 +426,19 @@
                                 <input type="button" value="Generate" class="form-control mb-2 btn"
                                     id="generateRecipePictureInput" disabled>
                                  -->
-                                <label class="form-label">Select recipe picture manually [512x512]:</label>
+                                <label class="form-label">
+                                    Select recipe picture manually [512x512]
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            Here you must select an image of what the recipe
+                                            looks like. I recommend taking a screenshot of the
+                                            recipe in-game when it is all put together, and then
+                                            selecting said image here. The image must be 512x512 pixels,
+                                            so if it is not then you must resize it beforehand.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input type="file" name="uploadRecipePicture" id="uploadRecipePictureInput"
                                     accept=".png,.jpg,.jpeg">
                                 <label for="uploadRecipePictureInput" class="manual-upload">Click here to browse</label>
@@ -281,7 +449,16 @@
 
                             <div class="scrollable content box">
                                 <!-- Insert crafting materials, etc -->
-                                <label class="form-label">Recipe materials:</label>
+                                <label class="form-label">
+                                    Recipe materials
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This is a short overview of what materials the recipe
+                                            needs, as well as how many.
+                                        </div>
+                                    </div>
+                                </label>
                                 <div class="box mb-2 h-auto" id="recipeMaterialsDiv">
 
                                 </div>
@@ -291,7 +468,17 @@
                                     id="recipePropertiesTextarea" rows="6" required spellcheck="false"></textarea>
 
                                 <!-- Insert recipe preview -->
-                                <label class="form-label">Recipe picture:</label>
+                                <label class="form-label">
+                                    Recipe picture
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This is what will be shown when you see the
+                                            block in the recipes tab in the game. Should
+                                            contain an image that shows how to craft the block.
+                                        </div>
+                                    </div>
+                                </label>
                                 <div class="form-control" id="recipePictureDiv">
                                     <img src="./premade/placeholder.png" alt="" class="recipe-picture-preview"
                                         id="recipePictureImg">
@@ -333,22 +520,59 @@
                             <h3 class="text-center header mb-1 outline">Choose where to save the block</h3>
 
                             <div class="scrollable content box">
-                                <div class="d-none box h-auto" id="existingLocationDiv">
-                                    <label class="form-label">Save in existing location (default when editing):</label>
-                                    <input type="button" value="" class="btn form-control mb-2 btn-pressed btn-path"
-                                        id="existingLocationInput">
-                                </div>
+                                <label class="form-label d-none" id="existingLocationLabel">
+                                    Save in existing location (default when editing)
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This option only shows up when you are editing
+                                            an existing block. This will simply save the block
+                                            where it already is.
+                                        </div>
+                                    </div>
+                                </label>
+                                <input type="button" value="" class="btn form-control mb-2 btn-pressed btn-path d-none"
+                                    id="existingLocationInput">
 
-                                <label class="form-label">Save in blocks folder (default):</label>
+                                <label class="form-label">
+                                    Save in blocks folder (default)
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This will save the block in the blocks folder located
+                                            at the path shown. This is where all individual blocks
+                                            are located.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input type="button" value="" class="btn form-control mb-2 btn-pressed btn-path"
                                     id="blocksFolderInput">
 
-                                <label class="form-label">Save in some mod folder:</label>
+                                <label class="form-label">
+                                    Save in some mod folder
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            If you are making a block for a mod, then you can choose
+                                            to save the block directly in the mod here. Simply click
+                                            on the mod and choose which update you want to save it to.
+                                        </div>
+                                    </div>
+                                </label>
                                 <div class="form-group-vertical mb-2" id="modFolderDiv">
 
                                 </div>
 
-                                <label class="form-label">Save somewhere manually:</label>
+                                <label class="form-label">
+                                    Save somewhere manually
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            If you want to save the block somewhere else entirely,
+                                            then you can manually choose a folder to save it to here.
+                                        </div>
+                                    </div>
+                                </label>
                                 <input class="form-control btn btn-path" type="button" name="saveBlockManually"
                                     id="saveBlockManuallyInput" webkitdirectory directory value="Click here to browse">
                             </div>
