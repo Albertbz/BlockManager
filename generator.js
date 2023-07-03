@@ -202,6 +202,9 @@ function addTexturesToDiv(fileArray, selectorDiv) {
     }
 
     updateValidity(selectorDiv);
+
+    // Update the preview button.
+    updatePreviewButton();
 }
 
 function updateValidity(textureDiv) {
@@ -949,6 +952,9 @@ async function loadTemp() {
 
     addEventListenersToTextureSelectors();
     handleDiscardBlockButtons();
+
+    // Update the preview button.
+    updatePreviewButton();
 }
 
 function showExistingLocation() {
@@ -1060,6 +1066,18 @@ document.getElementById('generatePreview').addEventListener('click', async (e) =
 
     loadCanvas(canvas, texturePaths, isAnimated, animationSpeed);
 })
+
+function updatePreviewButton() {
+    const previewButton = document.getElementById('generatePreview');
+
+    const regularTexturesDiv = document.getElementById('regularTexturesDiv');
+
+    if (regularTexturesDiv.childElementCount - 1 > 0) {
+        previewButton.disabled = false;
+    } else {
+        previewButton.disabled = true;
+    }
+}
 
 /**
  * Handle all tooltips
