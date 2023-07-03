@@ -43,9 +43,16 @@ function makeBlockDiv(block) {
         contentDiv.classList.toggle('d-none');
     });
 
+    let isAnimated = false;
+    let animationSpeed = 0;
+    if (block.properties.AnimationSpeed != undefined) {
+        isAnimated = true;
+        animationSpeed = block.properties.AnimationSpeed;
+    }
+
     dropDownDiv.addEventListener('mousedown', (e) => {
         const canvas = contentDiv.querySelector('canvas');
-        loadCanvas(canvas, getTexturePaths(block));
+        loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed);
     }, { once: true });
 
     div.appendChild(dropDownDiv);

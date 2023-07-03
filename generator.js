@@ -1014,8 +1014,6 @@ document.getElementById('generatePreview').addEventListener('click', async (e) =
 
     let texturePaths = [];
 
-    console.log(texturesDDS)
-
     switch (Object.keys(texturesDDS).length) {
         case 1:
             for (let i = 0; i < 6; i++) {
@@ -1048,13 +1046,15 @@ document.getElementById('generatePreview').addEventListener('click', async (e) =
             break;
     }
 
-    console.log(texturePaths)
     const canvas = document.createElement('canvas');
     canvas.width = 135;
     canvas.height = 135;
     blockPreviewDiv.appendChild(canvas);
 
-    loadCanvas(canvas, texturePaths);
+    let isAnimated = document.getElementById('makeAnimatedInput').checked;
+    let animationSpeed = document.getElementById('animationSpeedNumberInput').value;
+
+    loadCanvas(canvas, texturePaths, isAnimated, animationSpeed);
 })
 
 /**

@@ -1,7 +1,7 @@
 import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
 
-async function loadCanvas(canvas, texturePaths) {
+async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0) {
     let cubeRotation = 0.0;
     let deltaTime = 0;
 
@@ -34,9 +34,12 @@ async function loadCanvas(canvas, texturePaths) {
         varying highp vec2 vTextureCoord;
         varying highp vec3 vLighting;
 
+        uniform float uvScale;
+        uniform vec2 uvOffset;
+
         void main(void) {
             gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-            vTextureCoord = aTextureCoord;
+            vTextureCoord = aTextureCoord / uvScale + uvOffset;
 
             // Apply lighting effect
 
@@ -85,6 +88,8 @@ async function loadCanvas(canvas, texturePaths) {
             modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
             normalMatrix: gl.getUniformLocation(shaderProgram, "uNormalMatrix"),
             uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
+            vScale: gl.getUniformLocation(shaderProgram, "uvScale"),
+            vOffset: gl.getUniformLocation(shaderProgram, "uvOffset"),
         },
     };
 
@@ -103,6 +108,9 @@ async function loadCanvas(canvas, texturePaths) {
 
 
     let then = 0;
+    const scale = isAnimated ? 4.0 : 1.0;
+    let offset = glMatrix.vec2.fromValues(0.0, 0.0);
+    let animationCounter = 0;
 
     // Draw the scene repeatedly
     function render(now) {
@@ -110,13 +118,35 @@ async function loadCanvas(canvas, texturePaths) {
         deltaTime = now - then;
         then = now;
 
-        drawScene(gl, programInfo, buffers, textures, cubeRotation);
+        drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offset);
+
+        if (isAnimated) {
+            animationCounter += deltaTime;
+            if (animationCounter >= 15.5 / animationSpeed) {
+                offset = getNextOffset(offset);
+                animationCounter = 0;
+            }
+        }
+
         cubeRotation += deltaTime * 0.5;
 
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
 
+}
+
+function getNextOffset(offset) {
+    offset[0] += 0.25;
+    if (offset[0] == 1.0) {
+        offset[0] = 0.0;
+        offset[1] += 0.25;
+
+        if (offset[1] == 1.0) {
+            offset[1] = 0.0;
+        }
+    }
+    return offset;
 }
 
 //

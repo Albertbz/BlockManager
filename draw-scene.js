@@ -1,4 +1,4 @@
-function drawScene(gl, programInfo, buffers, textures, cubeRotation) {
+function drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offset) {
     gl.clearColor(0.0, 0.0, 0.0, 0.0); // Clear to black, fully opaque
     gl.clearDepth(1.0); // Clear everything
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -34,8 +34,6 @@ function drawScene(gl, programInfo, buffers, textures, cubeRotation) {
 
     glMatrix.mat4.lookAt(modelViewMatrix, eye, glMatrix.vec3.fromValues(0, 0, 0), glMatrix.vec3.fromValues(0, 1, 0));
 
-
-
     const normalMatrix = glMatrix.mat4.create();
     glMatrix.mat4.invert(normalMatrix, modelViewMatrix);
     glMatrix.mat4.transpose(normalMatrix, normalMatrix);
@@ -70,6 +68,18 @@ function drawScene(gl, programInfo, buffers, textures, cubeRotation) {
         false,
         normalMatrix
     );
+
+    gl.uniform1f(
+        programInfo.uniformLocations.vScale,
+        scale
+    );
+
+    //const offset = glMatrix.vec2.fromValues(0.25, 0.0)
+    gl.uniform2fv(
+        programInfo.uniformLocations.vOffset,
+        offset
+    );
+
 
     for (let i = 0; i < 6; i++) {
         // Tell WebGL we want to affect texture unit 0
