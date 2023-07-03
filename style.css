@@ -592,6 +592,10 @@ select {
 	margin-right: 2px;
 }
 
+.form-group .form-control-tight:not(:last-child) {
+	margin-right: 2px;
+}
+
 .form-group .form-control-tight {
 	display: flex;
 	flex: 0 1 auto;
@@ -652,6 +656,9 @@ input[type=checkbox] {
 	background: rgb(0, 117, 255);
 }
 
+.checkbox.form-control-tight {
+	flex: 0 0 auto;
+}
 
 /**
  * Custom file uploaders

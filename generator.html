@@ -217,10 +217,37 @@
                                         </div>
                                     </div>
                                 </label>
-                                <div class="checkbox">
+                                <div class="checkbox mb-2">
                                     <input class="form-control" type="checkbox" name="allowCrystalPlacement"
                                         id="allowCrystalPlacementInput" checked>
                                     <label for="allowCrystalPlacementInput"></label>
+                                </div>
+
+                                <label class="form-label">
+                                    Make animated
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            Make the block animated. If you enable this, then
+                                            the textures you provide in the next step must have
+                                            16 smaller images inside them. For example, for the
+                                            normal textures that are 2048x2048 pixels then you must
+                                            have 16 512x512 pixel images inside of them.
+                                            The slider is the speed of the animation, and can go
+                                            from 0 to 255.
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="form-group">
+                                    <div class="checkbox form-control-tight">
+                                        <input class="form-control" type="checkbox" name="makeAnimated"
+                                            id="makeAnimatedInput">
+                                        <label for="makeAnimatedInput"></label>
+                                    </div>
+                                    <input class="form-control d-none" type="range" name="animationSpeedSlider" id="animationSpeedSliderInput"
+                                        min="0" max="255" value="100">
+                                    <input class="form-control-tight d-none" type="number" name="animationSpeedNumber"
+                                        id="animationSpeedNumberInput" min="0" max="255" value="100">
                                 </div>
                             </div>
                         </div>

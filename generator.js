@@ -132,12 +132,12 @@ loadTemp();
 function addEventListenersToTextureSelectors() {
     document.querySelectorAll('div.texture-selector-parent').forEach((textureSelectorDiv, i) => {
         let textureFilesInput = textureSelectorDiv.previousElementSibling;
-    
+
         updateValidity(textureSelectorDiv);
-    
+
         const type = Object.keys(textureFiles)[i];
         addTexturesToDiv(textureFiles[type], textureSelectorDiv);
-    
+
         textureFilesInput.addEventListener('change', (e) => {
             addTexturesToDiv(textureFiles[type], textureSelectorDiv);
         })
@@ -428,7 +428,7 @@ function updateRecipeMaterials() {
 }
 
 function removeInvalidMaterials(materialsArray) {
-    return materialsArray.filter(function(material) {
+    return materialsArray.filter(function (material) {
         return material !== 11; // 11 means invalid/nothing.
     })
 }
@@ -457,7 +457,7 @@ function getMaterials(materialsArray) {
             materials = `${materials}, ${amount} ${materialName}`
         }
     }
-    
+
     return materials;
 }
 
@@ -602,6 +602,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     const uniqueIDToDrop = parseInt(formData.get('uniqueIDToDrop'));
     const allowMove = formData.get('allowMove') == 'on' ? true : false;
     const allowCrystalPlacement = formData.get('allowCrystalPlacement') == 'on' ? true : false;
+    const makeAnimated = formData.get('makeAnimated') == 'on' ? true : false;
 
     // Get all textures and corresponding mode
     const amountOfRegularTextures = document.getElementById('regularTexturesDiv').childElementCount - 1;
@@ -635,7 +636,17 @@ document.getElementById('blockForm').addEventListener('submit', async function (
         AllowMove: allowMove,
         AllowCrystalAssistedBlockPlacement: allowCrystalPlacement
     }
-    if (categoryName.length != 0) propertiesFileContent.CategoryName = categoryName;
+
+    // If it has a category name
+    if (categoryName.length != 0) {
+        propertiesFileContent.CategoryName = categoryName;
+    }
+
+    // If it is animated
+    if (makeAnimated) {
+        const animationSpeed = formData.get('animationSpeedNumber');
+        propertiesFileContent.AnimationSpeed = animationSpeed;
+    }
 
     // Delete old block if editing
     const tempBlock = await window.call.getTemp();
@@ -651,9 +662,9 @@ document.getElementById('blockForm').addEventListener('submit', async function (
 
     const location = `${saveLocation}\\${blockName}.${creatorName}.${uniqueID}`;
     // Give data to main, have it make the block
-    const response = await window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc, 
+    const response = await window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc,
         regularTextures, smallTextures, normalTextures, glowTextures);
-    
+
     if (response) {
         window.call.generationCompletePopup(location);
     }
@@ -719,7 +730,7 @@ document.getElementById('uniqueIDToDropDiv').querySelectorAll('input.btn').forEa
  * Handle excess whitespace in front of and behind all input.
  */
 document.querySelectorAll('input[type=text]').forEach((input) => {
-    input.addEventListener('focusout', function(e) {
+    input.addEventListener('focusout', function (e) {
         input.value = input.value.trim();
     });
 })
@@ -756,8 +767,8 @@ function updateSaveButton(button) {
         prevSaveButton.classList.remove('btn-pressed');
         button.classList.add('btn-pressed');
     };
-    
-    
+
+
     saveLocation = button.value;
     prevSaveButton = button;
 
@@ -785,7 +796,7 @@ async function putPathToBlocksFolderInButton(button) {
         button.value = blocksFolderPath;
         saveLocation = blocksFolderPath;
     }
-} 
+}
 
 /**
  * Populate Mod folder picker
@@ -795,7 +806,7 @@ populateModFolderPicker();
 async function populateModFolderPicker() {
     const modFolderDiv = document.getElementById('modFolderDiv');
     const modFolders = await window.call.getAllModFolders();
-    
+
     for (let i = 0; i < modFolders.length; i++) {
         modFolderDiv.appendChild(createInputGroup(modFolders[i]));
     }
@@ -825,7 +836,7 @@ function createInputGroup(values) {
         option.value = values.updates[i];
         option.innerText = values.updates[i];
         select.appendChild(option);
-    } 
+    }
 
     input.addEventListener('click', async (e) => {
         if (prevSaveButton == e.target) return;
@@ -847,7 +858,7 @@ function createInputGroup(values) {
 /**
  * Handle directory picker for saving
  */
-document.getElementById('saveBlockManuallyInput').addEventListener('click', async function(e) {
+document.getElementById('saveBlockManuallyInput').addEventListener('click', async function (e) {
     const path = await window.call.selectFolder();
     if (path == undefined) return;
     e.target.value = path;
@@ -875,7 +886,7 @@ async function loadTemp() {
     const isEditing = tempBlock != undefined;
     if (isEditing) {
         const formElem = document.forms['blockForm'];
-        
+
         // Set all properties
         formElem.elements['name'].value = tempBlock.properties.Name;
         formElem.elements['creatorName'].value = tempBlock.properties.CreatorName;
@@ -883,7 +894,7 @@ async function loadTemp() {
         formElem.elements['yieldSlider'].value = tempBlock.properties.Yield;
         formElem.elements['yieldNumber'].value = tempBlock.properties.Yield;
         formElem.elements['similarTo'].value = tempBlock.properties.SimilarTo;
-        
+
         if (tempBlock.properties.CategoryName != undefined) {
             formElem.elements['categoryName'].value = tempBlock.properties.CategoryName;
         }
@@ -897,17 +908,23 @@ async function loadTemp() {
         if (tempBlock.properties.AllowCrystalAssistedBlockPlacement != undefined) {
             formElem.elements['allowCrystalPlacement'].checked = tempBlock.properties.AllowCrystalAssistedBlockPlacement;
         }
-    
+        if (tempBlock.properties.AnimationSpeed != undefined) {
+            formElem.elements['makeAnimated'].checked = true;
+            formElem.elements['animationSpeedSlider'].value = tempBlock.properties.AnimationSpeed;
+            formElem.elements['animationSpeedNumber'].value = tempBlock.properties.AnimationSpeed;
+            enableAnimation();
+        }
+
         // Set textures.
         const textures = await window.call.getTempTextures();
         addFilesToTextureFiles(textures.regular, textureFiles.regular);
         addFilesToTextureFiles(textures.small, textureFiles.small);
         addFilesToTextureFiles(textures.normal, textureFiles.normal);
         addFilesToTextureFiles(textures.glow, textureFiles.glow);
-        
+
         // Set recipe.
-        const recipePropertiesJSON = JSON.stringify({Recipe: tempBlock.properties.Recipe}, null, 4);
-        formElem.elements['recipeProperties'].value = recipePropertiesJSON.substring(2, recipePropertiesJSON.length-2).replace('    ', '');
+        const recipePropertiesJSON = JSON.stringify({ Recipe: tempBlock.properties.Recipe }, null, 4);
+        formElem.elements['recipeProperties'].value = recipePropertiesJSON.substring(2, recipePropertiesJSON.length - 2).replace('    ', '');
         updateRecipeMaterials();
         document.getElementById('recipePictureImg').src = './temp/recipePreview.png';
 
@@ -920,7 +937,7 @@ async function loadTemp() {
 
         const existingLocationInput = document.getElementById('existingLocationInput');
         existingLocationInput.value = tempBlock.path.substring(0, tempBlock.path.lastIndexOf("\\"));
-        
+
         updateSaveButton(existingLocationInput);
 
         existingLocationInput.addEventListener('click', (e) => updateSaveButton(existingLocationInput));
@@ -1055,7 +1072,7 @@ document.querySelectorAll('div.tooltip').forEach((tooltipDiv) => {
         tooltipContent.style.width = (width * 0.5) + "px";
 
         const offset = tooltipDiv.offsetLeft;
-        
+
         if (offset + width * 0.5 + 22 > width) {
             tooltipContent.style.left = width - (offset + width * 0.5 + 27) + 'px';
         } else {
@@ -1069,3 +1086,39 @@ document.querySelectorAll('div.tooltip').forEach((tooltipDiv) => {
         tooltipContent.classList.add('d-none');
     });
 })
+
+/**
+ * Handle animation property stuff
+ */
+const animationSpeedSliderInput = document.getElementById('animationSpeedSliderInput');
+const animationSpeedNumberInput = document.getElementById('animationSpeedNumberInput');
+
+animationSpeedSliderInput.addEventListener('input', function (e) {
+    animationSpeedNumberInput.value = e.target.value;
+
+    if (animationSpeedNumberInput.classList.contains('highlight-invalid')) {
+        animationSpeedNumberInput.classList.remove('highlight-invalid');
+    }
+});
+
+animationSpeedNumberInput.addEventListener('input', function (e) {
+    animationSpeedSliderInput.value = e.target.value;
+});
+
+document.getElementById('makeAnimatedInput').addEventListener('change', (e) => {
+    if (e.target.checked) {
+        enableAnimation();
+    } else {
+        disableAnimation();
+    }
+})
+
+function enableAnimation() {
+    animationSpeedSliderInput.classList.remove('d-none');
+    animationSpeedNumberInput.classList.remove('d-none');
+}
+
+function disableAnimation() {
+    animationSpeedSliderInput.classList.add('d-none');
+    animationSpeedNumberInput.classList.add('d-none');
+}
