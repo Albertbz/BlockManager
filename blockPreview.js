@@ -112,6 +112,9 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
     let offset = glMatrix.vec2.fromValues(0.0, 0.0);
     let animationCounter = 0;
 
+    const framesPerSecond = 16 * (animationSpeed / 255);
+    const secondsPerFrame = 1 / framesPerSecond;
+
     // Draw the scene repeatedly
     function render(now) {
         now *= 0.001; // convert to seconds
@@ -122,7 +125,8 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
 
         if (isAnimated) {
             animationCounter += deltaTime;
-            if (animationCounter >= 15.5 / animationSpeed) {
+            
+            if (animationCounter >= secondsPerFrame) {
                 offset = getNextOffset(offset);
                 animationCounter = 0;
             }

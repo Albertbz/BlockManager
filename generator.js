@@ -415,16 +415,20 @@ function updateRecipeMaterials() {
 
     const materialsArray = removeInvalidMaterials(recipeProperties.Array);
 
-    const amountElem = document.createElement('span');
-    amountElem.classList.add('outline');
-    amountElem.innerHTML = `<em>Total amount:</em> ${materialsArray.length}`;
+    if (materialsArray.length == 0) {
+        const textElem = document.createElement('span');
+        textElem.classList.add('outline');
+        textElem.innerHTML = '<em>No recipe has been loaded. Therefore not craftable.</em>';
+        recipeMaterialsDiv.replaceChildren(textElem);
+    } else {
+        const materialsElem = document.createElement('span');
+        materialsElem.classList.add('outline');
+        let materials = getMaterials(materialsArray);
+        materialsElem.innerHTML = `<em>${materials}.</em>`;
+    
+        recipeMaterialsDiv.replaceChildren(materialsElem);
+    }
 
-    const materialsElem = document.createElement('span');
-    materialsElem.classList.add('outline');
-    let materials = getMaterials(materialsArray);
-    materialsElem.innerHTML = `<em>Specific materials:</em> ${materials}`;
-
-    recipeMaterialsDiv.replaceChildren(amountElem, materialsElem);
 }
 
 function removeInvalidMaterials(materialsArray) {
@@ -644,7 +648,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
 
     // If it is animated
     if (makeAnimated) {
-        const animationSpeed = formData.get('animationSpeedNumber');
+        const animationSpeed = parseInt(formData.get('animationSpeedNumber'));
         propertiesFileContent.AnimationSpeed = animationSpeed;
     }
 
