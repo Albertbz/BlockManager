@@ -624,7 +624,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     // Get recipe properties and picture
     const recipePropertiesRaw = formData.get('recipeProperties');
     const recipeProperties = JSON.parse(recipePropertiesRaw.replace('"Recipe": ', '').replace('},', '}'));
-    const recipePictureImgSrc = document.getElementById('recipePictureImg').src.replace('file:///', '');
+    const recipePictureImgSrc = document.getElementById('recipePictureImg').src.replace('file:///', '').replaceAll('%20', ' ');
 
     // Make properties file content
     let propertiesFileContent = {
@@ -692,7 +692,7 @@ function getTexturesSrcAndValue(textureInput) {
 function getTextureSrcAndValue(child) {
     const img = child.firstElementChild.firstElementChild;
     const select = child.lastElementChild;
-    const fixedImgSrc = img.src.replace('file:///', '');
+    const fixedImgSrc = img.src.replace('file:///', '').replaceAll('%20', ' ');
     return [fixedImgSrc, select.value];
 }
 

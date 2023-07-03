@@ -1,6 +1,6 @@
 {
   "name": "blockmanager",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "A program that helps you manage and create custom blocks for cyubeVR",
   "main": "main.js",
   "scripts": {

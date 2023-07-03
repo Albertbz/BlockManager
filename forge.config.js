@@ -7,12 +7,13 @@ module.exports = {
           owner: 'Albertbz',
           name: 'BlockManager',
         },
-        prerelease: true,
+        prerelease: false,
         draft: true,
       },
     },
   ],
   packagerConfig: {
+    name: 'Block Manager',
     icon: './images/icon'
   },
   rebuildConfig: {},
