@@ -1,18 +1,15 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
-const cliPath = path.join(__dirname, 'PVRTexToolCLI.exe');
+const cliPath = path.join(__dirname, 'CLI', 'compressonatorcli.exe');
 
-function createDDSImage(inputPath, outputPath, format, resize = false, width = 0, height = 0) {
-    let command = `"${cliPath}" -i "${inputPath}" -o "${outputPath}" -m -f ${format} -ics lRGB`;
-    if (resize) {
-        command = `${command} -r ${width},${height}`;
-    }
+function createDDSImage(inputPath, outputPath, format) {
+    let command = `"${cliPath}" -fd ${format} -mipsize 1 "${inputPath}" "${outputPath}"`;
     execSync(command, {stdio: 'ignore'});
 }
 
 function decompressDDSImage(inputPath, outputPath) {
-    let command = `"${cliPath}" -i "${inputPath}" -d "${outputPath}" -ics sRGB -noout`;
+    let command = `"${cliPath}" "${inputPath}" "${outputPath}"`;
     execSync(command, {stdio: 'ignore'});
 }
 

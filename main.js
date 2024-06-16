@@ -4,6 +4,7 @@ const { createDDSImage, decompressDDSImage } = require('./dds');
 const env = require('windows-env');
 const fs = require('fs');
 const { getGamePath } = require('steam-game-path');
+const sharp = require('sharp');
 
 let mainWindow;
 function createWindow() {
@@ -159,6 +160,10 @@ function getDefaultRecipeFileContent() {
     }
 }
 
+function resizeImage(src, dst, width, height) {
+    sharp(src).resize(width, height).toFile(dst, (err, info) => {if (err) throw err;});
+}
+
 async function generateCustomBlock(event, location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
     showPopup(generatingWin);
     await sleep(100);
@@ -174,8 +179,13 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
         //console.log('Successfully made properties file')
     })
 
+    // Path to have temporary files in
+    const tempTexturesPath = path.join(__dirname, 'temp_textures');
+
     // Make recipe preview file
-    createDDSImage(recipePictureImgSrc, `${location}\\RecipePreview.dds`, 'BC3');
+    let newPath = path.join(tempTexturesPath, path.basename(recipePictureImgSrc));
+    resizeImage(recipePictureImgSrc, newPath, 512, 512);
+    createDDSImage(newPath, `${location}\\RecipePreview.dds`, 'BC3');
 
     // Create Textures folder
     const texturesPath = `${location}\\Textures`;
@@ -187,7 +197,9 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
     for (i = 0; i < regularTextures.length; i++) {
         const [src, name] = regularTextures[i];
         outputPath = `${texturesPath}\\${name}.dds`;
-        createDDSImage(src, outputPath, 'BC3');
+        let newPath = path.join(tempTexturesPath, path.basename(src));
+        resizeImage(src, newPath, 2048, 2048);
+        createDDSImage(newPath, outputPath, 'BC3');
     }
 
     // Create small textures. If none, automatically
@@ -196,13 +208,17 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
         for (i = 0; i < regularTextures.length; i++) {
             const [src, name] = regularTextures[i];
             outputPath = `${texturesPath}\\${name}_small.dds`;
-            createDDSImage(src, outputPath, 'BC3', true, 512, 512);
+            let newPath = path.join(tempTexturesPath, path.basename(src));
+            resizeImage(src, newPath, 512, 512);
+            createDDSImage(newPath, outputPath, 'BC3');
         }
     } else {
         for (i = 0; i < smallTextures.length; i++) {
             const [src, name] = smallTextures[i];
             outputPath = `${texturesPath}\\${name}_small.dds`;
-            createDDSImage(src, outputPath, 'BC3');
+            let newPath = path.join(tempTexturesPath, path.basename(src));
+            resizeImage(src, newPath, 512, 512);
+            createDDSImage(newPath, outputPath, 'BC3');
         }
     }
 
@@ -210,15 +226,21 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
     for (i = 0; i < normalTextures.length; i++) {
         const [src, name] = normalTextures[i];
         outputPath = `${texturesPath}\\${name}_normal.dds`;
-        createDDSImage(src, outputPath, 'BC5');
+        let newPath = path.join(tempTexturesPath, path.basename(src));
+        resizeImage(src, newPath, 2048, 2048);
+        createDDSImage(newPath, outputPath, 'BC5');
     }
 
     // Create glow map textures
     for (i = 0; i < glowTextures.length; i++) {
         const [src, name] = glowTextures[i];
         outputPath = `${texturesPath}\\${name}_glow.dds`;
-        createDDSImage(src, outputPath, 'BC1');
+        let newPath = path.join(tempTexturesPath, path.basename(src));
+        resizeImage(src, newPath, 1024, 1024);
+        createDDSImage(newPath, outputPath, 'BC1');
     }
+
+    fs.readdirSync(tempTexturesPath).forEach(f => fs.rmSync(`${tempTexturesPath}\\${f}`, { recursive: true }));
 
     generatingWin.hide();
 
@@ -534,7 +556,7 @@ async function generatePreviewBlock(event, textures) {
     for (i = 0; i < textures.length; i++) {
         const [src, name] = textures[i];
         outputPath = `${texturesPath}\\${name}.dds`;
-        createDDSImage(src, outputPath, 'BC3');
+        createDDSImage(src, outputPath, 'BC3', true, 2048, 2048);
         texturesDDS[name] = outputPath;
     }
 
