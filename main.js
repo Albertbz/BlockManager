@@ -160,8 +160,13 @@ function getDefaultRecipeFileContent() {
     }
 }
 
-function resizeImage(src, dst, width, height) {
-    sharp(src).resize(width, height).toFile(dst, (err, info) => {if (err) throw err;});
+async function resizeImage(src, dst, width, height) {
+    try {
+        await sharp(src).resize(width, height).toFile(dst);
+    }
+    catch (err) {
+        console.log(err);
+    }
 }
 
 async function generateCustomBlock(event, location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
@@ -184,7 +189,7 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
 
     // Make recipe preview file
     let newPath = path.join(tempTexturesPath, path.basename(recipePictureImgSrc));
-    resizeImage(recipePictureImgSrc, newPath, 512, 512);
+    await resizeImage(recipePictureImgSrc, newPath, 512, 512);
     createDDSImage(newPath, `${location}\\RecipePreview.dds`, 'BC3');
 
     // Create Textures folder
@@ -196,9 +201,9 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
     // Create regular textures
     for (i = 0; i < regularTextures.length; i++) {
         const [src, name] = regularTextures[i];
-        outputPath = `${texturesPath}\\${name}.dds`;
+        let outputPath = `${texturesPath}\\${name}.dds`;
         let newPath = path.join(tempTexturesPath, path.basename(src));
-        resizeImage(src, newPath, 2048, 2048);
+        await resizeImage(src, newPath, 2048, 2048);
         createDDSImage(newPath, outputPath, 'BC3');
     }
 
@@ -207,17 +212,17 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
     if (smallTextures.length == 0) {
         for (i = 0; i < regularTextures.length; i++) {
             const [src, name] = regularTextures[i];
-            outputPath = `${texturesPath}\\${name}_small.dds`;
+            let outputPath = `${texturesPath}\\${name}_small.dds`;
             let newPath = path.join(tempTexturesPath, path.basename(src));
-            resizeImage(src, newPath, 512, 512);
+            await resizeImage(src, newPath, 512, 512);
             createDDSImage(newPath, outputPath, 'BC3');
         }
     } else {
         for (i = 0; i < smallTextures.length; i++) {
             const [src, name] = smallTextures[i];
-            outputPath = `${texturesPath}\\${name}_small.dds`;
+            let outputPath = `${texturesPath}\\${name}_small.dds`;
             let newPath = path.join(tempTexturesPath, path.basename(src));
-            resizeImage(src, newPath, 512, 512);
+            await resizeImage(src, newPath, 512, 512);
             createDDSImage(newPath, outputPath, 'BC3');
         }
     }
@@ -225,18 +230,18 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
     // Create normal map textures
     for (i = 0; i < normalTextures.length; i++) {
         const [src, name] = normalTextures[i];
-        outputPath = `${texturesPath}\\${name}_normal.dds`;
+        let outputPath = `${texturesPath}\\${name}_normal.dds`;
         let newPath = path.join(tempTexturesPath, path.basename(src));
-        resizeImage(src, newPath, 2048, 2048);
+        await resizeImage(src, newPath, 2048, 2048);
         createDDSImage(newPath, outputPath, 'BC5');
     }
 
     // Create glow map textures
     for (i = 0; i < glowTextures.length; i++) {
         const [src, name] = glowTextures[i];
-        outputPath = `${texturesPath}\\${name}_glow.dds`;
+        let outputPath = `${texturesPath}\\${name}_glow.dds`;
         let newPath = path.join(tempTexturesPath, path.basename(src));
-        resizeImage(src, newPath, 1024, 1024);
+        await resizeImage(src, newPath, 1024, 1024);
         createDDSImage(newPath, outputPath, 'BC1');
     }
 

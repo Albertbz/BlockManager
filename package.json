@@ -1,7 +1,7 @@
 {
   "name": "blockmanager",
-  "version": "1.0.1",
-  "description": "A program that helps you manage and create custom blocks for cyubeVR",
+  "version": "1.0.2",
+  "description": "An application that helps you manage and create custom blocks for cyubeVR",
   "main": "main.js",
   "scripts": {
     "start": "electron-forge start",
