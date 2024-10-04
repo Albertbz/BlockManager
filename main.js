@@ -169,7 +169,7 @@ async function resizeImage(src, dst, width, height) {
     }
 }
 
-async function generateCustomBlock(event, location, propertiesFileContent, recipePictureImgSrc, regularTextures, smallTextures, normalTextures, glowTextures) {
+async function generateCustomBlock(event, location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures) {
     showPopup(generatingWin);
     await sleep(100);
 
@@ -186,11 +186,6 @@ async function generateCustomBlock(event, location, propertiesFileContent, recip
 
     // Path to have temporary files in
     const tempTexturesPath = path.join(__dirname, 'temp_textures');
-
-    // Make recipe preview file
-    let newPath = path.join(tempTexturesPath, path.basename(recipePictureImgSrc));
-    await resizeImage(recipePictureImgSrc, newPath, 512, 512);
-    createDDSImage(newPath, `${location}\\RecipePreview.dds`, 'BC3');
 
     // Create Textures folder
     const texturesPath = `${location}\\Textures`;
@@ -393,10 +388,6 @@ function addBlocksTo(blocks, blocksFolderPath) {
             console.error(err);
         }
 
-        // Add path to recipe preview
-        const recipePreviewPath = path.join(blockPath, `RecipePreview.dds`)
-        block.recipePreviewPath = recipePreviewPath;
-
         // Add texture paths
         try {
             const texturesFolderPath = path.join(blockPath, `Textures`);
@@ -480,7 +471,6 @@ async function saveBlockInTemp(event, block) {
     showPopup(loadingWin);
     await sleep(100);
     decompressTexturesAndMoveToTemp(block);
-    decompressRecipePreviewAndMoveToTemp(block);
     loadingWin.hide();
     temp = block;
     return true;
@@ -509,12 +499,6 @@ function decompressTexturesAndMoveToTemp(block) {
 
         decompressDDSImage(inputPath, outputPath);
     }
-}
-
-function decompressRecipePreviewAndMoveToTemp(block) {
-    const inputPath = block.recipePreviewPath;
-    const outputPath = path.join(tempPath, 'recipePreview.png');
-    decompressDDSImage(inputPath, outputPath);
 }
 
 function getTempTextures() {

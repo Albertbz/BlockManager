@@ -451,27 +451,6 @@
                                 <input type="file" name="uploadRecipe" id="uploadRecipeInput" accept=".txt">
                                 <label for="uploadRecipeInput" class="manual-upload mb-2">Click here to browse</label>
 
-                                <!-- 
-                                <label class="form-label">Generate recipe picture (not implemented yet):</label>
-                                <input type="button" value="Generate" class="form-control mb-2 btn"
-                                    id="generateRecipePictureInput" disabled>
-                                 -->
-                                <label class="form-label">
-                                    Select recipe picture manually [512x512]
-                                    <div class="tooltip">
-                                        <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
-                                            Here you must select an image of what the recipe
-                                            looks like. I recommend taking a screenshot of the
-                                            recipe in-game when it is all put together, and then
-                                            selecting said image here. The image must be 512x512 pixels,
-                                            so if it is not then you must resize it beforehand.
-                                        </div>
-                                    </div>
-                                </label>
-                                <input type="file" name="uploadRecipePicture" id="uploadRecipePictureInput"
-                                    accept=".png,.jpg,.jpeg">
-                                <label for="uploadRecipePictureInput" class="manual-upload">Click here to browse</label>
                             </div>
                         </div>
                         <div class="form-part content box blur">
@@ -499,23 +478,6 @@
                                 <!-- Used to store the recipe (not visible to the user) -->
                                 <textarea class="recipe-properties-preview mb-2 d-none" name="recipeProperties"
                                     id="recipePropertiesTextarea" rows="6" required spellcheck="false"></textarea>
-
-                                <!-- Insert recipe preview -->
-                                <label class="form-label">
-                                    Recipe picture
-                                    <div class="tooltip">
-                                        <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
-                                            This is what will be shown when you see the
-                                            block in the recipes tab in the game. Should
-                                            contain an image that shows how to craft the block.
-                                        </div>
-                                    </div>
-                                </label>
-                                <div class="form-control" id="recipePictureDiv">
-                                    <img src="./premade/placeholder.png" alt="" class="recipe-picture-preview"
-                                        id="recipePictureImg">
-                                </div>
                             </div>
                         </div>
                     </div>

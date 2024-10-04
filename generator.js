@@ -479,6 +479,8 @@ function getMaterialName(materialAsNumber, amount) {
             return 'dark wood';
         case 10:
             return 'sand';
+        case 13:
+            return 'iron ore';
         case 22:
             return isPlural ? 'copper nuggets' : 'copper nugget';
         case 23:
@@ -545,8 +547,10 @@ function getMaterialName(materialAsNumber, amount) {
             return 'cloakstone';
         case 113:
             return isPlural ? 'cloakstone nuggets' : 'cloakstone nugget';
+        case 122:
+            return 'water'
         default:
-            return 'MISSING (please let me know)'
+            return 'MISSING MATERIAL ID \'' + materialAsNumber + '\' (please let me know)'
     }
 }
 
@@ -581,17 +585,6 @@ document.getElementById('loadRecipeInput').addEventListener('click', async funct
 });
 
 /**
- * Handle recipe picture preview
- */
-document.getElementById('uploadRecipePictureInput').addEventListener('change', function (e) {
-    const recipePictureImg = document.getElementById('recipePictureImg')
-
-    const recipePictureFile = e.target.files[0];
-
-    recipePictureImg.src = recipePictureFile.path;
-})
-
-/**
  * Handle form submit
  */
 document.getElementById('blockForm').addEventListener('submit', async function (e) {
@@ -624,7 +617,6 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     // Get recipe properties and picture
     const recipePropertiesRaw = formData.get('recipeProperties');
     const recipeProperties = JSON.parse(recipePropertiesRaw.replace('"Recipe": ', '').replace('},', '}'));
-    const recipePictureImgSrc = document.getElementById('recipePictureImg').src.replace('file:///', '').replaceAll('%20', ' ');
 
     // Make properties file content
     let propertiesFileContent = {
@@ -669,7 +661,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
 
     const location = `${saveLocation}\\${blockName}.${creatorName}.${uniqueID}`;
     // Give data to main, have it make the block
-    const response = await window.call.generateCustomBlock(location, propertiesFileContent, recipePictureImgSrc,
+    const response = await window.call.generateCustomBlock(location, propertiesFileContent,
         regularTextures, smallTextures, normalTextures, glowTextures);
 
     if (response) {
@@ -933,7 +925,6 @@ async function loadTemp() {
         const recipePropertiesJSON = JSON.stringify({ Recipe: tempBlock.properties.Recipe }, null, 4);
         formElem.elements['recipeProperties'].value = recipePropertiesJSON.substring(2, recipePropertiesJSON.length - 2).replace('    ', '');
         updateRecipeMaterials();
-        document.getElementById('recipePictureImg').src = './temp/recipePreview.png';
 
         // Change submit button text.
         document.getElementById('submitButton').innerText = 'Save changes';
