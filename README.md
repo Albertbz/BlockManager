@@ -40,11 +40,8 @@ Here there are also both Required and Optional textures that you can provide. Ho
 each type of texture.
 
 ### Recipe
-For the recipe you have to provide both a file specifying what blocks to use as well as an image showing how to craft the block.
-If you use the in-game recipe generator button, then you can simply press the "Load most recently generated recipe" button and
-the recipe materials to the right should update accordingly. You do however have to manually choose a recipe picture (I
-recommend taking a picture in-game while you hold the recipe before you press the "generate recipe file" button in the suitcase).
-Don't forget to crop the image so that it is 512x512 pixels!
+For the recipe you have to provide a file specifying what blocks to use.
+If you use the in-game recipe generator button, then you can simply press the "Load most recently generated recipe" button and the recipe materials to the right should update accordingly.
 
 The recipe part looks like this:
 ![Image of recipe part](readme_images/6.png)
@@ -54,8 +51,3 @@ Lastly we have the finalization. This is just where you specify where to save th
 block or as part of a mod. It looks like this:
 ![Image of finalization part](readme_images/7.png)
 If you want the block to be part of a mod, then choose the mod and the version that the mod is made for.
-
-### Disclaimer
-This product includes components of the PowerVR Tools Software from Imagination Technologies Limited.
-
-These are used to convert common image files (.png for example) into .dds files that are used for textures in cyubeVR.
