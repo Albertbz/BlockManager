@@ -20,20 +20,27 @@
 
                 <div class="filter header box-horizontal">
                     <div class="left">
-                        <button type="button" class="btn me-1 btn-pressed filter-btn" id="filterAll">All</button>
-                        <button type="button" class="btn me-1 filter-btn">Independent</button>
-                        <button type="button" class="btn me-1 filter-btn">Mods</button>
+                        <button type="button" class="btn me-1 btn-pressed filter-btn" id="filterAll"
+                            title="Show all blocks">All</button>
+                        <button type="button" class="btn me-1 filter-btn"
+                            title="Show only blocks that are not part of a mod">Independent</button>
+                        <button type="button" class="btn me-1 filter-btn"
+                            title="Show only blocks that are part of a mod">Mods</button>
                         <!-- Game version choice, only shown when filtering by mods -->
                         <select class="version-select d-none" id="versionSelect"></select>
                     </div>
                     <div class="right">
-    
+                        <button type="button" class="btn sort-button category-toggle me-1" id="categoryToggle"
+                            title="Group blocks by category">
+                            <img src="./images/categories.png" alt="Group by category" class="sort-img">
+                        </button>
+
                         <div class="dropdown">
-                            <button type="button" class="btn sort-button me-1" id="sortButton">
+                            <button type="button" class="btn sort-button me-1" id="sortButton" title="Sort by">
                                 <img src="./images/sort.png" alt="Sort by" class="sort-img">
                             </button>
                             <div class="dropdown-content d-none" id="dropdownContent">
-                                <p class="sort-text outline">Sort by</p>
+                                <p class="sort-text sort-header outline">Sort by</p>
                                 <button type="button" class="btn btn-fill h-22 sort-type-btn">
                                     <p class="sort-text">Name</p>
                                     <img class="sort-arrow" src="./images/sort-down-arrow.png" alt="">
@@ -44,7 +51,7 @@
                             </div>
                         </div>
     
-                        <button type="button" class="btn search-btn" id="searchButton">
+                        <button type="button" class="btn search-btn" id="searchButton" title="Search by name">
                             <img src="./images/search.png" alt="Search" class="search-img">
                         </button>
                     </div>

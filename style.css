@@ -418,10 +418,32 @@ select {
 	width: 80px;
 	left: -29px;
 	top: 24px;
-	background-color: rgb(57, 57, 57);
+	/* Same colors as the version dropdown's list */
+	background-color: rgb(40, 40, 40);
 	z-index: 1;
-	border: 1px solid rgb(0, 0, 0);
-	border-radius: 5px;
+	border: 1px solid rgb(0, 0, 0, 0.8);
+	border-radius: 4px;
+	/* Keep the header's darker background inside the rounded corners */
+	overflow: hidden;
+}
+
+/* "Sort by" is a label, not an option, so it is set apart by being
+   lighter than both the options and their hover color. More specific
+   than .sort-text, so its margins don't leave an uncolored gap. */
+.dropdown-content .sort-header {
+	width: 100%;
+	margin: 0;
+	padding: 6px 0;
+	text-align: center;
+	background-color: rgb(75, 75, 75);
+	border-bottom: 1px solid rgb(0, 0, 0, 0.8);
+	cursor: default;
+}
+
+/* Space between the header and the first option. Padding rather than
+   margin, so the option's hover color fills it too. */
+.sort-header + .sort-type-btn {
+	padding-top: 4px;
 }
 
 .sort-text {
@@ -435,20 +457,30 @@ select {
 }
 
 .sort-arrow {
+	/* Kept to the right, so the text doesn't move when it's shown */
+	position: absolute;
+	right: 6px;
+	top: 50%;
+	transform: translateY(-50%);
 	width: 14px;
 	height: 14px;
-	margin-top: 2px;
-	margin-bottom: 2px;
 }
 
 .sort-type-btn {
 	display: flex;
 	flex-flow: row;
 	justify-content: center;
+	position: relative;
 	width: 100%;
-	margin-left: 2px;
-	margin-right: 2px;
-	margin-bottom: 2px;
+	margin: 0;
+	/* Plain rows like the version dropdown's options */
+	border: none;
+	border-radius: 0;
+	background-color: transparent;
+}
+
+.sort-type-btn:hover:not(:disabled) {
+	background-color: rgb(255, 255, 255, 0.1);
 }
 
 .search-btn {
@@ -930,4 +962,28 @@ ul.form-stepper>li:not(:last-of-type) {
 
 .mod-group-title:not(:first-child) {
 	margin-top: 0.5rem;
+}
+
+/* A toggle, so it stays clickable while pressed */
+.category-toggle.btn-pressed {
+	cursor: pointer !important;
+}
+
+.category-group-title {
+	color: white;
+	font-size: small;
+	opacity: 0.85;
+	margin-bottom: 0.15rem;
+}
+
+.category-group-title:not(:first-child) {
+	margin-top: 0.5rem;
+}
+
+.category-group-title-nested {
+	margin-left: 0.75rem;
+}
+
+.mod-group-title + .category-group-title {
+	margin-top: 0;
 }

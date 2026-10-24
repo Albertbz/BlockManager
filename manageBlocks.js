@@ -8,7 +8,41 @@ function populateBlocksDiv() {
     }
 
     // Add all blocks
-    blocksDiv.appendChild(makeBlocksDiv());
+    const scrollableDiv = makeBlocksDiv();
+    blocksDiv.appendChild(scrollableDiv);
+
+    // Go back to where this view was scrolled to, and keep track of it
+    scrollableDiv.scrollTop = getSavedScrollTop();
+    scrollableDiv.addEventListener('scroll', () => saveScrollTop(scrollableDiv.scrollTop));
+}
+
+/**
+ * Remember how far each view (filter, version and search) has been
+ * scrolled, so that it stays there when the list is rebuilt, and
+ * when coming back after e.g. editing a block.
+ */
+function getCurrentView() {
+    return `${filterBy}|${selectedVersion ?? ''}|${searchValue}`;
+}
+
+function getSavedScrollPositions() {
+    try {
+        return JSON.parse(sessionStorage.getItem('scrollPositions')) ?? {};
+    } catch {
+        return {};
+    }
+}
+
+function getSavedScrollTop() {
+    return getSavedScrollPositions()[getCurrentView()] ?? 0;
+}
+
+function saveScrollTop(scrollTop) {
+    const scrollPositions = getSavedScrollPositions();
+    scrollPositions[getCurrentView()] = scrollTop;
+    try {
+        sessionStorage.setItem('scrollPositions', JSON.stringify(scrollPositions));
+    } catch { }
 }
 
 function makeBlocksDiv() {
@@ -18,23 +52,15 @@ function makeBlocksDiv() {
     if (filterBy == 'Mods') {
         // Show the blocks of each mod together, under the mod's name
         for (const group of groupBlocksByMod(blocks)) {
-            const title = document.createElement('span');
-            title.classList.add('outline', 'ps-1', 'mod-group-title');
-            title.innerText = selectedVersion == undefined
+            const title = selectedVersion == undefined
                 ? `${group.mod.name} (${group.mod.update})`
                 : group.mod.name;
-            div.appendChild(title);
+            div.appendChild(makeGroupTitle(title, 'mod-group-title'));
 
-            for (const block of group.blocks) {
-                div.appendChild(makeBlockDiv(block));
-            }
+            appendBlocks(div, group.blocks, true);
         }
     } else {
-        for (let i = 0; i < blocks.length; i++) {
-            const block = blocks[i];
-            const horizontalDiv = makeBlockDiv(block);
-            div.appendChild(horizontalDiv);
-        }
+        appendBlocks(div, blocks, false);
     }
 
     if (blocks.length == 0) {
@@ -45,6 +71,33 @@ function makeBlocksDiv() {
     }
 
     return div;
+}
+
+// Add the blocks to the div, grouped by category if chosen.
+function appendBlocks(div, blocks, isInModGroup) {
+    if (!groupByCategory) {
+        for (const block of blocks) {
+            div.appendChild(makeBlockDiv(block));
+        }
+        return;
+    }
+
+    for (const group of groupBlocksByCategory(blocks)) {
+        const title = makeGroupTitle(group.name, 'category-group-title');
+        if (isInModGroup) title.classList.add('category-group-title-nested');
+        div.appendChild(title);
+
+        for (const block of group.blocks) {
+            div.appendChild(makeBlockDiv(block));
+        }
+    }
+}
+
+function makeGroupTitle(text, className) {
+    const title = document.createElement('span');
+    title.classList.add('outline', 'ps-1', className);
+    title.innerText = text;
+    return title;
 }
 
 function makeBlockDiv(block) {
@@ -362,32 +415,47 @@ let sortBy = {
     order: 'Down'
 };
 
-document.querySelectorAll('button.sort-type-btn').forEach((button) => {
+// Use the sorting chosen last time, if any
+try {
+    const savedSortBy = JSON.parse(localStorage.getItem('sortBy'));
+    if (['Name', 'ID'].includes(savedSortBy?.type) && ['Down', 'Up'].includes(savedSortBy?.order)) {
+        sortBy = savedSortBy;
+    }
+} catch { }
+
+const sortTypeButtons = document.querySelectorAll('button.sort-type-btn');
+
+// Show the arrow on the chosen sort type, pointing in the chosen order
+function showSortArrow() {
+    document.querySelectorAll('img.sort-arrow').forEach(img => img.remove());
+
+    const button = [...sortTypeButtons].find(button => button.firstElementChild.innerText == sortBy.type);
+    const img = document.createElement('img');
+    img.classList.add('sort-arrow');
+    img.src = `./images/sort-${sortBy.order.toLowerCase()}-arrow.png`;
+    button.appendChild(img);
+}
+
+showSortArrow();
+
+sortTypeButtons.forEach((button) => {
     button.addEventListener('click', (e) => {
         const type = button.firstElementChild.innerText;
         const isSameType = sortBy.type == type;
         if (isSameType) {
             // Toggle order
-            sortBy.order == 'Down' ? sortBy.order = 'Up' : sortBy.order = 'Down';
-
-            // Set new image src
-            const img = button.lastElementChild;
-            img.src = `./images/sort-${sortBy.order.toLowerCase()}-arrow.png`;
+            sortBy.order = sortBy.order == 'Down' ? 'Up' : 'Down';
         }
         else {
-            // Remove old image
-            button.parentElement.querySelector('img').remove();
-
             sortBy.type = type;
             sortBy.order = 'Down';
-
-            // Add new image
-            const img = document.createElement('img');
-            img.classList.add('sort-arrow');
-            img.src = `./images/sort-down-arrow.png`;
-            button.appendChild(img);
         }
 
+        try {
+            localStorage.setItem('sortBy', JSON.stringify(sortBy));
+        } catch { }
+
+        showSortArrow();
         updateBlocksSort();
         populateBlocksDiv();
     });
@@ -496,6 +564,49 @@ versionSelect.addEventListener('change', () => {
     selectedVersion = versionSelect.value == '' ? undefined : versionSelect.value;
     updateBlocks();
 });
+
+/**
+ * Handle grouping blocks by category. The choice is remembered
+ * between visits.
+ */
+const noCategoryName = 'No category';
+// On by default, until turned off
+let groupByCategory = true;
+try {
+    groupByCategory = localStorage.getItem('groupByCategory') != 'false';
+} catch { }
+
+const categoryToggle = document.getElementById('categoryToggle');
+categoryToggle.classList.toggle('btn-pressed', groupByCategory);
+
+categoryToggle.addEventListener('click', () => {
+    groupByCategory = !groupByCategory;
+    categoryToggle.classList.toggle('btn-pressed', groupByCategory);
+    try {
+        localStorage.setItem('groupByCategory', groupByCategory);
+    } catch { }
+
+    populateBlocksDiv();
+});
+
+// Group blocks by category, keeping the current sort within each group.
+// Categories are in alphabetical order, with blocks without one last.
+function groupBlocksByCategory(blocks) {
+    const groups = new Map();
+
+    for (const block of blocks) {
+        const categoryName = block.properties.CategoryName?.trim() || noCategoryName;
+        const key = categoryName == noCategoryName ? '' : categoryName.toLowerCase();
+        if (!groups.has(key)) groups.set(key, { name: categoryName, blocks: [] });
+        groups.get(key).blocks.push(block);
+    }
+
+    return [...groups.values()].sort((a, b) => {
+        if (a.name == noCategoryName) return 1;
+        if (b.name == noCategoryName) return -1;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
+}
 
 // Group blocks by mod and version, keeping the current sort within each
 // group. Groups are ordered by mod name, then newest version first.
