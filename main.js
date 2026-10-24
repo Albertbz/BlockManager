@@ -124,7 +124,7 @@ ipcMain.handle('openGenerationLocation', openGenerationLocation);
 ipcMain.handle('getAllBlocks', getAllBlocks);
 ipcMain.handle('displayDeleteDialog', displayDeleteDialog);
 ipcMain.handle('refreshMainWindow', async () => {
-    await hidePreviews();
+    await leavePage();
     mainWindow.reload();
 });
 ipcMain.handle('loadGenerator', loadGenerator);
@@ -562,28 +562,32 @@ function deleteBlock(block) {
     fs.rmSync(block.path, { recursive: true });
 }
 
-// The old page stays on screen until the next one has been drawn, but its
-// block previews are freed as it is left, which shows white squares where
-// they were. So they are hidden first, until the screen has been drawn
-// without them.
-async function hidePreviews() {
+// Before switching pages, the page first animates out (see pageTransition.js).
+// The old page then stays on screen until the next one has been drawn, but
+// its block previews are freed as it is left, which shows white squares
+// where they were. So they are hidden first, until the screen has been
+// drawn without them.
+async function leavePage() {
     try {
         await mainWindow.webContents.executeJavaScript(`new Promise(resolve => {
-            document.querySelectorAll('canvas').forEach(canvas => canvas.style.visibility = 'hidden');
-            requestAnimationFrame(() => requestAnimationFrame(resolve));
-            setTimeout(resolve, 100);
+            setTimeout(resolve, 1000);
+            Promise.resolve(window.animatePageOut?.()).catch(() => { }).then(() => {
+                document.querySelectorAll('canvas').forEach(canvas => canvas.style.visibility = 'hidden');
+                requestAnimationFrame(() => requestAnimationFrame(resolve));
+                setTimeout(resolve, 100);
+            });
         })`);
     } catch { }
 }
 
 async function loadGenerator() {
-    await hidePreviews();
+    await leavePage();
     mainWindow.loadFile('generator.html');
     mainWindow.focus();
 }
 
 async function loadManageBlocks() {
-    await hidePreviews();
+    await leavePage();
     mainWindow.loadFile('manageBlocks.html');
     mainWindow.focus();
 }

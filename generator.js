@@ -1,4 +1,14 @@
 import { loadCanvas } from "./blockPreview.js";
+import { growFromButton, setPageOutAnimation, shrinkIntoButton } from "./pageTransition.js";
+
+// The generator grows out of the button to stop creating the block (which
+// is where the button to create one was), and shrinks back into it
+growFromButton(getShownDiscardButton(), 220);
+setPageOutAnimation(() => shrinkIntoButton(getShownDiscardButton(), 220));
+
+function getShownDiscardButton() {
+    return [...document.querySelectorAll('button.discard')].find(button => button.offsetParent != null);
+}
 
 /**
  * Define a function to navigate betweens form steps.

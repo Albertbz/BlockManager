@@ -1,4 +1,11 @@
 import { loadCanvas } from "./blockPreview.js";
+import { growFromButton, setPageOutAnimation, shrinkIntoButton } from "./pageTransition.js";
+
+// The page grows out of the button to create a block, and shrinks back
+// into it, which is where the generator appears from
+const makeNewBlockButton = document.getElementById('makeNewBlock');
+growFromButton(makeNewBlockButton, 150);
+setPageOutAnimation(() => shrinkIntoButton(makeNewBlockButton, 150));
 
 /**
  * Saved settings, kept between visits. Storage can be unavailable,

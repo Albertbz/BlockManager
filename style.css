@@ -190,6 +190,11 @@ input[type=range] {
 	justify-content: space-between;
 }
 
+/* Hidden until the page's animation in starts (see pageTransition.js) */
+.page-entering > .container {
+	opacity: 0;
+}
+
 /* For labels and buttons, which clicking or double-clicking near shouldn't
    select. Text fields inside stay selectable. */
 .no-select {
