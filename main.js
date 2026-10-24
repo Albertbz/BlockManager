@@ -123,7 +123,10 @@ ipcMain.handle('generationCompletePopup', generationCompletePopup);
 ipcMain.handle('openGenerationLocation', openGenerationLocation);
 ipcMain.handle('getAllBlocks', getAllBlocks);
 ipcMain.handle('displayDeleteDialog', displayDeleteDialog);
-ipcMain.handle('refreshMainWindow', () => mainWindow.reload());
+ipcMain.handle('refreshMainWindow', async () => {
+    await hidePreviews();
+    mainWindow.reload();
+});
 ipcMain.handle('loadGenerator', loadGenerator);
 ipcMain.handle('loadManageBlocks', loadManageBlocks);
 ipcMain.handle('displayDiscardDialog', displayDiscardDialog);
@@ -559,12 +562,28 @@ function deleteBlock(block) {
     fs.rmSync(block.path, { recursive: true });
 }
 
-function loadGenerator() {
+// The old page stays on screen until the next one has been drawn, but its
+// block previews are freed as it is left, which shows white squares where
+// they were. So they are hidden first, until the screen has been drawn
+// without them.
+async function hidePreviews() {
+    try {
+        await mainWindow.webContents.executeJavaScript(`new Promise(resolve => {
+            document.querySelectorAll('canvas').forEach(canvas => canvas.style.visibility = 'hidden');
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+            setTimeout(resolve, 100);
+        })`);
+    } catch { }
+}
+
+async function loadGenerator() {
+    await hidePreviews();
     mainWindow.loadFile('generator.html');
     mainWindow.focus();
 }
 
-function loadManageBlocks() {
+async function loadManageBlocks() {
+    await hidePreviews();
     mainWindow.loadFile('manageBlocks.html');
     mainWindow.focus();
 }
