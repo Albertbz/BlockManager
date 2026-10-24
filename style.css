@@ -190,6 +190,12 @@ input[type=range] {
 	justify-content: space-between;
 }
 
+/* For labels and buttons, which clicking or double-clicking near shouldn't
+   select. Text fields inside stay selectable. */
+.no-select {
+	user-select: none;
+}
+
 .left {
 	display: flex;
 	flex: 1;
