@@ -105,6 +105,7 @@ document.querySelectorAll(".btn-navigate-form-step").forEach((formNavigationBtn)
  */
 document.querySelectorAll('span.form-stepper-title').forEach((span) => {
     const step = span.getAttribute("step_number");
+    span.title = `Go to ${span.innerText.trim()}`;
 
     span.addEventListener('click', (e) => {
         navigateToFormStep(step);
