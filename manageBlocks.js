@@ -38,11 +38,6 @@ function makeBlockDiv(block) {
     const dropDownDiv = makeDropDownDiv(block);
     const contentDiv = makeContentDiv(block);
 
-    dropDownDiv.addEventListener('click', (e) => {
-        dropDownDiv.classList.toggle('toggled');
-        contentDiv.classList.toggle('d-none');
-    });
-
     let isAnimated = false;
     let animationSpeed = 0;
     if (block.properties.AnimationSpeed != undefined) {
@@ -50,10 +45,21 @@ function makeBlockDiv(block) {
         animationSpeed = block.properties.AnimationSpeed;
     }
 
-    dropDownDiv.addEventListener('mousedown', (e) => {
-        const canvas = contentDiv.querySelector('canvas');
-        loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed);
-    }, { once: true });
+    dropDownDiv.addEventListener('click', (e) => {
+        dropDownDiv.classList.toggle('toggled');
+        const isExpanded = !contentDiv.classList.toggle('d-none');
+
+        // Only keep a preview while the block is expanded, as only a
+        // limited number of previews (WebGL contexts) can exist at once.
+        const previewDiv = contentDiv.querySelector('div.block-preview');
+        if (isExpanded) {
+            const canvas = makePreviewCanvas();
+            previewDiv.replaceChildren(canvas);
+            loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed);
+        } else {
+            previewDiv.replaceChildren();
+        }
+    });
 
     div.appendChild(dropDownDiv);
     div.appendChild(contentDiv);
@@ -147,13 +153,15 @@ function makePreviewDiv() {
     const previewDiv = document.createElement('div');
     previewDiv.classList.add('block-preview', 'center');
 
+    return previewDiv;
+}
+
+function makePreviewCanvas() {
     const canvas = document.createElement('canvas');
     canvas.width = 135;
     canvas.height = 135;
 
-    previewDiv.appendChild(canvas);
-
-    return previewDiv;
+    return canvas;
 }
 
 function getTexturePaths(block) {
@@ -467,7 +475,7 @@ document.getElementById('searchButton').addEventListener('click', (e) => {
     });
 
     searchInput.addEventListener('input', (e) => {
-        searchValue = searchInput.value;
+        searchValue = searchInput.value.toLowerCase();
         updateBlocks();
     })
 

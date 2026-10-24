@@ -117,6 +117,14 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
 
     // Draw the scene repeatedly
     function render(now) {
+        // Stop rendering once the canvas has been removed, and free
+        // its WebGL context, as only a limited number can exist.
+        if (!canvas.isConnected) {
+            const loseContextExt = gl.getExtension('WEBGL_lose_context');
+            if (loseContextExt) loseContextExt.loseContext();
+            return;
+        }
+
         now *= 0.001; // convert to seconds
         deltaTime = now - then;
         then = now;

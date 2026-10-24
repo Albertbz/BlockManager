@@ -6,6 +6,13 @@ const fs = require('fs');
 const { getGamePath } = require('steam-game-path');
 const sharp = require('sharp');
 
+// Folders for temporary files. These are not part of the repository,
+// so make sure they exist.
+const tempPath = path.join(__dirname, 'temp');
+const tempTexturesPath = path.join(__dirname, 'temp_textures');
+const previewPath = path.join(__dirname, 'preview');
+[tempPath, tempTexturesPath, previewPath].forEach(dir => fs.mkdirSync(dir, { recursive: true }));
+
 let mainWindow;
 function createWindow() {
     // Make initial window.
@@ -120,7 +127,6 @@ ipcMain.handle('saveBlockInTemp', saveBlockInTemp);
 ipcMain.handle('clearTemp', clearTemp);
 ipcMain.handle('getTemp', getTemp);
 ipcMain.handle('getTempTextures', getTempTextures);
-ipcMain.handle('deleteBlockInTemp', () => deleteBlock(temp));
 ipcMain.handle('removeBlockToDelete', removeBlockToDelete);
 ipcMain.handle('generatePreviewBlock', generatePreviewBlock);
 
@@ -160,101 +166,103 @@ function getDefaultRecipeFileContent() {
     }
 }
 
-async function resizeImage(src, dst, width, height) {
-    try {
-        await sharp(src).resize(width, height).toFile(dst);
-    }
-    catch (err) {
-        console.log(err);
-    }
+// Compressonator fails on paths with characters like 'æ', so it only
+// works on fixed file names in the temp textures folder, and the
+// result is copied to where it should be.
+const resizedTexturePath = path.join(tempTexturesPath, 'resized.png');
+const compressedTexturePath = path.join(tempTexturesPath, 'compressed.dds');
+
+async function createTexture(src, outputPath, size, format) {
+    await sharp(src).resize(size, size).toFile(resizedTexturePath);
+    createDDSImage(resizedTexturePath, compressedTexturePath, format);
+    fs.copyFileSync(compressedTexturePath, outputPath);
 }
 
 async function generateCustomBlock(event, location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures, heightTextures) {
     showPopup(generatingWin);
     await sleep(100);
 
-    // Make folder for block
-    if (!fs.existsSync(location)) {
-        fs.mkdirSync(location, { recursive: true });
+    // The block is first made in a staging folder, so that nothing
+    // existing is touched if anything goes wrong.
+    const stagingPath = `${location}.BlockManagerNew`;
+    const backupPath = `${location}.BlockManagerOld`;
+
+    try {
+        fs.rmSync(stagingPath, { recursive: true, force: true });
+        await writeBlockFiles(stagingPath, propertiesFileContent,
+            regularTextures, smallTextures, normalTextures, glowTextures, heightTextures);
+
+        // Swap the new block in, keeping a backup of whatever
+        // was there until the swap has succeeded.
+        fs.rmSync(backupPath, { recursive: true, force: true });
+        const hadExisting = fs.existsSync(location);
+        if (hadExisting) fs.renameSync(location, backupPath);
+        try {
+            fs.renameSync(stagingPath, location);
+        } catch (err) {
+            if (hadExisting) fs.renameSync(backupPath, location);
+            throw err;
+        }
+        fs.rmSync(backupPath, { recursive: true, force: true });
+
+        // If an edited block was saved somewhere else, remove the original.
+        if (temp != undefined && fs.existsSync(temp.path)
+            && path.resolve(temp.path).toLowerCase() != path.resolve(location).toLowerCase()) {
+            fs.rmSync(temp.path, { recursive: true });
+        }
+        clearTemp();
+
+        return true;
+    } catch (err) {
+        console.error(err);
+        fs.rmSync(stagingPath, { recursive: true, force: true });
+        dialog.showErrorBox('Could not generate block',
+            `Something went wrong while generating the block. Nothing has been changed.\n\n${err.message}`);
+        return false;
+    } finally {
+        clearFolder(tempTexturesPath);
+        generatingWin.hide();
     }
+}
+
+async function writeBlockFiles(location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures, heightTextures) {
+    // Make folder for block
+    const texturesPath = path.join(location, 'Textures');
+    fs.mkdirSync(texturesPath, { recursive: true });
 
     // Make properties file
-    fs.writeFile(`${location}\\Properties.json`, JSON.stringify(propertiesFileContent), function (err) {
-        if (err) console.error(err);
-        //console.log('Successfully made properties file')
-    })
-
-    // Path to have temporary files in
-    const tempTexturesPath = path.join(__dirname, 'temp_textures');
-
-    // Create Textures folder
-    const texturesPath = `${location}\\Textures`;
-    if (!fs.existsSync(texturesPath)) {
-        fs.mkdirSync(texturesPath);
-    }
+    fs.writeFileSync(path.join(location, 'Properties.json'), JSON.stringify(propertiesFileContent));
 
     // Create regular textures
-    for (i = 0; i < regularTextures.length; i++) {
-        const [src, name] = regularTextures[i];
-        let outputPath = `${texturesPath}\\${name}.dds`;
-        let newPath = path.join(tempTexturesPath, path.basename(src));
-        await resizeImage(src, newPath, 2048, 2048);
-        createDDSImage(newPath, outputPath, 'BC3');
+    for (const [src, name] of regularTextures) {
+        await createTexture(src, path.join(texturesPath, `${name}.dds`), 2048, 'BC3');
     }
 
     // Create small textures. If none, automatically
     // make them using the regular textures.
-    if (smallTextures.length == 0) {
-        for (i = 0; i < regularTextures.length; i++) {
-            const [src, name] = regularTextures[i];
-            let outputPath = `${texturesPath}\\${name}_small.dds`;
-            let newPath = path.join(tempTexturesPath, path.basename(src));
-            await resizeImage(src, newPath, 512, 512);
-            createDDSImage(newPath, outputPath, 'BC3');
-        }
-    } else {
-        for (i = 0; i < smallTextures.length; i++) {
-            const [src, name] = smallTextures[i];
-            let outputPath = `${texturesPath}\\${name}_small.dds`;
-            let newPath = path.join(tempTexturesPath, path.basename(src));
-            await resizeImage(src, newPath, 512, 512);
-            createDDSImage(newPath, outputPath, 'BC3');
-        }
+    const smallTextureSources = smallTextures.length == 0 ? regularTextures : smallTextures;
+    for (const [src, name] of smallTextureSources) {
+        await createTexture(src, path.join(texturesPath, `${name}_small.dds`), 512, 'BC3');
     }
 
     // Create normal map textures
-    for (i = 0; i < normalTextures.length; i++) {
-        const [src, name] = normalTextures[i];
-        let outputPath = `${texturesPath}\\${name}_normal.dds`;
-        let newPath = path.join(tempTexturesPath, path.basename(src));
-        await resizeImage(src, newPath, 2048, 2048);
-        createDDSImage(newPath, outputPath, 'BC5');
+    for (const [src, name] of normalTextures) {
+        await createTexture(src, path.join(texturesPath, `${name}_normal.dds`), 2048, 'BC5');
     }
 
     // Create glow map textures
-    for (i = 0; i < glowTextures.length; i++) {
-        const [src, name] = glowTextures[i];
-        let outputPath = `${texturesPath}\\${name}_glow.dds`;
-        let newPath = path.join(tempTexturesPath, path.basename(src));
-        await resizeImage(src, newPath, 1024, 1024);
-        createDDSImage(newPath, outputPath, 'BC1');
+    for (const [src, name] of glowTextures) {
+        await createTexture(src, path.join(texturesPath, `${name}_glow.dds`), 1024, 'BC1');
     }
 
     // Create height map textures
-    for (i = 0; i < heightTextures.length; i++) {
-        const [src, name] = heightTextures[i];
-        let outputPath = `${texturesPath}\\${name}_height.dds`;
-        let newPath = path.join(tempTexturesPath, path.basename(src));
-        await resizeImage(src, newPath, 2048, 2048);
-        createDDSImage(newPath, outputPath, 'BC4');
+    for (const [src, name] of heightTextures) {
+        await createTexture(src, path.join(texturesPath, `${name}_height.dds`), 2048, 'BC4');
     }
+}
 
-    // Clear the temp textures
-    fs.readdirSync(tempTexturesPath).forEach(f => fs.rmSync(`${tempTexturesPath}\\${f}`, { recursive: true }));
-
-    generatingWin.hide();
-
-    return true;
+function clearFolder(folderPath) {
+    fs.readdirSync(folderPath).forEach(f => fs.rmSync(path.join(folderPath, f), { recursive: true }));
 }
 
 function getModsFolderPath() {
@@ -276,6 +284,8 @@ function getAllModFolders() {
     const modFoldersPath = path.join(modsFolderPath, 'ModFolders');
 
     let res = [];
+
+    if (!fs.existsSync(modFoldersPath)) return res;
 
     const modFoldersNames = fs.readdirSync(modFoldersPath, { withFileTypes: true })
         .filter((item) => item.isDirectory())
@@ -393,9 +403,15 @@ function addBlocksTo(blocks, blocksFolderPath) {
             const propertiesFilePath = path.join(blockPath, `Properties.json`);
             const propertiesJSON = fs.readFileSync(propertiesFilePath);
             const properties = JSON.parse(propertiesJSON);
+            if (typeof properties != 'object' || properties == null) {
+                throw new Error(`Invalid properties file: ${propertiesFilePath}`);
+            }
             block.properties = properties;
         } catch (err) {
+            // Skip blocks whose properties can't be read, as
+            // the rest of the app relies on them.
             console.error(err);
+            continue;
         }
 
         // Add texture paths
@@ -475,15 +491,23 @@ async function selectFolder() {
 }
 
 let temp = undefined;
-const tempPath = path.join(__dirname, 'temp');
 async function saveBlockInTemp(event, block) {
     clearTemp();
     showPopup(loadingWin);
     await sleep(100);
-    decompressTexturesAndMoveToTemp(block);
-    loadingWin.hide();
-    temp = block;
-    return true;
+    try {
+        decompressTexturesAndMoveToTemp(block);
+        temp = block;
+        return true;
+    } catch (err) {
+        console.error(err);
+        clearTemp();
+        dialog.showErrorBox('Could not load block',
+            `Something went wrong while loading the block's textures.\n\n${err.message}`);
+        return false;
+    } finally {
+        loadingWin.hide();
+    }
 }
 
 function sleep(ms) {
@@ -492,7 +516,7 @@ function sleep(ms) {
 
 function clearTemp() {
     temp = undefined;
-    fs.readdirSync(tempPath).forEach(f => fs.rmSync(`${tempPath}\\${f}`, { recursive: true }));
+    clearFolder(tempPath);
 }
 
 function getTemp() {
@@ -504,14 +528,22 @@ function decompressTexturesAndMoveToTemp(block) {
     const compressedTexturesPaths = fs.readdirSync(texturesPath)
         .map(fileName => [path.join(texturesPath, fileName), fileName]);
 
-    for (const [inputPath, fileName] of compressedTexturesPaths) {
-        const outputPath = path.join(tempPath, fileName.replace('dds', 'png'));
+    try {
+        for (const [inputPath, fileName] of compressedTexturesPaths) {
+            const outputPath = path.join(tempPath, fileName.replace('dds', 'png'));
 
-        decompressDDSImage(inputPath, outputPath);
+            // Copy to a fixed name first, as the block's path may contain
+            // characters that Compressonator can't handle (see createTexture).
+            fs.copyFileSync(inputPath, compressedTexturePath);
+            decompressDDSImage(compressedTexturePath, resizedTexturePath);
+            fs.copyFileSync(resizedTexturePath, outputPath);
+        }
+    } finally {
+        clearFolder(tempTexturesPath);
     }
 }
 
-function getTempTextures() {
+async function getTempTextures() {
     let textures = {};
     const allTextures = fs.readdirSync(tempPath)
         .filter(fileName => !fileName.includes('recipe'));
@@ -536,7 +568,42 @@ function getTempTextures() {
         .filter(fileName => fileName.includes('height'))
         .map(fileName => path.join(tempPath, fileName));
 
+    // If the small textures were autogenerated from the regular textures,
+    // leave them out so they get regenerated from whatever regular
+    // textures the block ends up with.
+    if (await smallTexturesAreGenerated(textures.regular, textures.small)) {
+        textures.small = [];
+    }
+
     return textures;
+}
+
+async function smallTexturesAreGenerated(regularTextures, smallTextures) {
+    if (smallTextures.length == 0 || smallTextures.length != regularTextures.length) return false;
+
+    try {
+        for (const regularPath of regularTextures) {
+            const smallPath = regularPath.replace(/\.png$/, '_small.png');
+            if (!smallTextures.includes(smallPath)) return false;
+
+            // Compare the small texture to a downscaled regular texture. For
+            // autogenerated ones the average difference per channel is around
+            // 3 (from compression), whereas unrelated textures differ far more.
+            const [regular, small] = await Promise.all([regularPath, smallPath].map(p =>
+                sharp(p).resize(512, 512).ensureAlpha().raw().toBuffer()));
+
+            let totalDifference = 0;
+            for (let i = 0; i < regular.length; i++) {
+                totalDifference += Math.abs(regular[i] - small[i]);
+            }
+            if (totalDifference / regular.length > 8) return false;
+        }
+    } catch (err) {
+        console.error(err);
+        return false;
+    }
+
+    return true;
 }
 
 function showPopup(popupWin) {
@@ -553,26 +620,23 @@ async function generatePreviewBlock(event, textures) {
 
     let texturesDDS = {};
 
-    // Path to have temporary files in
-    const tempTexturesPath = path.join(__dirname, 'temp_textures');
+    try {
+        clearFolder(previewPath);
 
-    // Path to have the preview texture files in
-    const texturesPath = path.join(__dirname, 'preview');
-    fs.readdirSync(texturesPath).forEach(f => fs.rmSync(`${texturesPath}\\${f}`, { recursive: true }));
+        for (const [src, name] of textures) {
+            const outputPath = path.join(previewPath, `${name}.dds`);
+            await createTexture(src, outputPath, 2048, 'BC3');
+            texturesDDS[name] = outputPath;
+        }
 
-    for (i = 0; i < textures.length; i++) {
-        const [src, name] = textures[i];
-        outputPath = `${texturesPath}\\${name}.dds`;
-        let newPath = path.join(tempTexturesPath, path.basename(src));
-        await resizeImage(src, newPath, 2048, 2048);
-        createDDSImage(newPath, outputPath, 'BC3');
-        texturesDDS[name] = outputPath;
+        return texturesDDS;
+    } catch (err) {
+        console.error(err);
+        dialog.showErrorBox('Could not generate preview',
+            `Something went wrong while generating the preview.\n\n${err.message}`);
+        return undefined;
+    } finally {
+        clearFolder(tempTexturesPath);
+        generatingWin.hide();
     }
-
-    // Clear the temp textures
-    fs.readdirSync(tempTexturesPath).forEach(f => fs.rmSync(`${tempTexturesPath}\\${f}`, { recursive: true }));
-
-    generatingWin.hide();
-
-    return texturesDDS;
 }

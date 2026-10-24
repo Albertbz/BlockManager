@@ -115,6 +115,23 @@ uniqueIDButton.addEventListener('click', function () {
     removeInvalidHighlight(uniqueIDInput);
 });
 
+/**
+ * The block name and creator name are used in the block's
+ * folder name, so they can't contain characters that
+ * Windows doesn't allow there.
+ */
+const folderNameInputs = [document.getElementById('nameInput'), document.getElementById('creatorNameInput')];
+
+folderNameInputs.forEach((input) => {
+    input.addEventListener('input', () => validateFolderNameInput(input));
+    validateFolderNameInput(input);
+});
+
+function validateFolderNameInput(input) {
+    const isInvalid = /[\\/:*?"<>|]/.test(input.value) || input.value.endsWith('.');
+    input.setCustomValidity(isInvalid ? 'Can not contain \\ / : * ? " < > | or end with a period.' : '');
+}
+
 
 
 /**
@@ -171,6 +188,10 @@ function addTexturesToDiv(fileArray, selectorDiv) {
         const textureImg = document.createElement('img');
         const crossImg = document.createElement('img');
         const select = createSelect(amountOfTextures, i);
+        select.addEventListener('change', (e) => {
+            updateValidity(selectorDiv);
+            removeInvalidHighlight(input);
+        });
 
         div.classList.add('texture-selector-child');
         div.appendChild(label);
@@ -180,7 +201,8 @@ function addTexturesToDiv(fileArray, selectorDiv) {
         label.appendChild(textureImg);
         label.appendChild(crossImg);
 
-        textureImg.src = fileArray[i];
+        textureImg.src = toFileUrl(fileArray[i]);
+        textureImg.dataset.path = fileArray[i];
         textureImg.classList.add('texture-img');
         textureImg.addEventListener('click', (e) => {
             fileArray.splice(i, 1);
@@ -241,6 +263,24 @@ function updateValidity(textureDiv) {
             input.setCustomValidity("");
         }
     }
+
+    // Two textures for the same face would overwrite each other.
+    if (hasDuplicateFaces(textureDiv)) {
+        input.setCustomValidity("Each texture must be for a different face.");
+    }
+}
+
+function hasDuplicateFaces(textureDiv) {
+    const faces = [...textureDiv.querySelectorAll('div.texture-selector-child select')]
+        .map(select => select.value);
+    return new Set(faces).size != faces.length;
+}
+
+// Turn a file path into a URL usable as an image source, escaping
+// characters like '#' and '%' that would otherwise break it.
+function toFileUrl(filePath) {
+    const parts = filePath.replaceAll('\\', '/').split('/');
+    return 'file:///' + parts.map((part, i) => i == 0 ? part : encodeURIComponent(part)).join('/');
 }
 
 function hasSameAmountAsRegular(amountOfTextures, required) {
@@ -415,7 +455,24 @@ function updateRecipeMaterials() {
     const recipeMaterialsDiv = document.getElementById('recipeMaterialsDiv');
 
     const recipePropertiesRaw = recipePropertiesTextarea.value;
-    const recipeProperties = JSON.parse(recipePropertiesRaw.replace('"Recipe": ', '').replace('},', '}'));
+    let recipeProperties;
+    try {
+        recipeProperties = JSON.parse(recipePropertiesRaw.replace('"Recipe": ', '').replace('},', '}'));
+    } catch (err) {
+        console.error(err);
+    }
+
+    if (recipeProperties == undefined || !Array.isArray(recipeProperties.Array)) {
+        // Block submitting until a valid recipe is loaded
+        recipePropertiesTextarea.setCustomValidity('Invalid recipe.');
+
+        const textElem = document.createElement('span');
+        textElem.classList.add('outline');
+        textElem.innerHTML = '<em>Could not read the recipe. Please load a valid recipe file.</em>';
+        recipeMaterialsDiv.replaceChildren(textElem);
+        return;
+    }
+    recipePropertiesTextarea.setCustomValidity('');
 
     const materialsArray = removeInvalidMaterials(recipeProperties.Array);
 
@@ -653,20 +710,14 @@ document.getElementById('blockForm').addEventListener('submit', async function (
         propertiesFileContent.AnimationSpeed = animationSpeed;
     }
 
-    // Delete old block if editing
-    const tempBlock = await window.call.getTemp();
-    const isEditing = tempBlock != undefined;
-    if (isEditing) {
-        await window.call.deleteBlockInTemp();
-    }
-
     // Format location
     if (saveLocation == undefined) {
         return;
     }
 
     const location = `${saveLocation}\\${blockName}.${creatorName}.${uniqueID}`;
-    // Give data to main, have it make the block
+    // Give data to main, have it make the block. If editing, main
+    // removes the old block once the new one has been made.
     const response = await window.call.generateCustomBlock(location, propertiesFileContent,
         regularTextures, smallTextures, normalTextures, glowTextures, heightTextures);
 
@@ -690,8 +741,7 @@ function getTexturesSrcAndValue(textureInput) {
 function getTextureSrcAndValue(child) {
     const img = child.firstElementChild.firstElementChild;
     const select = child.lastElementChild;
-    const fixedImgSrc = img.src.replace('file:///', '').replaceAll('%20', ' ');
-    return [fixedImgSrc, select.value];
+    return [img.dataset.path, select.value];
 }
 
 /**
@@ -843,21 +893,37 @@ function createInputGroup(values) {
         select.appendChild(option);
     }
 
-    input.addEventListener('click', async (e) => {
-        if (prevSaveButton == e.target) return;
+    // Without an update folder there is nowhere to save the block.
+    if (values.updates.length == 0) {
+        input.disabled = true;
+        select.disabled = true;
+    }
 
-        prevSaveButton.classList.remove('btn-pressed');
-        e.target.classList.add('btn-pressed');
-        const update = e.target.nextElementSibling.value;
-        saveLocation = (await window.call.getModsFolderPath()) + `\\ModFolders\\${e.target.value}\\${update}\\Blocks`;
+    input.addEventListener('click', () => selectModFolder(input, select));
 
-        prevSaveButton = e.target;
-    })
+    // Changing the update of the selected mod changes where to save.
+    select.addEventListener('change', () => {
+        if (prevSaveButton == input) selectModFolder(input, select);
+    });
 
     div.appendChild(input);
     div.appendChild(select);
 
     return div;
+}
+
+async function selectModFolder(input, select) {
+    const modsFolderPath = await window.call.getModsFolderPath();
+    const location = `${modsFolderPath}\\ModFolders\\${input.value}\\${select.value}\\Blocks`;
+
+    if (prevSaveButton != input) {
+        prevSaveButton.classList.remove('btn-pressed');
+        input.classList.add('btn-pressed');
+        prevSaveButton = input;
+    }
+
+    saveLocation = location;
+    updateSubmitButtonState();
 }
 
 /**
@@ -895,6 +961,7 @@ async function loadTemp() {
         // Set all properties
         formElem.elements['name'].value = tempBlock.properties.Name;
         formElem.elements['creatorName'].value = tempBlock.properties.CreatorName;
+        folderNameInputs.forEach(validateFolderNameInput);
         formElem.elements['uniqueID'].value = tempBlock.properties.UniqueID;
         formElem.elements['yieldSlider'].value = tempBlock.properties.Yield;
         formElem.elements['yieldNumber'].value = tempBlock.properties.Yield;
@@ -931,10 +998,12 @@ async function loadTemp() {
         addFilesToTextureFiles(textures.glow, textureFiles.glow);
         addFilesToTextureFiles(textures.height, textureFiles.height);
 
-        // Set recipe.
-        const recipePropertiesJSON = JSON.stringify({ Recipe: tempBlock.properties.Recipe }, null, 4);
-        formElem.elements['recipeProperties'].value = recipePropertiesJSON.substring(2, recipePropertiesJSON.length - 2).replace('    ', '');
-        updateRecipeMaterials();
+        // Set recipe. Blocks without one keep the default (not craftable).
+        if (tempBlock.properties.Recipe != undefined) {
+            const recipePropertiesJSON = JSON.stringify({ Recipe: tempBlock.properties.Recipe }, null, 4);
+            formElem.elements['recipeProperties'].value = recipePropertiesJSON.substring(2, recipePropertiesJSON.length - 2).replace('    ', '');
+            updateRecipeMaterials();
+        }
 
         // Change submit button text.
         document.getElementById('submitButton').innerText = 'Save changes';
@@ -976,12 +1045,17 @@ function updateUniqueIDToDropDiv() {
             prevButton = document.getElementById('uniqueIDToDropNothingInput');
             prevButton.classList.add('btn-pressed');
             break;
-        default:
+        default: {
             prevButton.classList.remove('btn-pressed');
             prevButton = document.getElementById('uniqueIDToDropCustomInput');
             prevButton.classList.add('btn-pressed');
-            document.getElementById('uniqueIDToDropInput').classList.remove('hide');
+
+            const numberInput = document.getElementById('uniqueIDToDropInput');
+            numberInput.classList.remove('hide');
+            numberInput.readOnly = false;
+            numberInput.required = true;
             break;
+        }
     }
 }
 
@@ -1017,11 +1091,19 @@ document.getElementById('generatePreview').addEventListener('click', async (e) =
     const blockPreviewDiv = document.getElementById('blockPreviewDiv');
     if (blockPreviewDiv.firstElementChild) blockPreviewDiv.firstElementChild.remove();
 
-    const textures = getTexturesSrcAndValue(document.getElementById('textureFilesInput'));
+    const textureFilesInput = document.getElementById('textureFilesInput');
+    const textures = getTexturesSrcAndValue(textureFilesInput);
 
     if (textures.length == 0) return;
 
+    // The preview needs one texture per face.
+    if (hasDuplicateFaces(document.getElementById('regularTexturesDiv'))) {
+        addInvalidHighlight(textureFilesInput);
+        return;
+    }
+
     const texturesDDS = await window.call.generatePreviewBlock(textures);
+    if (texturesDDS == undefined) return;
 
     let texturePaths = [];
 
