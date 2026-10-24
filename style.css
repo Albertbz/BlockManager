@@ -864,29 +864,64 @@ ul.form-stepper li:not(.form-stepper-active) .form-stepper-title:active {
 	filter: brightness(0.9);
 }
 
-/* The step being filled in is amber, to tell it apart from finished ones */
-ul.form-stepper .form-stepper-active .form-stepper-title {
-	cursor: default;
-	background-color: rgb(235, 155, 0);
+/* Like most step-by-step forms, the steps reached are blue, and their
+   state is told apart by more than the color: the current step is a
+   darker blue, finished ones have a checkmark, and skipped ones (with
+   something missing) are red with an exclamation mark. Steps not reached
+   are white. */
+ul.form-stepper .form-stepper-active .form-stepper-title,
+ul.form-stepper .form-stepper-completed .form-stepper-title,
+ul.form-stepper .form-stepper-skipped .form-stepper-title {
+	background-color: rgb(0, 117, 255);
 	color: white;
 	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 }
 
-ul.form-stepper .form-stepper-completed .form-stepper-title {
-	background-color: rgb(31, 54, 160);
-	color: rgb(200, 200, 200);
-	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
+ul.form-stepper .form-stepper-active .form-stepper-title {
+	cursor: default;
+	background-color: rgb(0, 90, 200);
+}
+
+ul.form-stepper .form-stepper-skipped .form-stepper-title {
+	background-color: rgb(201, 18, 18);
+}
+
+/* The icons are badges on the title's corner, so they don't move its text */
+ul.form-stepper .form-stepper-title {
+	position: relative;
+}
+
+ul.form-stepper .form-stepper-completed .form-stepper-title::before,
+ul.form-stepper .form-stepper-skipped .form-stepper-title::before {
+	position: absolute;
+	top: -5px;
+	right: -5px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 15px;
+	height: 15px;
+	border: 1px solid black;
+	border-radius: 50%;
+	background-color: white;
+	font-size: 10px;
+	font-weight: bold;
+	text-shadow: none;
+}
+
+ul.form-stepper .form-stepper-completed .form-stepper-title::before {
+	content: "\2713";
+	color: rgb(0, 117, 255);
+}
+
+ul.form-stepper .form-stepper-skipped .form-stepper-title::before {
+	content: "!";
+	color: rgb(201, 18, 18);
 }
 
 ul.form-stepper .form-stepper-unfinished .form-stepper-title {
 	background-color: rgb(248, 247, 255);
 	color: black;
-}
-
-ul.form-stepper .form-stepper-skipped .form-stepper-title {
-	background-color: rgb(201, 18, 18);
-	color: rgb(200, 200, 200);
-	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 }
 
 .form-stepper-horizontal {
@@ -922,16 +957,14 @@ ul.form-stepper>li:not(:last-of-type) {
 	top: 50%;
 }
 
+/* The lines are blue up to the current step, and grey after it */
 .form-stepper-horizontal li:after {
 	background-color: #dee2e6;
 }
 
-.form-stepper-horizontal li.form-stepper-completed:after {
-	background-color: rgb(0, 117, 255);
-}
-
+.form-stepper-horizontal li.form-stepper-completed:after,
 .form-stepper-horizontal li.form-stepper-skipped:after {
-	background-color: rgb(221, 20, 20);
+	background-color: rgb(0, 117, 255);
 }
 
 .form-stepper-horizontal li:last-child {
