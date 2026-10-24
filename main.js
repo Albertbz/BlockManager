@@ -126,6 +126,7 @@ ipcMain.handle('displayDeleteDialog', displayDeleteDialog);
 ipcMain.handle('refreshMainWindow', () => mainWindow.reload());
 ipcMain.handle('loadGenerator', loadGenerator);
 ipcMain.handle('loadManageBlocks', loadManageBlocks);
+ipcMain.handle('displayDiscardDialog', displayDiscardDialog);
 ipcMain.handle('selectFolder', selectFolder);
 ipcMain.handle('saveBlockInTemp', saveBlockInTemp);
 ipcMain.handle('clearTemp', clearTemp);
@@ -405,29 +406,7 @@ function getAllModFolders() {
 let generationLocation;
 async function generationCompletePopup(event, location) {
     generationLocation = location;
-
-    const popupWin = new BrowserWindow({
-        width: 300,
-        height: 200,
-        center: true,
-        frame: false,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-        },
-        parent: mainWindow,
-        modal: true,
-        show: false
-    });
-
-    popupWin.loadFile('generationPopup.html');
-
-    popupWin.once('ready-to-show', () => {
-        popupWin.show();
-    })
-
-    const winPosition = mainWindow.getPosition();
-    const winSize = mainWindow.getSize();
-    popupWin.setPosition(winPosition[0] + Math.round(winSize[0] / 2) - 150, winPosition[1] + Math.round(winSize[1] / 2) - 100);
+    openPopup('generationPopup.html');
 }
 
 function openGenerationLocation() {
@@ -528,7 +507,18 @@ function addBlocksTo(blocks, blocksFolderPath) {
 let blockToDelete = undefined;
 async function displayDeleteDialog(event, block) {
     blockToDelete = block;
+    openPopup('deletionPopup.html');
+}
 
+async function displayDiscardDialog(event, isEditing) {
+    openPopup('discardPopup.html', { isEditing: String(isEditing) });
+}
+
+/**
+ * Show a small popup in the middle of the main window, which can't be
+ * used until the popup is closed.
+ */
+function openPopup(file, query) {
     const popupWin = new BrowserWindow({
         width: 300,
         height: 200,
@@ -542,7 +532,7 @@ async function displayDeleteDialog(event, block) {
         show: false
     });
 
-    popupWin.loadFile('deletionPopup.html');
+    popupWin.loadFile(file, { query });
 
     popupWin.once('ready-to-show', () => {
         popupWin.show();

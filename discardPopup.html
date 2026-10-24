@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <link rel="stylesheet" href="./style.css">
+    <title>Discard Popup</title>
+</head>
+
+<body class="no-select">
+    <div class="container box blur-s">
+        <h2 class="text-center mb-2 mt-2 outline" id="discardMessage">Are you sure that you want to discard this block?</h2>
+        <div class="box content">
+            <button class="btn content mb-2 btn-medium" id="discardConfirm">Yes, discard it</button>
+            <button class="btn content mb-2 btn-medium" id="discardCancel">No, keep editing</button>
+        </div>
+    </div>
+</body>
+
+<script src="./discardPopup.js"></script>
+</html>

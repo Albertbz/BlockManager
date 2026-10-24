@@ -145,7 +145,7 @@ const textureFiles = {
     height: []
 };
 
-loadTemp();
+const loadingTemp = loadTemp();
 
 function addEventListenersToTextureSelectors() {
     document.querySelectorAll('div.texture-selector-parent').forEach((textureSelectorDiv, i) => {
@@ -416,7 +416,7 @@ yieldNumberInput.addEventListener('input', function (e) {
 /**
  * Handle recipe info
  */
-setDefaultRecipePreview();
+const loadingDefaultRecipe = setDefaultRecipePreview();
 addEventListenerToRefreshButton();
 checkIfRecipeButtonWillWorkAndUpdate();
 
@@ -843,7 +843,7 @@ function updateSaveButton(button) {
 /**
  * Put path to Blocks folder in button
  */
-putPathToBlocksFolderInButton(document.getElementById('blocksFolderInput'));
+const loadingBlocksFolder = putPathToBlocksFolderInButton(document.getElementById('blocksFolderInput'));
 
 async function putPathToBlocksFolderInButton(button) {
     const modsFolderPath = await window.call.getModsFolderPath();
@@ -866,7 +866,7 @@ async function putPathToBlocksFolderInButton(button) {
 /**
  * Populate Mod folder picker
  */
-populateModFolderPicker();
+const loadingModFolders = populateModFolderPicker();
 
 async function populateModFolderPicker() {
     const modFolderDiv = document.getElementById('modFolderDiv');
@@ -948,14 +948,43 @@ document.getElementById('saveBlockManuallyInput').addEventListener('click', asyn
 })
 
 /**
- * Handle Discard block buttons
+ * Handle Discard block buttons. If anything has been input since the
+ * page loaded, ask before throwing it away.
  */
-function handleDiscardBlockButtons() {
+let initialFormState;
+Promise.all([loadingTemp, loadingDefaultRecipe, loadingBlocksFolder, loadingModFolders])
+    .then(() => initialFormState = getFormState());
+
+function handleDiscardBlockButtons(isEditing) {
     document.querySelectorAll('button.discard').forEach(button => {
+        if (isEditing) button.title = 'Stop editing this block';
+
         button.addEventListener('click', (e) => {
-            window.call.loadManageBlocks();
+            const hasChanges = initialFormState != undefined && getFormState() != initialFormState;
+            if (hasChanges) {
+                window.call.displayDiscardDialog(isEditing);
+            } else {
+                window.call.loadManageBlocks();
+            }
         });
     });
+}
+
+// Everything the user can input: the fields, which buttons are chosen,
+// and the textures with the faces they are used for.
+function getFormState() {
+    const fields = [...document.forms['blockForm'].elements]
+        .filter(element => element.type != 'file')
+        .map(element => {
+            if (element.type == 'checkbox') return element.checked;
+            if (element.type == 'button') return [element.value, element.classList.contains('btn-pressed')];
+            return element.value;
+        });
+    const textures = [...document.querySelectorAll('input[type=file]')]
+        .filter(input => input.nextElementSibling?.classList.contains('texture-selector-parent'))
+        .map(getTexturesSrcAndValue);
+
+    return JSON.stringify([fields, textures]);
 }
 
 
@@ -1031,7 +1060,7 @@ async function loadTemp() {
     };
 
     addEventListenersToTextureSelectors();
-    handleDiscardBlockButtons();
+    handleDiscardBlockButtons(isEditing);
 
     // Update the preview button.
     updatePreviewButton();

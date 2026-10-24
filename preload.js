@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('call', {
     refreshMainWindow: () => ipcRenderer.invoke('refreshMainWindow'),
     loadGenerator: () => ipcRenderer.invoke('loadGenerator'),
     loadManageBlocks: () => ipcRenderer.invoke('loadManageBlocks'),
+    displayDiscardDialog: (isEditing) => ipcRenderer.invoke('displayDiscardDialog', isEditing),
     saveBlockInTemp: (block) => ipcRenderer.invoke('saveBlockInTemp', block),
     clearTemp: () => ipcRenderer.invoke('clearTemp'),
     getTemp: () => ipcRenderer.invoke('getTemp'),
