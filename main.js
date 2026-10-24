@@ -240,6 +240,7 @@ async function generateCustomBlock(event, location, propertiesFileContent, regul
         createDDSImage(newPath, outputPath, 'BC1');
     }
 
+    // Clear the temp textures
     fs.readdirSync(tempTexturesPath).forEach(f => fs.rmSync(`${tempTexturesPath}\\${f}`, { recursive: true }));
 
     generatingWin.hide();
@@ -539,15 +540,24 @@ async function generatePreviewBlock(event, textures) {
 
     let texturesDDS = {};
 
+    // Path to have temporary files in
+    const tempTexturesPath = path.join(__dirname, 'temp_textures');
+
+    // Path to have the preview texture files in
     const texturesPath = path.join(__dirname, 'preview');
     fs.readdirSync(texturesPath).forEach(f => fs.rmSync(`${texturesPath}\\${f}`, { recursive: true }));
 
     for (i = 0; i < textures.length; i++) {
         const [src, name] = textures[i];
         outputPath = `${texturesPath}\\${name}.dds`;
-        createDDSImage(src, outputPath, 'BC3', true, 2048, 2048);
+        let newPath = path.join(tempTexturesPath, path.basename(src));
+        await resizeImage(src, newPath, 2048, 2048);
+        createDDSImage(newPath, outputPath, 'BC3');
         texturesDDS[name] = outputPath;
     }
+
+    // Clear the temp textures
+    fs.readdirSync(tempTexturesPath).forEach(f => fs.rmSync(`${tempTexturesPath}\\${f}`, { recursive: true }));
 
     generatingWin.hide();
 

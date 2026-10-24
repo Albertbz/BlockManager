@@ -130,4 +130,6 @@ dist
 .pnp.*
 
 # Custom
-temp/*
+temp/
+preview/
+temp_textures/
