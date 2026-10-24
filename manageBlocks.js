@@ -15,10 +15,26 @@ function makeBlocksDiv() {
     const div = document.createElement('div');
     div.classList.add('box', 'scrollable');
 
-    for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i];
-        const horizontalDiv = makeBlockDiv(block);
-        div.appendChild(horizontalDiv);
+    if (filterBy == 'Mods') {
+        // Show the blocks of each mod together, under the mod's name
+        for (const group of groupBlocksByMod(blocks)) {
+            const title = document.createElement('span');
+            title.classList.add('outline', 'ps-1', 'mod-group-title');
+            title.innerText = selectedVersion == undefined
+                ? `${group.mod.name} (${group.mod.update})`
+                : group.mod.name;
+            div.appendChild(title);
+
+            for (const block of group.blocks) {
+                div.appendChild(makeBlockDiv(block));
+            }
+        }
+    } else {
+        for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i];
+            const horizontalDiv = makeBlockDiv(block);
+            div.appendChild(horizontalDiv);
+        }
     }
 
     if (blocks.length == 0) {
@@ -88,6 +104,14 @@ function makeDropDownDiv(block) {
 
     leftDiv.appendChild(arrow);
     leftDiv.appendChild(name);
+
+    const modLabel = getModLabel(block);
+    if (modLabel != undefined) {
+        const mod = document.createElement('span');
+        mod.classList.add('align-center', 'ms-1', 'block-mod-label');
+        mod.innerText = modLabel;
+        leftDiv.appendChild(mod);
+    }
 
     dropDownDiv.appendChild(leftDiv);
     dropDownDiv.appendChild(id);
@@ -409,31 +433,130 @@ async function updateBlocksFilter() {
     const modFolders = allBlocks.modFolders;
     switch (filterBy) {
         case 'All':
-            blocks = allBlocks.defaultBlocksFolder;
-
-            for (let i = 0; i < modFolders.length; i++) {
-                const modFolder = modFolders[i];
-
-                for (let j = 0; j < modFolder.updates.length; j++) {
-                    const update = modFolder.updates[j];
-                    blocks = blocks.concat(update.blocksFolder);
-                }
-            }
+            blocks = allBlocks.defaultBlocksFolder.concat(getModBlocks(modFolders));
             break;
         case 'Independent':
             blocks = allBlocks.defaultBlocksFolder;
             break;
         case 'Mods':
-            for (let i = 0; i < modFolders.length; i++) {
-                const modFolder = modFolders[i];
-
-                for (let j = 0; j < modFolder.updates.length; j++) {
-                    const update = modFolder.updates[j];
-                    blocks = blocks.concat(update.blocksFolder);
-                }
-            }
+            updateVersionFilter(modFolders);
+            blocks = getModBlocks(modFolders)
+                .filter(block => selectedVersion == undefined || block.mod.update == selectedVersion);
             break;
     }
+
+    // Found before searching, so titles don't change while typing.
+    duplicateNames = filterBy == 'All' ? getDuplicateNames(blocks) : new Set();
+}
+
+/**
+ * Handle choosing which game version to show mod blocks for.
+ * undefined means all versions.
+ */
+let selectedVersion = undefined;
+let shownVersions = [];
+
+// Newest version first, e.g. "Update 60" before "Update 59".
+function compareVersions(a, b) {
+    const aNumber = parseInt(a.match(/\d+/)?.[0]);
+    const bNumber = parseInt(b.match(/\d+/)?.[0]);
+    if (!isNaN(aNumber) && !isNaN(bNumber) && aNumber != bNumber) return bNumber - aNumber;
+    return b.localeCompare(a);
+}
+
+// Show options for all versions that have mods.
+const versionSelect = document.getElementById('versionSelect');
+
+function updateVersionFilter(modFolders) {
+    const versions = [...new Set(modFolders.flatMap(modFolder =>
+        modFolder.updates.map(update => update.name)))].sort(compareVersions);
+
+    if (!versions.includes(selectedVersion)) selectedVersion = undefined;
+
+    // Only rebuild the options if the versions have changed
+    if (versions.join('|') == shownVersions.join('|')) return;
+    shownVersions = versions;
+
+    const allOption = document.createElement('option');
+    allOption.value = '';
+    allOption.innerText = 'All versions';
+    versionSelect.replaceChildren(allOption);
+
+    for (const version of versions) {
+        const option = document.createElement('option');
+        option.value = version;
+        option.innerText = version;
+        versionSelect.appendChild(option);
+    }
+
+    versionSelect.value = selectedVersion ?? '';
+}
+
+versionSelect.addEventListener('change', () => {
+    selectedVersion = versionSelect.value == '' ? undefined : versionSelect.value;
+    updateBlocks();
+});
+
+// Group blocks by mod and version, keeping the current sort within each
+// group. Groups are ordered by mod name, then newest version first.
+function groupBlocksByMod(blocks) {
+    const groups = new Map();
+
+    for (const block of blocks) {
+        const key = `${block.mod.name}|${block.mod.update}`;
+        if (!groups.has(key)) groups.set(key, { mod: block.mod, blocks: [] });
+        groups.get(key).blocks.push(block);
+    }
+
+    return [...groups.values()].sort((a, b) =>
+        a.mod.name.localeCompare(b.mod.name, undefined, { sensitivity: 'base' })
+        || compareVersions(a.mod.update, b.mod.update));
+}
+
+// Get all blocks from the mod folders, with the mod and
+// update (version) each of them is from.
+function getModBlocks(modFolders) {
+    let modBlocks = [];
+
+    for (const modFolder of modFolders) {
+        for (const update of modFolder.updates) {
+            for (const block of update.blocksFolder) {
+                block.mod = { name: modFolder.name, update: update.name };
+                modBlocks.push(block);
+            }
+        }
+    }
+
+    return modBlocks;
+}
+
+/**
+ * Handle blocks with the same name, typically from several
+ * versions of a mod. These get their mod shown in the title.
+ */
+let duplicateNames = new Set();
+
+function getNameKey(block) {
+    return block.properties.Name.trim().toLowerCase();
+}
+
+function getDuplicateNames(blocks) {
+    const seenNames = new Set();
+    const duplicates = new Set();
+
+    for (const block of blocks) {
+        const nameKey = getNameKey(block);
+        if (seenNames.has(nameKey)) duplicates.add(nameKey);
+        seenNames.add(nameKey);
+    }
+
+    return duplicates;
+}
+
+function getModLabel(block) {
+    if (block.mod == undefined || !duplicateNames.has(getNameKey(block))) return undefined;
+
+    return `(${block.mod.name}, ${block.mod.update})`;
 }
 
 // Change filtering method
@@ -447,6 +570,8 @@ document.querySelectorAll('button.filter-btn').forEach((button) => {
 
         prevFilterButton = button;
         filterBy = button.innerText;
+
+        versionSelect.classList.toggle('d-none', filterBy != 'Mods');
 
         updateBlocks();
     })
