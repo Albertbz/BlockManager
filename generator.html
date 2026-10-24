@@ -224,6 +224,24 @@
                                 </div>
 
                                 <label class="form-label">
+                                    Allow rotation
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            Whether to allow the block to be placed rotated.
+                                            Useful for blocks with a fixed direction (like a
+                                            compass), or for blocks whose textures would tile
+                                            incorrectly if placed rotated.
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="checkbox mb-2">
+                                    <input class="form-control" type="checkbox" name="allowRotation"
+                                        id="allowRotationInput" checked>
+                                    <label for="allowRotationInput"></label>
+                                </div>
+
+                                <label class="form-label">
                                     Make animated
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
@@ -371,9 +389,33 @@
                                 </label>
                                 <input type="file" name="glowTextureFiles" id="glowTextureFilesInput" multiple
                                     accept=".png,.jpg,.jpeg">
-                                <div class="texture-selector-parent">
+                                <div class="texture-selector-parent mb-2">
                                     <!-- Textures are automatically added here -->
                                     <label for="glowTextureFilesInput" class="custom-file-uploader">Select
+                                        file(s)</label>
+                                </div>
+
+                                <!-- Height map files -->
+                                <label class="form-label">
+                                    Height map file(s) [2048x2048]
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            If you want the block to have tessellation (actual
+                                            3D depth on its surface), then provide the height map
+                                            files here. These should be greyscale images, where the
+                                            brighter the texture, the higher the surface. You can preview how a height map will look
+                                            in the game at: TODO_HEIGHTMAP_PREVIEW_URL
+                                            These must be 2048x2048 pixels, and you must provide either
+                                            none or as many as normal textures.
+                                        </div>
+                                    </div>
+                                </label>
+                                <input type="file" name="heightTextureFiles" id="heightTextureFilesInput" multiple
+                                    accept=".png,.jpg,.jpeg">
+                                <div class="texture-selector-parent">
+                                    <!-- Textures are automatically added here -->
+                                    <label for="heightTextureFilesInput" class="custom-file-uploader">Select
                                         file(s)</label>
                                 </div>
                             </div>

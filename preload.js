@@ -3,8 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('call', {
     getGeneratedRecipeFileContent: async () => await ipcRenderer.invoke('getGeneratedRecipeFileContent'),
     getDefaultRecipeFileContent: async () => await ipcRenderer.invoke('getDefaultRecipeFileContent'),
-    generateCustomBlock: (location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures) =>
-        ipcRenderer.invoke('generateCustomBlock', location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures),
+    generateCustomBlock: (location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures, heightTextures) =>
+        ipcRenderer.invoke('generateCustomBlock', location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures, heightTextures),
     selectFolder: () => ipcRenderer.invoke('selectFolder'),
     getModsFolderPath: () => ipcRenderer.invoke('getModsFolderPath'),
     getAllModFolders: () => ipcRenderer.invoke('getAllModFolders'),

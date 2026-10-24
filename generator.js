@@ -124,7 +124,8 @@ const textureFiles = {
     regular: [],
     small: [],
     normal: [],
-    glow: []
+    glow: [],
+    height: []
 };
 
 loadTemp();
@@ -602,6 +603,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     const uniqueIDToDrop = parseInt(formData.get('uniqueIDToDrop'));
     const allowMove = formData.get('allowMove') == 'on' ? true : false;
     const allowCrystalPlacement = formData.get('allowCrystalPlacement') == 'on' ? true : false;
+    const allowRotation = formData.get('allowRotation') == 'on' ? true : false;
     const makeAnimated = formData.get('makeAnimated') == 'on' ? true : false;
 
     // Get all textures and corresponding mode
@@ -613,6 +615,8 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     const hasNormalTextures = normalTextures.length != 0;
     const glowTextures = getTexturesSrcAndValue(document.getElementById('glowTextureFilesInput'));
     const hasGlowTextures = glowTextures.length != 0;
+    const heightTextures = getTexturesSrcAndValue(document.getElementById('heightTextureFilesInput'));
+    const hasHeightTextures = heightTextures.length != 0;
 
     // Get recipe properties and picture
     const recipePropertiesRaw = formData.get('recipeProperties');
@@ -629,11 +633,13 @@ document.getElementById('blockForm').addEventListener('submit', async function (
         Textures: {
             Mode: mode,
             WithNormals: hasNormalTextures,
-            WithGlowMap: hasGlowTextures
+            WithGlowMap: hasGlowTextures,
+            WithHeight: hasHeightTextures
         },
         UniqueIDToDrop: uniqueIDToDrop,
         AllowMove: allowMove,
-        AllowCrystalAssistedBlockPlacement: allowCrystalPlacement
+        AllowCrystalAssistedBlockPlacement: allowCrystalPlacement,
+        AllowRotation: allowRotation
     }
 
     // If it has a category name
@@ -662,7 +668,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     const location = `${saveLocation}\\${blockName}.${creatorName}.${uniqueID}`;
     // Give data to main, have it make the block
     const response = await window.call.generateCustomBlock(location, propertiesFileContent,
-        regularTextures, smallTextures, normalTextures, glowTextures);
+        regularTextures, smallTextures, normalTextures, glowTextures, heightTextures);
 
     if (response) {
         window.call.generationCompletePopup(location);
@@ -907,6 +913,9 @@ async function loadTemp() {
         if (tempBlock.properties.AllowCrystalAssistedBlockPlacement != undefined) {
             formElem.elements['allowCrystalPlacement'].checked = tempBlock.properties.AllowCrystalAssistedBlockPlacement;
         }
+        if (tempBlock.properties.AllowRotation != undefined) {
+            formElem.elements['allowRotation'].checked = tempBlock.properties.AllowRotation;
+        }
         if (tempBlock.properties.AnimationSpeed != undefined) {
             formElem.elements['makeAnimated'].checked = true;
             formElem.elements['animationSpeedSlider'].value = tempBlock.properties.AnimationSpeed;
@@ -920,6 +929,7 @@ async function loadTemp() {
         addFilesToTextureFiles(textures.small, textureFiles.small);
         addFilesToTextureFiles(textures.normal, textureFiles.normal);
         addFilesToTextureFiles(textures.glow, textureFiles.glow);
+        addFilesToTextureFiles(textures.height, textureFiles.height);
 
         // Set recipe.
         const recipePropertiesJSON = JSON.stringify({ Recipe: tempBlock.properties.Recipe }, null, 4);

@@ -30,6 +30,9 @@ and much more. It looks like this:
 There are both Required and Optional properties. To read more about each of them, simply hover over the question mark next to
 each field.
 
+Among the optional properties is "Allow rotation", which is enabled by default. Disable it for blocks that should never be
+placed rotated, such as blocks with a fixed direction (like a compass) or blocks whose textures would tile incorrectly when rotated.
+
 ### Textures
 The textures part is pretty self-explanatory. Simply select the textures that you want your block to have. It looks like this
 when no textures have been selected:
@@ -38,6 +41,10 @@ And like this when 3 textures have been given and after the "Generate preview of
 ![Image of non-empty textures part](readme_images/5.png)
 Here there are also both Required and Optional textures that you can provide. Hover over the question mark to read more about
 each type of texture.
+
+One of the optional texture types is height maps. If you provide a height map for every texture, the block will have tessellation,
+giving its surface actual 3D depth in game. Height maps should be greyscale 2048x2048 images, where brighter means higher. To tune
+a height map without having to restart the game, you can preview how it will look in game at TODO_HEIGHTMAP_PREVIEW_URL.
 
 ### Recipe
 For the recipe you have to provide a file specifying what blocks to use.

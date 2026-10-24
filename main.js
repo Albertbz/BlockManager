@@ -169,7 +169,7 @@ async function resizeImage(src, dst, width, height) {
     }
 }
 
-async function generateCustomBlock(event, location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures) {
+async function generateCustomBlock(event, location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures, heightTextures) {
     showPopup(generatingWin);
     await sleep(100);
 
@@ -238,6 +238,15 @@ async function generateCustomBlock(event, location, propertiesFileContent, regul
         let newPath = path.join(tempTexturesPath, path.basename(src));
         await resizeImage(src, newPath, 1024, 1024);
         createDDSImage(newPath, outputPath, 'BC1');
+    }
+
+    // Create height map textures
+    for (i = 0; i < heightTextures.length; i++) {
+        const [src, name] = heightTextures[i];
+        let outputPath = `${texturesPath}\\${name}_height.dds`;
+        let newPath = path.join(tempTexturesPath, path.basename(src));
+        await resizeImage(src, newPath, 2048, 2048);
+        createDDSImage(newPath, outputPath, 'BC4');
     }
 
     // Clear the temp textures
@@ -521,6 +530,10 @@ function getTempTextures() {
 
     textures.glow = allTextures
         .filter(fileName => fileName.includes('glow'))
+        .map(fileName => path.join(tempPath, fileName));
+
+    textures.height = allTextures
+        .filter(fileName => fileName.includes('height'))
         .map(fileName => path.join(tempPath, fileName));
 
     return textures;

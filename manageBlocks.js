@@ -136,6 +136,10 @@ function makePropertiesDiv(block) {
     crystalAssistElem.innerHTML = '<b>Crystal assist:</b> ' + getCrystalAssist(block.properties.AllowCrystalAssistedBlockPlacement);
     propertiesDiv.appendChild(crystalAssistElem);
 
+    const rotatableElem = document.createElement('span');
+    rotatableElem.innerHTML = '<b>Rotatable:</b> ' + getRotatable(block.properties.AllowRotation);
+    propertiesDiv.appendChild(rotatableElem);
+
     return propertiesDiv;
 }
 
@@ -270,6 +274,10 @@ function getMovable(allowMove) {
 
 function getCrystalAssist(allowCrystalAssistedBlockPlacement) {
     return booleanToYesNo(allowCrystalAssistedBlockPlacement);
+}
+
+function getRotatable(allowRotation) {
+    return booleanToYesNo(allowRotation);
 }
 
 function booleanToYesNo(boolean) {
