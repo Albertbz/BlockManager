@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, screen, dialog, shell } = require('electron');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const { createDDSImage, decompressDDSImage } = require('./dds');
 const env = require('windows-env');
 const fs = require('fs');
@@ -138,6 +139,7 @@ ipcMain.handle('getTempTextures', getTempTextures);
 ipcMain.handle('removeBlockToDelete', removeBlockToDelete);
 ipcMain.handle('generatePreviewBlock', (...args) => queueTextureWork(() => generatePreviewBlock(...args)));
 ipcMain.handle('getTextureThumbnail', getTextureThumbnail);
+ipcMain.handle('getBlockTexturesUrl', getBlockTexturesUrl);
 
 
 /*
@@ -374,6 +376,18 @@ function getModsFolderPath() {
         const cyubeVRPath = getGamePath(619500).game.path;
         const modsFolderPath = path.join(cyubeVRPath, 'cyubeVR\\Mods');
         return modsFolderPath;
+    }
+    catch {
+        return undefined;
+    }
+}
+
+// The game's own block textures, which recipes are shown with
+function getBlockTexturesUrl() {
+    try {
+        const cyubeVRPath = getGamePath(619500).game.path;
+        const texturesPath = path.join(cyubeVRPath, 'cyubeVR\\Content\\Movies\\BlockTextures\\DDS');
+        return pathToFileURL(texturesPath).href;
     }
     catch {
         return undefined;

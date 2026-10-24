@@ -1,4 +1,8 @@
 import { loadCanvas } from "./blockPreview.js";
+import { createRecipePreview } from "./recipePreview.js";
+import { createRecipeBuilder } from "./recipeBuilder.js";
+import { getMaterialName } from "./recipeMaterials.js";
+import "./sliderScroll.js";
 import { growFromButton, setPageOutAnimation, shrinkIntoButton } from "./pageTransition.js";
 
 // The generator grows out of the button to stop creating the block (which
@@ -427,6 +431,50 @@ yieldNumberInput.addEventListener('input', function (e) {
 /**
  * Handle recipe info
  */
+const blockTexturesUrl = window.call.getBlockTexturesUrl();
+
+const recipePreview = createRecipePreview(
+    document.getElementById('recipePreviewDiv'),
+    document.getElementById('recipeLayerInput'),
+    document.getElementById('recipeLayerValue'),
+    material => getMaterialName(material, 1),
+    blockTexturesUrl
+);
+
+// What is built is written to the recipe, the same way the game writes it
+const recipeBuilder = createRecipeBuilder(
+    {
+        grid: document.getElementById('recipeBuilderGrid'),
+        layerText: document.getElementById('recipeBuilderLayerText'),
+        downButton: document.getElementById('recipeBuilderDownButton'),
+        upButton: document.getElementById('recipeBuilderUpButton'),
+        clearLayerButton: document.getElementById('recipeBuilderClearLayerButton'),
+        resetButton: document.getElementById('recipeBuilderResetButton'),
+    },
+    blockTexturesUrl,
+    {
+        onChange: (recipe) => {
+            document.getElementById('recipePropertiesTextarea').value = getRecipeFileContent(recipe);
+            updateRecipeMaterials(false);
+        },
+        onHover: (position) => recipePreview.highlight(position),
+        onLayerChange: (layer) => recipePreview.showBuilderLayer(layer),
+    }
+);
+
+document.getElementById('recipeBuilderLayerInput').addEventListener('change', (e) => {
+    recipePreview.setBuilderLayerShown(e.target.checked);
+});
+
+function getRecipeFileContent(recipe) {
+    return `"Recipe": {\n`
+        + `\t\t"Array" : [${recipe.Array.join(',')}],\n`
+        + `\t\t"SizeX": ${recipe.SizeX},\n`
+        + `\t\t"SizeY": ${recipe.SizeY},\n`
+        + `\t\t"SizeZ": ${recipe.SizeZ}\n`
+        + `},`;
+}
+
 const loadingDefaultRecipe = setDefaultRecipePreview();
 addEventListenerToRefreshButton();
 checkIfRecipeButtonWillWorkAndUpdate();
@@ -471,7 +519,8 @@ function addEventListenerToRefreshButton() {
     });
 }
 
-function updateRecipeMaterials() {
+// The recipe builder shows the recipe too, unless the change came from it
+function updateRecipeMaterials(updateBuilder = true) {
     const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const recipeMaterialsDiv = document.getElementById('recipeMaterialsDiv');
 
@@ -482,6 +531,9 @@ function updateRecipeMaterials() {
     } catch (err) {
         console.error(err);
     }
+
+    const recipeLayoutElems = document.querySelectorAll('.recipe-layout');
+    recipeLayoutElems.forEach(elem => elem.classList.add('d-none'));
 
     if (recipeProperties == undefined || !Array.isArray(recipeProperties.Array)) {
         // Block submitting until a valid recipe is loaded
@@ -494,6 +546,7 @@ function updateRecipeMaterials() {
         return;
     }
     recipePropertiesTextarea.setCustomValidity('');
+    if (updateBuilder) recipeBuilder.setRecipe(recipeProperties);
 
     const materialsArray = removeInvalidMaterials(recipeProperties.Array);
 
@@ -509,6 +562,9 @@ function updateRecipeMaterials() {
         materialsElem.innerHTML = `<em>${materials}.</em>`;
     
         recipeMaterialsDiv.replaceChildren(materialsElem);
+
+        recipeLayoutElems.forEach(elem => elem.classList.remove('d-none'));
+        recipePreview.setRecipe(recipeProperties);
     }
 
 }
@@ -545,92 +601,6 @@ function getMaterials(materialsArray) {
     }
 
     return materials;
-}
-
-function getMaterialName(materialAsNumber, amount) {
-    const isPlural = amount > 1;
-    switch (materialAsNumber) {
-        case 1:
-            return 'grass';
-        case 2:
-            return 'dirt';
-        case 6:
-            return 'dark wood';
-        case 10:
-            return 'sand';
-        case 13:
-            return 'iron ore';
-        case 22:
-            return isPlural ? 'copper nuggets' : 'copper nugget';
-        case 23:
-            return isPlural ? 'gold nuggets' : 'gold nugget';
-        case 24:
-            return 'coal';
-        case 32:
-            return 'light wood';
-        case 33:
-            return isPlural ? 'light wood planks' : 'light wood plank';
-        case 34:
-            return isPlural ? 'dark wood planks' : 'dark wood plank';
-        case 35:
-            return 'stone';
-        case 38:
-            return 'blue dye';
-        case 41:
-            return 'green dye';
-        case 46:
-            return 'wallstone';
-        case 47:
-            return 'flagstone';
-        case 48:
-            return 'red dye';
-        case 52:
-            return 'wood scaffolding';
-        case 62:
-            return 'rainbow dye';
-        case 64:
-            return 'white dye';
-        case 68:
-            return isPlural ? 'crystals' : 'crystal';
-        case 72:
-            return 'dry grass';
-        case 73:
-            return isPlural ? 'iron ingots' : 'iron ingot';
-        case 89:
-            return isPlural ? 'glass blocks' : 'glass block';
-        case 91:
-            return isPlural ? 'glass ingots' : 'glass ingot';
-        case 96:
-            return 'blue shimmerstone';
-        case 97:
-            return 'gold shimmerstone';
-        case 98:
-            return 'white shimmerstone';
-        case 99:
-            return 'green shimmerstone';
-        case 100:
-            return 'blue starstone';
-        case 101:
-            return 'gold starstone';
-        case 102:
-            return 'green starstone';
-        case 103:
-            return 'blue shimmertile';
-        case 104:
-            return 'gold shimmertile';
-        case 105:
-            return 'white shimmertile';
-        case 106:
-            return 'green shimmertile';
-        case 112:
-            return 'cloakstone';
-        case 113:
-            return isPlural ? 'cloakstone nuggets' : 'cloakstone nugget';
-        case 122:
-            return 'water'
-        default:
-            return 'MISSING MATERIAL ID \'' + materialAsNumber + '\' (please let me know)'
-    }
 }
 
 // Manually upload
@@ -1284,7 +1254,17 @@ document.querySelectorAll('div.tooltip').forEach((tooltipDiv) => {
             tooltipContent.style.left = '';
         }
 
+        tooltipContent.style.top = '';
+        tooltipContent.style.bottom = '';
         tooltipContent.classList.remove('d-none');
+
+        // Shown above the question mark instead if there isn't room below it,
+        // as the scrolling area it is in would cut it off
+        const scrollArea = tooltipDiv.parentElement.parentElement;
+        if (tooltipContent.getBoundingClientRect().bottom > scrollArea.getBoundingClientRect().bottom) {
+            tooltipContent.style.top = 'auto';
+            tooltipContent.style.bottom = '25px';
+        }
     });
 
     tooltipDiv.addEventListener('mouseout', (e) => {

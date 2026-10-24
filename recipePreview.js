@@ -1,0 +1,309 @@
+import * as THREE from "./three/three.module.min.js";
+import { OrbitControls } from "./three/OrbitControls.js";
+import { createMaterialMesh, disposeMaterialMesh, cubeGeometry, edgesGeometry, edgeMaterial, hoveredEdgeMaterial } from "./recipeMeshes.js";
+
+const EMPTY = 11; // 11 means invalid/nothing.
+
+// Leaves a small gap between the cubes, so neighbours of the same
+// material can still be told apart
+const SPACING = 1.08;
+
+//
+// Show a recipe as a 3D grid of cubes in the given element. It can be turned
+// around by dragging, pointing at a cube shows what material it is, and the
+// layer input hides the top layers so the blocks inside can be seen. The
+// layer input and the element showing its value can be left out, to always
+// show all layers. The preview stops, and frees its WebGL context, once its
+// element has been removed from the page.
+// The textures are taken from texturesUrl (or a promise of it), which is the
+// game's BlockTextures/DDS folder. Without it, only colours are shown.
+// With isInteractive turned off, it only turns by itself, and can't be
+// dragged, zoomed or pointed at, like the block previews.
+//
+function createRecipePreview(container, layerInput, layerValue, getMaterialLabel, texturesUrl, { isInteractive = true } = {}) {
+    const canvas = document.createElement('canvas');
+    const label = document.createElement('div');
+    label.classList.add('recipe-preview-label', 'outline', 'd-none');
+    container.replaceChildren(canvas, label);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+    scene.add(camera);
+
+    // The light follows the camera, so the side being looked at is always lit
+    scene.add(new THREE.AmbientLight(0xffffff, 1.6));
+    const light = new THREE.DirectionalLight(0xffffff, 2.4);
+    light.position.set(1, 2, 1.5);
+    camera.add(light);
+
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.enablePan = false;
+    controls.enabled = isInteractive;
+    controls.autoRotateSpeed = 1.5;
+    // Stop spinning once it is grabbed, so it stays where it was put
+    controls.addEventListener('start', () => controls.autoRotate = false);
+
+    // Hidden layers are still faintly shown, to keep the shape of the recipe
+    const ghostMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.06, depthWrite: false });
+
+    const cubes = new THREE.Group();
+    scene.add(cubes);
+
+    // Shows where a material can be added, when such a spot is highlighted
+    const placeholder = new THREE.Mesh(cubeGeometry, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.2, depthWrite: false }));
+    placeholder.add(new THREE.LineSegments(edgesGeometry, hoveredEdgeMaterial));
+    placeholder.visible = false;
+    scene.add(placeholder);
+
+    // Shows which layer the recipe builder is on, as a see-through plane
+    // through the middle of that layer, a bit larger than the recipe
+    const layerPlane = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0x80c0ff, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false })
+    );
+    layerPlane.add(new THREE.LineSegments(
+        new THREE.EdgesGeometry(layerPlane.geometry),
+        new THREE.LineBasicMaterial({ color: 0x80c0ff, transparent: true, opacity: 0.8 })
+    ));
+    layerPlane.visible = false;
+    scene.add(layerPlane);
+    let builderLayer;
+    let isBuilderLayerShown = true;
+
+    let sizeX = 1;
+    let sizeY = 1;
+    let layerCount = 1;
+    let radius = 1;
+    let horizontalRadius = 1;
+    let halfHeight = 1;
+    let needsFraming = false;
+    let shownSize;
+
+    function setRecipe(recipe) {
+        for (const cube of cubes.children) disposeMaterialMesh(cube);
+        cubes.clear();
+        setHovered(undefined);
+        highlighted = undefined;
+        placeholder.visible = false;
+
+        // In the game's recipe files, the array goes through x first, then y,
+        // and the layers from the bottom up last
+        sizeX = Math.max(1, recipe.SizeX);
+        sizeY = Math.max(1, recipe.SizeY);
+        layerCount = Math.max(1, Math.ceil(recipe.Array.length / (sizeX * sizeY)));
+
+        recipe.Array.forEach((material, i) => {
+            if (material == EMPTY) return;
+            const x = i % sizeX;
+            const y = Math.floor(i / sizeX) % sizeY;
+            const layer = Math.floor(i / (sizeX * sizeY));
+
+            // Items are turned a bit differently each
+            const { mesh: cube } = createMaterialMesh(material, texturesUrl, i * 1.7);
+            setPosition(cube, x, y, layer);
+            Object.assign(cube.userData, { material, x, y, layer });
+            cubes.add(cube);
+        });
+
+        radius = 0.5 * SPACING * Math.hypot(sizeX, sizeY, layerCount);
+        horizontalRadius = 0.5 * SPACING * Math.hypot(sizeX, sizeY);
+        halfHeight = 0.5 * SPACING * layerCount;
+
+        // A recipe of the same size, like one being built a square at a
+        // time, is shown the way it was already being looked at
+        const size = `${sizeX},${sizeY},${layerCount}`;
+        if (size != shownSize) {
+            shownSize = size;
+            if (layerInput != undefined) {
+                layerInput.max = layerCount;
+                layerInput.value = layerCount;
+                layerInput.disabled = layerCount == 1;
+            }
+            controls.autoRotate = true;
+            needsFraming = true;
+        }
+        showLayers(layerInput != undefined ? Number(layerInput.value) : layerCount);
+        placeLayerPlane();
+        resize();
+    }
+
+    // layer is the recipe's layer, which may be just below or above it,
+    // or undefined to not show it
+    function showBuilderLayer(layer) {
+        builderLayer = layer;
+        placeLayerPlane();
+    }
+
+    // The plane can be turned off, to see the recipe without it
+    function setBuilderLayerShown(isShown) {
+        isBuilderLayerShown = isShown;
+        placeLayerPlane();
+    }
+
+    function placeLayerPlane() {
+        layerPlane.visible = isBuilderLayerShown && builderLayer != undefined;
+        if (!layerPlane.visible) return;
+        setPosition(layerPlane, (sizeX - 1) / 2, (sizeY - 1) / 2, builderLayer);
+        layerPlane.scale.set(sizeX * SPACING + 0.5, 1, sizeY * SPACING + 0.5);
+    }
+
+    // The recipe is placed with its middle in the middle of the scene
+    function setPosition(object, x, y, layer) {
+        object.position.set(
+            (x - (sizeX - 1) / 2) * SPACING,
+            (layer - (layerCount - 1) / 2) * SPACING,
+            (y - (sizeY - 1) / 2) * SPACING
+        );
+    }
+
+    // Place the camera so the whole recipe fits while it spins. Spinning
+    // around, it takes up the space of the cylinder around it, as seen
+    // from slightly above.
+    function frame() {
+        const halfVerticalFov = THREE.MathUtils.degToRad(camera.fov) / 2;
+        const halfHorizontalFov = Math.atan(Math.tan(halfVerticalFov) * camera.aspect);
+
+        const direction = new THREE.Vector3(1, 0.8, 1).normalize();
+        const elevation = Math.asin(direction.y);
+        const projectedHalfHeight = halfHeight * Math.cos(elevation) + horizontalRadius * Math.sin(elevation);
+
+        const distance = 1.05 * Math.max(
+            horizontalRadius / Math.sin(halfHorizontalFov),
+            projectedHalfHeight / Math.tan(halfVerticalFov) + horizontalRadius * Math.cos(elevation)
+        );
+
+        camera.position.copy(direction).setLength(distance);
+        controls.target.set(0, 0, 0);
+        controls.minDistance = radius * 1.2;
+        controls.maxDistance = distance * 3;
+        controls.update();
+        needsFraming = false;
+    }
+
+    function showLayers(shownLayers) {
+        for (const cube of cubes.children) {
+            const isShown = cube.userData.layer < shownLayers;
+            cube.material = isShown ? cube.userData.solidMaterials : ghostMaterial;
+            if (!cube.userData.isItem) cube.children[0].visible = isShown;
+        }
+        if (layerValue != undefined) layerValue.textContent = `${shownLayers} of ${layerCount}`;
+    }
+    layerInput?.addEventListener('input', () => showLayers(Number(layerInput.value)));
+
+    // The preview is hidden while another step is shown, which leaves it
+    // without a size, so it is only framed once it gets one
+    function resize() {
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        if (width == 0 || height == 0) return;
+
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        if (needsFraming) frame();
+    }
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
+
+    //
+    // Hovering
+    //
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let isPointerInside = false;
+    let hovered;
+
+    if (isInteractive) canvas.addEventListener('pointermove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        pointer.set(
+            (e.clientX - rect.left) / rect.width * 2 - 1,
+            -(e.clientY - rect.top) / rect.height * 2 + 1
+        );
+        isPointerInside = true;
+        label.style.left = `${e.clientX - rect.left + 14}px`;
+        label.style.top = `${e.clientY - rect.top + 14}px`;
+    });
+    if (isInteractive) canvas.addEventListener('pointerleave', () => {
+        isPointerInside = false;
+        setHovered(undefined);
+    });
+
+    // Checked every frame, as the cubes move under a still pointer while spinning
+    function updateHovered() {
+        if (!isPointerInside) return;
+        raycaster.setFromCamera(pointer, camera);
+        const hit = raycaster.intersectObjects(cubes.children, false)
+            .find(hit => hit.object.material != ghostMaterial);
+        setHovered(hit?.object);
+    }
+
+    // The hovered cube gets white edges, as making it brighter would
+    // dim the glowing blocks. Items have no edges, and are made brighter.
+    function setHovered(cube) {
+        if (cube == hovered) return;
+        if (hovered != undefined && hovered != highlighted) setHighlighted(hovered, false);
+        hovered = cube;
+
+        if (cube == undefined) {
+            label.classList.add('d-none');
+            return;
+        }
+        setHighlighted(cube, true);
+        const name = getMaterialLabel(cube.userData.material);
+        label.textContent = `${name[0].toUpperCase()}${name.slice(1)} (layer ${cube.userData.layer + 1})`;
+        label.classList.remove('d-none');
+    }
+
+    // A cube highlighted from outside, like the one under the pointer in the
+    // recipe builder. position is { x, y, layer }, or undefined for none.
+    // Where there is nothing yet, a see-through placeholder is shown there.
+    let highlighted;
+    function highlight(position) {
+        if (highlighted != undefined && highlighted != hovered) setHighlighted(highlighted, false);
+        highlighted = position == undefined ? undefined : cubes.children.find(cube =>
+            cube.userData.x == position.x && cube.userData.y == position.y && cube.userData.layer == position.layer
+        );
+        if (highlighted != undefined) setHighlighted(highlighted, true);
+
+        placeholder.visible = position != undefined && highlighted == undefined;
+        if (placeholder.visible) setPosition(placeholder, position.x, position.y, position.layer);
+    }
+
+    function setHighlighted(cube, isHighlighted) {
+        if (cube.userData.isItem) {
+            cube.userData.solidMaterials.emissive.setHex(isHighlighted ? 0x404040 : 0x000000);
+        } else {
+            cube.children[0].material = isHighlighted ? hoveredEdgeMaterial : edgeMaterial;
+        }
+    }
+
+    renderer.setAnimationLoop(() => {
+        if (!canvas.isConnected) {
+            dispose();
+            return;
+        }
+        if (container.clientWidth == 0) return;
+        controls.update();
+        updateHovered();
+        renderer.render(scene, camera);
+    });
+
+    // Only a limited number of WebGL contexts can exist at once
+    function dispose() {
+        renderer.setAnimationLoop(null);
+        resizeObserver.disconnect();
+        controls.dispose();
+        for (const cube of cubes.children) disposeMaterialMesh(cube);
+        renderer.dispose();
+        renderer.forceContextLoss();
+    }
+
+    return { setRecipe, highlight, showBuilderLayer, setBuilderLayerShown };
+}
+
+export { createRecipePreview }

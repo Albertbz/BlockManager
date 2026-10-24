@@ -370,8 +370,20 @@ select {
 	cursor: pointer;
 }
 
+/* The properties of an opened block keep each on one line, rather than
+   making room for the previews */
+.block-properties {
+	flex: 1 0 auto;
+	white-space: nowrap;
+}
+
+/* The previews in Manage Blocks are as tall as the opened block, and get
+   their widths from that when they are made */
 .block-preview {
-	height: 135px;
+	align-self: stretch;
+	align-items: center;
+	justify-content: center;
+	min-height: 135px;
 	width: 135px;
 }
 
@@ -402,6 +414,301 @@ select {
 	align-items: center;
 	justify-content: center;
 	text-align: center;
+}
+
+/* The recipe preview fills the space below the materials */
+.recipe-preview {
+	position: relative;
+	flex: 1 1 0;
+	min-height: 220px;
+	background-color: rgb(0, 0, 0, 0.25);
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.recipe-preview canvas,
+.block-recipe-preview canvas,
+.large-recipe-preview canvas {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.recipe-preview canvas {
+	cursor: grab;
+}
+
+.recipe-preview canvas:active {
+	cursor: grabbing;
+}
+
+/* The recipe in Manage Blocks, to the right of the block preview, and
+   shown large like it when clicked */
+.block-recipe-preview {
+	position: relative;
+	display: flex;
+	flex: 0 0 auto;
+	align-self: stretch;
+	align-items: center;
+	justify-content: center;
+	width: 200px;
+	min-height: 135px;
+	margin: 0 8px;
+}
+
+.large-recipe-preview {
+	position: relative;
+}
+
+/* The Edit and Delete buttons of an opened block share its height, and
+   are about as wide as they are tall */
+.block-buttons {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-self: stretch;
+	align-items: flex-end;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.block-buttons .btn {
+	flex: 1 1 0;
+	width: 80px;
+	font-size: medium;
+}
+
+/* Names the block under the pointer */
+.recipe-preview-label {
+	position: absolute;
+	padding: 2px 6px;
+	background-color: rgb(0, 0, 0, 0.6);
+	border-radius: 4px;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+/* Next to the layers slider, like the number next to the other sliders */
+.recipe-layer-value {
+	flex: 0 0 auto;
+	align-self: center;
+	margin-left: 8px;
+	white-space: nowrap;
+}
+
+/* A material, shown as its texture or colour. Items are round. */
+.swatch {
+	background-color: var(--swatch-color);
+	background-size: cover;
+	border-radius: 2px;
+}
+
+.swatch-item {
+	border-radius: 50%;
+}
+
+.swatch-see-through {
+	opacity: 0.6;
+}
+
+/* The recipe builder's layer, seen from above */
+/* Fills the rest of the column, with the layer in the middle, the buttons to
+   go up and down above and below it, and the clear button at the bottom */
+.recipe-builder {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	min-height: 280px;
+}
+
+.recipe-builder-arrow {
+	width: 60%;
+	padding: 2px 8px;
+}
+
+/* The squares are sized to fill this (see recipeBuilder.js) */
+.recipe-builder-area {
+	display: flex;
+	flex: 1 1 0;
+	align-self: stretch;
+	min-height: 0;
+	align-items: center;
+	justify-content: center;
+}
+
+.recipe-builder-actions {
+	display: flex;
+	gap: 8px;
+	width: 80%;
+	margin-top: 10px;
+}
+
+.recipe-builder-actions .btn {
+	flex: 1 1 0;
+	padding: 5px 8px;
+	font-size: medium;
+}
+
+/* Reset has to be clicked again, which is made to stand out */
+.recipe-builder-actions .btn.confirming {
+	border-color: rgb(160, 30, 30);
+	background-color: rgb(200, 40, 40, 0.6);
+}
+
+.recipe-builder-grid {
+	display: grid;
+	grid-template-columns: repeat(var(--columns), var(--square-size, 44px));
+	gap: 3px;
+}
+
+.recipe-builder-square {
+	position: relative;
+	aspect-ratio: 1;
+	padding: 0;
+	border: 1px solid rgb(255, 255, 255, 0.15);
+	border-radius: 3px;
+	background-color: rgb(0, 0, 0, 0.3);
+	color: white;
+	cursor: pointer;
+	transition: background-color 0.15s, border-color 0.15s;
+}
+
+.recipe-builder-square:hover:not(:disabled) {
+	border-color: rgb(255, 255, 255, 0.7);
+}
+
+.recipe-builder-square:disabled {
+	border-color: transparent;
+	background-color: rgb(0, 0, 0, 0.1);
+	cursor: default;
+}
+
+.recipe-builder-square.fillable::after {
+	content: '+';
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: calc(var(--square-size, 44px) * 0.4);
+	color: rgb(255, 255, 255, 0.75);
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
+}
+
+.recipe-builder-square.picking {
+	border-color: white;
+	box-shadow: 0 0 0 1px white;
+}
+
+.recipe-builder-below {
+	position: absolute;
+	inset: 0;
+	opacity: 0.25;
+}
+
+.recipe-builder-material {
+	position: absolute;
+	inset: 2px;
+}
+
+.recipe-builder-material.swatch-item {
+	inset: 25%;
+}
+
+/* Says why a material can't be removed */
+.recipe-builder-message {
+	position: fixed;
+	z-index: 20;
+	padding: 3px 7px;
+	background-color: rgb(0, 0, 0, 0.75);
+	border-radius: 4px;
+	white-space: nowrap;
+	pointer-events: none;
+	animation: fade-out 2s ease-in forwards;
+}
+
+@keyframes fade-out {
+	0%, 75% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+/* Choosing what goes in a square */
+.recipe-picker {
+	position: fixed;
+	z-index: 20;
+	width: 340px;
+	max-height: 70vh;
+	overflow-y: auto;
+	padding: 8px;
+	background-color: rgb(30, 30, 30, 0.85);
+	box-shadow: 0 4px 16px rgb(0, 0, 0, 0.5);
+}
+
+.recipe-picker-remove {
+	width: 100%;
+	margin-bottom: 4px;
+	padding: 4px;
+}
+
+.recipe-picker-heading {
+	margin: 6px 0 4px;
+	font-size: small;
+	color: rgb(255, 255, 255, 0.75);
+}
+
+.recipe-picker-options {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 4px;
+}
+
+.recipe-picker-option {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px;
+	border: 1px solid rgb(0, 0, 0, 0.6);
+	border-radius: 4px;
+	background-color: rgb(0, 0, 0, 0.2);
+	color: white;
+	font-size: small;
+	text-align: left;
+	cursor: pointer;
+}
+
+.recipe-picker-option:hover {
+	background-color: rgb(255, 255, 255, 0.12);
+}
+
+.recipe-picker-option.selected {
+	border-color: rgb(0, 117, 255);
+}
+
+.recipe-picker-option .swatch,
+.recipe-picker-option .thumbnail {
+	flex: 0 0 auto;
+	width: 32px;
+	height: 32px;
+}
+
+.recipe-picker-option .swatch-item {
+	width: 20px;
+	height: 20px;
+	margin: 6px;
+}
+
+/* A material drawn as its 3D model, as in the recipe preview */
+.thumbnail {
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
 }
 
 .enlargeable {

@@ -1,5 +1,10 @@
-import { loadCanvas } from "./blockPreview.js";
+import { loadCanvas, showLargeView } from "./blockPreview.js";
 import { growFromButton, setPageOutAnimation, shrinkIntoButton } from "./pageTransition.js";
+import "./sliderScroll.js";
+import { createRecipePreview } from "./recipePreview.js";
+import { getMaterialName } from "./recipeMaterials.js";
+
+const blockTexturesUrl = window.call.getBlockTexturesUrl();
 
 // The page grows out of the button to create a block, and shrinks back
 // into it, which is where the generator appears from
@@ -156,15 +161,16 @@ function forgetMissingOpenedBlocks(allBlocks) {
 
 /**
  * Only a limited number of previews (WebGL contexts) can exist at once,
- * so a preview only exists while its opened block is on screen.
+ * so a block's previews only exist while its opened block is on screen.
  */
 const previewLoaders = new WeakMap();
 const previewObserver = new IntersectionObserver((entries) => {
     for (const entry of entries) {
+        const { load, unload } = previewLoaders.get(entry.target);
         if (entry.isIntersecting) {
-            previewLoaders.get(entry.target)();
+            load();
         } else {
-            entry.target.replaceChildren();
+            unload();
         }
     }
 });
@@ -184,10 +190,24 @@ function makeBlockDiv(block) {
     }
 
     const previewDiv = contentDiv.querySelector('div.block-preview');
-    previewLoaders.set(previewDiv, () => {
-        const canvas = makePreviewCanvas();
-        previewDiv.replaceChildren(canvas);
-        loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed);
+    const recipePreviewDiv = contentDiv.querySelector('div.block-recipe-preview');
+    previewLoaders.set(previewDiv, {
+        load: () => {
+            // As tall as the opened block, which they are stretched to
+            const size = previewDiv.clientHeight;
+            previewDiv.style.width = `${size}px`;
+            recipePreviewDiv.style.width = `${Math.round(size * RECIPE_PREVIEW_ASPECT)}px`;
+
+            const canvas = makePreviewCanvas(size);
+            previewDiv.replaceChildren(canvas);
+            loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed);
+            loadRecipePreview(recipePreviewDiv, block.properties.Recipe);
+        },
+        // Removing them also stops them and frees their WebGL contexts
+        unload: () => {
+            previewDiv.replaceChildren();
+            recipePreviewDiv.replaceChildren();
+        },
     });
 
     let contentAnimation;
@@ -238,7 +258,7 @@ function makeBlockDiv(block) {
         // it right away can briefly show a white square where it was, as
         // the screen may be drawn once more after its image is freed.
         requestAnimationFrame(() => requestAnimationFrame(() => {
-            if (contentDiv.classList.contains('d-none')) previewDiv.replaceChildren();
+            if (contentDiv.classList.contains('d-none')) previewLoaders.get(previewDiv).unload();
         }));
     }
 
@@ -303,10 +323,12 @@ function makeContentDiv(block) {
 
     const propertiesDiv = makePropertiesDiv(block);
     const previewDiv = makePreviewDiv();
+    const recipePreviewDiv = makeRecipePreviewDiv(block.properties.Recipe);
     const buttonDiv = makeButtonDiv(block);
 
     contentDiv.appendChild(propertiesDiv);
     contentDiv.appendChild(previewDiv);
+    contentDiv.appendChild(recipePreviewDiv);
     contentDiv.appendChild(buttonDiv);
 
     return contentDiv;
@@ -314,7 +336,7 @@ function makeContentDiv(block) {
 
 function makePropertiesDiv(block) {
     const propertiesDiv = document.createElement('div');
-    propertiesDiv.classList.add('box', 'ms-2', 'left');
+    propertiesDiv.classList.add('box', 'ms-2', 'left', 'block-properties');
 
     const creatorElem = document.createElement('span');
     creatorElem.innerHTML = '<b>Creator:</b> ' + block.properties.CreatorName;
@@ -358,10 +380,49 @@ function makePreviewDiv() {
     return previewDiv;
 }
 
-function makePreviewCanvas() {
+// The recipe preview is wider than it is tall, as recipes are often wide
+const RECIPE_PREVIEW_ASPECT = 1.5;
+
+// Clicking the recipe shows it large, like the block preview
+function makeRecipePreviewDiv(recipe) {
+    const recipePreviewDiv = document.createElement('div');
+    recipePreviewDiv.classList.add('block-recipe-preview');
+    if (isCraftable(recipe)) {
+        recipePreviewDiv.classList.add('enlargeable');
+        recipePreviewDiv.addEventListener('click', () => showLargeView(recipePreviewDiv, () => {
+            const largeDiv = document.createElement('div');
+            largeDiv.classList.add('large-recipe-preview');
+            loadRecipePreview(largeDiv, recipe);
+            return largeDiv;
+        }));
+    }
+
+    return recipePreviewDiv;
+}
+
+function isCraftable(recipe) {
+    return Array.isArray(recipe?.Array) && recipe.Array.some(material => material != 11);
+}
+
+// The recipe, turning by itself like the block preview. Blocks without a
+// recipe can't be crafted, which is said instead.
+function loadRecipePreview(recipePreviewDiv, recipe) {
+    if (!isCraftable(recipe)) {
+        const textElem = document.createElement('span');
+        textElem.innerHTML = '<em>Not craftable</em>';
+        recipePreviewDiv.replaceChildren(textElem);
+        return;
+    }
+
+    const recipePreview = createRecipePreview(recipePreviewDiv, undefined, undefined,
+        material => getMaterialName(material, 1), blockTexturesUrl, { isInteractive: false });
+    recipePreview.setRecipe(recipe);
+}
+
+function makePreviewCanvas(size) {
     const canvas = document.createElement('canvas');
-    canvas.width = 135;
-    canvas.height = 135;
+    canvas.width = size;
+    canvas.height = size;
 
     return canvas;
 }
@@ -406,23 +467,19 @@ function getTexturePaths(block) {
 
 function makeButtonDiv(block) {
     const buttonDiv = document.createElement('div');
-    buttonDiv.classList.add('align-end', 'me-2', 'right');
-
-    const buttonSpan = document.createElement('span');
-    buttonSpan.classList.add('box')
-    buttonDiv.appendChild(buttonSpan);
+    buttonDiv.classList.add('me-2', 'block-buttons');
 
     const editButton = document.createElement('button');
     editButton.type = 'button';
     editButton.innerText = 'Edit';
-    editButton.classList.add('btn', 'mb-1');
+    editButton.classList.add('btn');
 
     editButton.addEventListener('click', async (e) => {
         const success = await window.call.saveBlockInTemp(block);
         if (success) window.call.loadGenerator();
     });
 
-    buttonSpan.appendChild(editButton);
+    buttonDiv.appendChild(editButton);
 
     const deleteButton = document.createElement('button');
     deleteButton.type = 'button';
@@ -433,7 +490,7 @@ function makeButtonDiv(block) {
         await window.call.displayDeleteDialog(block);
     });
 
-    buttonSpan.appendChild(deleteButton);
+    buttonDiv.appendChild(deleteButton);
 
     return buttonDiv;
 }

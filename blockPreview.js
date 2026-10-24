@@ -151,26 +151,35 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
 
 }
 
+function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed) {
+    showLargeView(smallCanvas, (size) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        loadCanvas(canvas, texturePaths, isAnimated, animationSpeed, false);
+        return canvas;
+    });
+}
+
 //
-// Show a large preview covering most of the screen, which is closed again
-// by clicking anywhere. It grows out of the small preview when opened, and
-// shrinks back into it when closed.
+// Show a large view covering most of the screen, which is closed again by
+// clicking anywhere. It grows out of the small element when opened, and
+// shrinks back into it when closed. makeContent makes what is shown, given
+// its size, which is shown as a square of that many pixels.
 //
 const largePreviewAnimationOptions = { duration: 250, easing: 'ease-out' };
 
-function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed) {
+function showLargeView(smallElement, makeContent) {
     const overlay = document.createElement('div');
     overlay.classList.add('large-preview');
 
     const size = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.9);
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    canvas.style.width = `${size}px`;
-    canvas.style.height = `${size}px`;
-    overlay.appendChild(canvas);
+    const content = makeContent(size);
+    content.style.width = `${size}px`;
+    content.style.height = `${size}px`;
+    overlay.appendChild(content);
 
-    // Removing the canvas also stops its rendering and frees its WebGL context
+    // Removing a preview also stops its rendering and frees its WebGL context
     let isClosing = false;
     function close() {
         if (isClosing) return;
@@ -179,7 +188,7 @@ function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed)
 
         const options = { ...largePreviewAnimationOptions, easing: 'ease-in', direction: 'reverse' };
         overlay.animate([{ opacity: 0 }, { opacity: 1 }], options);
-        canvas.animate(getGrowKeyframes(smallCanvas, canvas), options).finished.then(() => overlay.remove());
+        content.animate(getGrowKeyframes(smallElement, content), options).finished.then(() => overlay.remove());
     }
     function onKeyDown(e) {
         if (e.key == 'Escape') close();
@@ -189,17 +198,16 @@ function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed)
 
     document.body.appendChild(overlay);
     overlay.animate([{ opacity: 0 }, { opacity: 1 }], largePreviewAnimationOptions);
-    canvas.animate(getGrowKeyframes(smallCanvas, canvas), largePreviewAnimationOptions);
-    loadCanvas(canvas, texturePaths, isAnimated, animationSpeed, false);
+    content.animate(getGrowKeyframes(smallElement, content), largePreviewAnimationOptions);
 }
 
-// Keyframes moving the large canvas from where the small one is to where the
+// Keyframes moving the large element from where the small one is to where the
 // large one is. If the small one is gone, it just grows from the middle.
-function getGrowKeyframes(smallCanvas, largeCanvas) {
-    const largeRect = largeCanvas.getBoundingClientRect();
+function getGrowKeyframes(smallElement, largeElement) {
+    const largeRect = largeElement.getBoundingClientRect();
     let from = 'scale(0.2)';
-    if (smallCanvas.isConnected) {
-        const smallRect = smallCanvas.getBoundingClientRect();
+    if (smallElement.isConnected) {
+        const smallRect = smallElement.getBoundingClientRect();
         const dx = (smallRect.left + smallRect.width / 2) - (largeRect.left + largeRect.width / 2);
         const dy = (smallRect.top + smallRect.height / 2) - (largeRect.top + largeRect.height / 2);
         from = `translate(${dx}px, ${dy}px) scale(${smallRect.width / largeRect.width})`;
@@ -349,4 +357,4 @@ async function loadTexture(gl, url, maxTextureSize) {
     return texture;
 }
 
-export { loadCanvas }
+export { loadCanvas, showLargeView }

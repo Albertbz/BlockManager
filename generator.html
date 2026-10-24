@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
-    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <!-- The pictures of the recipe's materials are made in the page, as data: images -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:" />
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:" />
     <link rel="stylesheet" href="./style.css">
     <script src="./glmatrix/gl-matrix-min.js"></script>
     <script src="./blockPreview.js" type="module"></script>
@@ -515,6 +516,44 @@
                                 <input type="file" name="uploadRecipe" id="uploadRecipeInput" accept=".txt">
                                 <label for="uploadRecipeInput" class="manual-upload mb-2">Click here to browse</label>
 
+                                <label class="form-label">
+                                    Build recipe
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            Build the recipe here one layer at a time, seen from
+                                            above. Click a square with a + to put a material there,
+                                            or a filled square to change it. Right-click a filled
+                                            square to remove it, unless that would cut other
+                                            materials off from the rest. New materials have to be
+                                            next to one that is already there, also above or below.
+                                            Use the arrows or scroll to change layer. The layer
+                                            below is shown faintly. Pointing at a square shows
+                                            where it is in the preview. Clear layer removes
+                                            everything on the current layer, and Reset removes
+                                            everything to start over. A recipe that is loaded
+                                            above can be changed here too. The blocks only show
+                                            their real textures if cyubeVR is installed.
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="recipe-builder mb-2" id="recipeBuilderDiv">
+                                    <button type="button" class="btn recipe-builder-arrow" id="recipeBuilderUpButton"
+                                        title="Go a layer up">&#9650;</button>
+                                    <span class="outline" id="recipeBuilderLayerText"></span>
+                                    <div class="recipe-builder-area">
+                                        <div class="recipe-builder-grid" id="recipeBuilderGrid"></div>
+                                    </div>
+                                    <button type="button" class="btn recipe-builder-arrow" id="recipeBuilderDownButton"
+                                        title="Go a layer down">&#9660;</button>
+                                    <div class="recipe-builder-actions">
+                                        <button type="button" class="btn" id="recipeBuilderClearLayerButton"
+                                            title="Remove everything on this layer">Clear layer</button>
+                                        <button type="button" class="btn" id="recipeBuilderResetButton"
+                                            title="Remove everything on all layers, to start over">Reset</button>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                         <div class="form-part content box blur">
@@ -537,6 +576,55 @@
                                 </label>
                                 <div class="box mb-2 h-auto" id="recipeMaterialsDiv">
 
+                                </div>
+
+                                <label class="form-label recipe-layout d-none">
+                                    Recipe layout
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            This shows how the materials are put together. Drag
+                                            to turn it around and scroll to zoom. Point at a
+                                            block to see what it is. The layer being built in the
+                                            recipe builder is shown as a see-through plane. The
+                                            blocks only show their real textures if cyubeVR is
+                                            installed, and otherwise only colours. Items are only
+                                            simple models, and not the ones from the game.
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="recipe-preview recipe-layout mb-2 d-none" id="recipePreviewDiv"></div>
+
+                                <label class="form-label recipe-layout d-none">
+                                    Layers shown
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            How many of the recipe's layers are shown, from the
+                                            bottom up. The layers above are only faintly shown,
+                                            so the blocks inside the recipe can be seen.
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="form-group recipe-layout mb-2 d-none">
+                                    <input class="form-control" type="range" id="recipeLayerInput" min="1" max="1"
+                                        value="1" step="1">
+                                    <span class="recipe-layer-value outline" id="recipeLayerValue"></span>
+                                </div>
+
+                                <label class="form-label recipe-layout d-none">
+                                    Show the layer being built
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            Whether to show the layer that the recipe builder
+                                            is on as a see-through plane in the preview.
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="checkbox recipe-layout mb-2 d-none">
+                                    <input class="form-control" type="checkbox" id="recipeBuilderLayerInput" checked>
+                                    <label for="recipeBuilderLayerInput"></label>
                                 </div>
 
                                 <!-- Used to store the recipe (not visible to the user) -->
