@@ -297,7 +297,7 @@
                     <div class="content box-horizontal">
                         <div class="form-part content box blur">
                             <h3 class="text-center header mb-1 outline">Required</h3>
-                            <div class="scrollable content box">
+                            <div class="scrollable header box texture-picker">
                                 <!-- Regular texture files -->
                                 <label class="form-label">
                                     Texture file(s) [2048x2048]
@@ -318,13 +318,22 @@
                                     <!-- Textures are automatically added here -->
                                     <label for="textureFilesInput" class="custom-file-uploader">Select file(s)</label>
                                 </div>
+                            </div>
 
-                                <button type="button" class="btn form-control mb-2" id="generatePreview" disabled>Generate
-                                    preview of block</button>
-                                <div class="block-preview align-center" id="blockPreviewDiv">
-
-                                </div>
-
+                            <!-- Preview of the block, using the rest of the space -->
+                            <div class="content box preview-part">
+                                <label class="form-label">
+                                    Preview
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            How the block will look with the textures above.
+                                            It is made again whenever they change.
+                                            Click it to see it larger.
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="generator-preview" id="blockPreviewDiv"></div>
                             </div>
 
                         </div>

@@ -116,7 +116,7 @@ app.on('window-all-closed', () => {
 ipcMain.handle('createDDSImage', createDDSImageWrapper);
 ipcMain.handle('getGeneratedRecipeFileContent', getGeneratedRecipeFileContent);
 ipcMain.handle('getDefaultRecipeFileContent', getDefaultRecipeFileContent);
-ipcMain.handle('generateCustomBlock', generateCustomBlock);
+ipcMain.handle('generateCustomBlock', (...args) => queueTextureWork(() => generateCustomBlock(...args)));
 ipcMain.handle('getModsFolderPath', getModsFolderPath);
 ipcMain.handle('getAllModFolders', getAllModFolders);
 ipcMain.handle('generationCompletePopup', generationCompletePopup);
@@ -133,7 +133,7 @@ ipcMain.handle('clearTemp', clearTemp);
 ipcMain.handle('getTemp', getTemp);
 ipcMain.handle('getTempTextures', getTempTextures);
 ipcMain.handle('removeBlockToDelete', removeBlockToDelete);
-ipcMain.handle('generatePreviewBlock', generatePreviewBlock);
+ipcMain.handle('generatePreviewBlock', (...args) => queueTextureWork(() => generatePreviewBlock(...args)));
 ipcMain.handle('getTextureThumbnail', getTextureThumbnail);
 
 
@@ -178,6 +178,14 @@ function getDefaultRecipeFileContent() {
 const resizedTexturePath = path.join(tempTexturesPath, 'resized.png');
 const compressedTexturePath = path.join(tempTexturesPath, 'compressed.dds');
 const decompressedTexturePath = path.join(tempTexturesPath, 'decompressed.png');
+
+// As those files are shared, only one block or preview is made at a time
+let textureWork = Promise.resolve();
+function queueTextureWork(work) {
+    const result = textureWork.then(work);
+    textureWork = result.catch(() => { });
+    return result;
+}
 
 async function createTexture(src, outputPath, size, format) {
     // DDS files that are already exactly as needed are used as they are.
@@ -696,10 +704,8 @@ function showPopup(popupWin) {
     popupWin.show();
 }
 
+// Made in the background while choosing textures, so no popup is shown
 async function generatePreviewBlock(event, textures) {
-    showPopup(generatingWin);
-    await sleep(100);
-
     let texturesDDS = {};
 
     try {
@@ -719,6 +725,5 @@ async function generatePreviewBlock(event, textures) {
         return undefined;
     } finally {
         clearFolder(tempTexturesPath);
-        generatingWin.hide();
     }
 }

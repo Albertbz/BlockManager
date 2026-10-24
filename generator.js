@@ -191,6 +191,7 @@ function addTexturesToDiv(fileArray, selectorDiv) {
         select.addEventListener('change', (e) => {
             updateValidity(selectorDiv);
             removeInvalidHighlight(input);
+            schedulePreview();
         });
 
         div.classList.add('texture-selector-child');
@@ -226,8 +227,7 @@ function addTexturesToDiv(fileArray, selectorDiv) {
 
     updateValidity(selectorDiv);
 
-    // Update the preview button.
-    updatePreviewButton();
+    schedulePreview();
 }
 
 function updateValidity(textureDiv) {
@@ -1061,9 +1061,6 @@ async function loadTemp() {
 
     addEventListenersToTextureSelectors();
     handleDiscardBlockButtons(isEditing);
-
-    // Update the preview button.
-    updatePreviewButton();
 }
 
 function showExistingLocation() {
@@ -1124,26 +1121,99 @@ function addFilesToTextureFiles(newFiles, existingFiles) {
 }
 
 /**
- * Handle block preview generation
+ * Handle block preview generation. The preview is made again whenever
+ * the textures change, shortly after the last change.
  */
-document.getElementById('generatePreview').addEventListener('click', async (e) => {
-    const blockPreviewDiv = document.getElementById('blockPreviewDiv');
-    if (blockPreviewDiv.firstElementChild) blockPreviewDiv.firstElementChild.remove();
+const blockPreviewDiv = document.getElementById('blockPreviewDiv');
+let previewTimeout;
+let isGeneratingPreview = false;
+let previewedTextures = '[]';
+let previewTexturePaths;
 
-    const textureFilesInput = document.getElementById('textureFilesInput');
-    const textures = getTexturesSrcAndValue(textureFilesInput);
+function schedulePreview() {
+    clearTimeout(previewTimeout);
+    previewTimeout = setTimeout(updatePreview, 300);
+}
 
-    if (textures.length == 0) return;
+function getRegularTextures() {
+    return getTexturesSrcAndValue(document.getElementById('textureFilesInput'));
+}
 
-    // The preview needs one texture per face.
-    if (hasDuplicateFaces(document.getElementById('regularTexturesDiv'))) {
-        addInvalidHighlight(textureFilesInput);
+async function updatePreview() {
+    // Only one preview is made at a time. When it is done, it checks
+    // whether the textures have changed again in the meantime.
+    if (isGeneratingPreview) return;
+
+    const textures = getRegularTextures();
+    const texturesKey = JSON.stringify(textures);
+    if (texturesKey == previewedTextures) return;
+    previewedTextures = texturesKey;
+
+    // The preview needs a valid amount of textures, one per face.
+    if (![1, 2, 3, 6].includes(textures.length) || hasDuplicateFaces(document.getElementById('regularTexturesDiv'))) {
+        previewTexturePaths = undefined;
+        blockPreviewDiv.replaceChildren();
         return;
     }
 
-    const texturesDDS = await window.call.generatePreviewBlock(textures);
-    if (texturesDDS == undefined) return;
+    isGeneratingPreview = true;
+    const message = document.createElement('span');
+    message.classList.add('outline', 'preview-message');
+    message.innerText = 'Generating preview...';
+    blockPreviewDiv.replaceChildren(message);
 
+    const texturesDDS = await window.call.generatePreviewBlock(textures);
+    isGeneratingPreview = false;
+
+    // Newer textures are previewed instead
+    if (JSON.stringify(getRegularTextures()) != texturesKey) {
+        updatePreview();
+        return;
+    }
+
+    previewTexturePaths = texturesDDS == undefined ? undefined : getPreviewTexturePaths(texturesDDS);
+    showPreview();
+}
+
+// The animation settings only change how the preview is shown
+document.getElementById('makeAnimatedInput').addEventListener('change', showPreview);
+document.getElementById('animationSpeedSliderInput').addEventListener('change', showPreview);
+document.getElementById('animationSpeedNumberInput').addEventListener('change', showPreview);
+
+// The preview is as large as fits in its space, so it is drawn again when
+// that changes, like when the textures step is first shown
+new ResizeObserver(() => {
+    const canvas = blockPreviewDiv.querySelector('canvas');
+    if (getPreviewSize() != (canvas?.width ?? 0)) showPreview();
+}).observe(blockPreviewDiv);
+
+function getPreviewSize() {
+    return Math.floor(Math.min(blockPreviewDiv.clientWidth, blockPreviewDiv.clientHeight));
+}
+
+function showPreview() {
+    if (isGeneratingPreview) return;
+    const size = getPreviewSize();
+    if (previewTexturePaths == undefined || size == 0) {
+        blockPreviewDiv.replaceChildren();
+        return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+    blockPreviewDiv.replaceChildren(canvas);
+
+    let isAnimated = document.getElementById('makeAnimatedInput').checked;
+    let animationSpeed = document.getElementById('animationSpeedNumberInput').value;
+
+    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed);
+}
+
+// The texture for each side of the cube
+function getPreviewTexturePaths(texturesDDS) {
     let texturePaths = [];
 
     switch (Object.keys(texturesDDS).length) {
@@ -1178,27 +1248,7 @@ document.getElementById('generatePreview').addEventListener('click', async (e) =
             break;
     }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = 135;
-    canvas.height = 135;
-    blockPreviewDiv.appendChild(canvas);
-
-    let isAnimated = document.getElementById('makeAnimatedInput').checked;
-    let animationSpeed = document.getElementById('animationSpeedNumberInput').value;
-
-    loadCanvas(canvas, texturePaths, isAnimated, animationSpeed);
-})
-
-function updatePreviewButton() {
-    const previewButton = document.getElementById('generatePreview');
-
-    const regularTexturesDiv = document.getElementById('regularTexturesDiv');
-
-    if (regularTexturesDiv.childElementCount - 1 > 0) {
-        previewButton.disabled = false;
-    } else {
-        previewButton.disabled = true;
-    }
+    return texturePaths;
 }
 
 /**

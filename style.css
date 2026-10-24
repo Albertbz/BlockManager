@@ -370,6 +370,35 @@ select {
 	width: 135px;
 }
 
+/* The generator's preview fills the space below the textures, which
+   only take up the height they need */
+.box .texture-picker {
+	flex: 0 0 auto;
+	height: auto;
+}
+
+.box .preview-part {
+	flex: 1 1 0;
+	margin-top: 0.75rem;
+}
+
+.generator-preview {
+	display: flex;
+	flex: 1 1 0;
+	min-height: 0;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Shown in place of the preview while it is being made */
+.preview-message {
+	display: flex;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
 .enlargeable {
 	cursor: zoom-in;
 	transition: filter 0.15s;
