@@ -11,7 +11,11 @@ const sharp = require('sharp');
 const tempPath = path.join(__dirname, 'temp');
 const tempTexturesPath = path.join(__dirname, 'temp_textures');
 const previewPath = path.join(__dirname, 'preview');
-[tempPath, tempTexturesPath, previewPath].forEach(dir => fs.mkdirSync(dir, { recursive: true }));
+const thumbnailsPath = path.join(__dirname, 'thumbnails');
+[tempPath, tempTexturesPath, previewPath, thumbnailsPath].forEach(dir => fs.mkdirSync(dir, { recursive: true }));
+
+// Thumbnails are only kept for as long as the app is running.
+fs.readdirSync(thumbnailsPath).forEach(f => fs.rmSync(path.join(thumbnailsPath, f), { recursive: true }));
 
 let mainWindow;
 function createWindow() {
@@ -129,6 +133,7 @@ ipcMain.handle('getTemp', getTemp);
 ipcMain.handle('getTempTextures', getTempTextures);
 ipcMain.handle('removeBlockToDelete', removeBlockToDelete);
 ipcMain.handle('generatePreviewBlock', generatePreviewBlock);
+ipcMain.handle('getTextureThumbnail', getTextureThumbnail);
 
 
 /*
@@ -171,11 +176,98 @@ function getDefaultRecipeFileContent() {
 // result is copied to where it should be.
 const resizedTexturePath = path.join(tempTexturesPath, 'resized.png');
 const compressedTexturePath = path.join(tempTexturesPath, 'compressed.dds');
+const decompressedTexturePath = path.join(tempTexturesPath, 'decompressed.png');
 
 async function createTexture(src, outputPath, size, format) {
-    await sharp(src).resize(size, size).toFile(resizedTexturePath);
+    // DDS files that are already exactly as needed are used as they are.
+    if (isMatchingDDS(src, size, format)) {
+        fs.copyFileSync(src, outputPath);
+        return;
+    }
+
+    await sharp(getReadableImage(src)).resize(size, size).toFile(resizedTexturePath);
     createDDSImage(resizedTexturePath, compressedTexturePath, format);
     fs.copyFileSync(compressedTexturePath, outputPath);
+}
+
+// sharp can't read DDS files, so those are decompressed to a PNG first.
+function getReadableImage(src) {
+    if (!isDDSFile(src)) return src;
+
+    fs.copyFileSync(src, compressedTexturePath);
+    decompressDDSImage(compressedTexturePath, decompressedTexturePath);
+    return decompressedTexturePath;
+}
+
+function isDDSFile(filePath) {
+    return path.extname(filePath).toLowerCase() == '.dds';
+}
+
+// The ways each format can be stored in a DDS file: legacy FourCC
+// codes, or DXGI formats for files with a DX10 header.
+const ddsFormats = {
+    BC1: { fourCCs: ['DXT1'], dxgiFormats: [71, 72] },
+    BC3: { fourCCs: ['DXT5'], dxgiFormats: [77, 78] },
+    BC4: { fourCCs: ['ATI1', 'BC4U'], dxgiFormats: [80] },
+    BC5: { fourCCs: ['ATI2', 'BC5U'], dxgiFormats: [83] }
+};
+
+// Whether the file is a DDS file of the given size and format, with a
+// full set of mipmaps (the same as what Compressonator would make).
+function isMatchingDDS(filePath, size, format) {
+    if (!isDDSFile(filePath)) return false;
+
+    const header = Buffer.alloc(148);
+    const fd = fs.openSync(filePath, 'r');
+    try {
+        fs.readSync(fd, header, 0, header.length, 0);
+    } finally {
+        fs.closeSync(fd);
+    }
+
+    if (header.toString('ascii', 0, 4) != 'DDS ') return false;
+
+    const height = header.readUInt32LE(12);
+    const width = header.readUInt32LE(16);
+    const mipMapCount = header.readUInt32LE(28);
+    const fourCC = header.toString('ascii', 84, 88);
+
+    const { fourCCs, dxgiFormats } = ddsFormats[format];
+    const formatMatches = fourCC == 'DX10'
+        ? dxgiFormats.includes(header.readUInt32LE(128))
+        : fourCCs.includes(fourCC);
+
+    return width == size && height == size
+        && mipMapCount == Math.log2(size) + 1
+        && formatMatches;
+}
+
+// Browsers can't show DDS files, so make small PNG thumbnails of them.
+let thumbnailCount = 0;
+const thumbnails = new Map();
+async function getTextureThumbnail(event, filePath) {
+    try {
+        const key = `${filePath}|${fs.statSync(filePath).mtimeMs}`;
+        if (thumbnails.has(key)) return thumbnails.get(key);
+
+        // Unique names, as several thumbnails can be made at once.
+        const n = thumbnailCount++;
+        const ddsPath = path.join(thumbnailsPath, `${n}.dds`);
+        const fullSizePath = path.join(thumbnailsPath, `${n}_full.png`);
+        const thumbnailPath = path.join(thumbnailsPath, `${n}.png`);
+
+        fs.copyFileSync(filePath, ddsPath);
+        decompressDDSImage(ddsPath, fullSizePath);
+        await sharp(fullSizePath).resize(256, 256).toFile(thumbnailPath);
+        fs.rmSync(ddsPath);
+        fs.rmSync(fullSizePath);
+
+        thumbnails.set(key, thumbnailPath);
+        return thumbnailPath;
+    } catch (err) {
+        console.error(err);
+        return undefined;
+    }
 }
 
 async function generateCustomBlock(event, location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures, heightTextures) {

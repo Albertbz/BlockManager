@@ -201,7 +201,7 @@ function addTexturesToDiv(fileArray, selectorDiv) {
         label.appendChild(textureImg);
         label.appendChild(crossImg);
 
-        textureImg.src = toFileUrl(fileArray[i]);
+        setTextureImgSrc(textureImg, fileArray[i]);
         textureImg.dataset.path = fileArray[i];
         textureImg.classList.add('texture-img');
         textureImg.addEventListener('click', (e) => {
@@ -274,6 +274,16 @@ function hasDuplicateFaces(textureDiv) {
     const faces = [...textureDiv.querySelectorAll('div.texture-selector-child select')]
         .map(select => select.value);
     return new Set(faces).size != faces.length;
+}
+
+// DDS files can't be shown directly, so show a thumbnail made by main.
+async function setTextureImgSrc(img, filePath) {
+    if (filePath.toLowerCase().endsWith('.dds')) {
+        const thumbnailPath = await window.call.getTextureThumbnail(filePath);
+        if (thumbnailPath != undefined) img.src = toFileUrl(thumbnailPath);
+    } else {
+        img.src = toFileUrl(filePath);
+    }
 }
 
 // Turn a file path into a URL usable as an image source, escaping

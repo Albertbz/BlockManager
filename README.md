@@ -42,6 +42,18 @@ And like this when 3 textures have been given and after the "Generate preview of
 Here there are also both Required and Optional textures that you can provide. Hover over the question mark to read more about
 each type of texture.
 
+Textures can be given as .png, .jpg or .dds files. If a .dds file already has the right size, format and mipmaps for its texture
+type, it is used as it is, without being compressed again. This is useful if you want full control over the compression. Any other
+.dds file is converted like a regular image. The formats are:
+
+| Texture type | Size | Format |
+| --- | --- | --- |
+| Texture | 2048x2048 | BC3 (DXT5) |
+| Small texture | 512x512 | BC3 (DXT5) |
+| Normal map | 2048x2048 | BC5 (ATI2) |
+| Glow map | 1024x1024 | BC1 (DXT1) |
+| Height map | 2048x2048 | BC4 (ATI1) |
+
 One of the optional texture types is height maps. If you provide a height map for every texture, the block will have tessellation,
 giving its surface actual 3D depth in game. Height maps should be greyscale 2048x2048 images, where brighter means higher. To tune
 a height map without having to restart the game, you can preview how it will look in game at TODO_HEIGHTMAP_PREVIEW_URL.
