@@ -1,11 +1,33 @@
 import { loadCanvas } from "./blockPreview.js";
 
+/**
+ * Saved settings, kept between visits. Storage can be unavailable,
+ * in which case the defaults are used.
+ */
+function loadSetting(key, defaultValue) {
+    try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return value ?? defaultValue;
+    } catch {
+        return defaultValue;
+    }
+}
+
+function saveSetting(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch { }
+}
+
 function populateBlocksDiv() {
     const blocksDiv = document.getElementById('blocksDiv');
     const hasChild = blocksDiv.firstElementChild != null;
     if (hasChild) {
         blocksDiv.removeChild(blocksDiv.firstElementChild);
     }
+
+    // The old blocks are gone, so stop watching their previews
+    previewObserver.disconnect();
 
     // Add all blocks
     const scrollableDiv = makeBlocksDiv();
@@ -100,6 +122,46 @@ function makeGroupTitle(text, className) {
     return title;
 }
 
+/**
+ * Remember which blocks are opened (by their folder path).
+ */
+let openedBlocks = new Set(loadSetting('openedBlocks', []));
+
+function setBlockOpened(block, isOpened) {
+    if (isOpened) {
+        openedBlocks.add(block.path);
+    } else {
+        openedBlocks.delete(block.path);
+    }
+    saveSetting('openedBlocks', [...openedBlocks]);
+}
+
+// Forget blocks that no longer exist, e.g. after being deleted. Nothing
+// found at all most likely means the game folder couldn't be found, so
+// keep everything in that case.
+function forgetMissingOpenedBlocks(allBlocks) {
+    if (allBlocks.length == 0) return;
+
+    const paths = new Set(allBlocks.map(block => block.path));
+    openedBlocks = new Set([...openedBlocks].filter(path => paths.has(path)));
+    saveSetting('openedBlocks', [...openedBlocks]);
+}
+
+/**
+ * Only a limited number of previews (WebGL contexts) can exist at once,
+ * so a preview only exists while its opened block is on screen.
+ */
+const previewLoaders = new WeakMap();
+const previewObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+        if (entry.isIntersecting) {
+            previewLoaders.get(entry.target)();
+        } else {
+            entry.target.replaceChildren();
+        }
+    }
+});
+
 function makeBlockDiv(block) {
     const div = document.createElement('div');
     div.classList.add('header', 'block');
@@ -114,20 +176,39 @@ function makeBlockDiv(block) {
         animationSpeed = block.properties.AnimationSpeed;
     }
 
-    dropDownDiv.addEventListener('click', (e) => {
-        dropDownDiv.classList.toggle('toggled');
-        const isExpanded = !contentDiv.classList.toggle('d-none');
+    const previewDiv = contentDiv.querySelector('div.block-preview');
+    previewLoaders.set(previewDiv, () => {
+        const canvas = makePreviewCanvas();
+        previewDiv.replaceChildren(canvas);
+        loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed);
+    });
 
-        // Only keep a preview while the block is expanded, as only a
-        // limited number of previews (WebGL contexts) can exist at once.
-        const previewDiv = contentDiv.querySelector('div.block-preview');
+    function setExpanded(isExpanded) {
+        dropDownDiv.classList.toggle('toggled', isExpanded);
+        contentDiv.classList.toggle('d-none', !isExpanded);
+
+        // The preview is shown while the expanded block is on screen
         if (isExpanded) {
-            const canvas = makePreviewCanvas();
-            previewDiv.replaceChildren(canvas);
-            loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed);
+            previewObserver.observe(previewDiv);
         } else {
-            previewDiv.replaceChildren();
+            previewObserver.unobserve(previewDiv);
+
+            // Remove the preview a couple of frames after hiding it. Removing
+            // it right away can briefly show a white square where it was, as
+            // the screen may be drawn once more after its image is freed.
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                if (contentDiv.classList.contains('d-none')) previewDiv.replaceChildren();
+            }));
         }
+    }
+
+    // Blocks that were opened stay opened
+    setExpanded(openedBlocks.has(block.path));
+
+    dropDownDiv.addEventListener('click', (e) => {
+        const isExpanded = contentDiv.classList.contains('d-none');
+        setExpanded(isExpanded);
+        setBlockOpened(block, isExpanded);
     });
 
     div.appendChild(dropDownDiv);
@@ -491,7 +572,8 @@ function updateBlocksSort() {
 /**
  * Handle filtering for blocks
  */
-let filterBy = 'All';
+let filterBy = loadSetting('filterBy', 'All');
+if (!['All', 'Independent', 'Mods'].includes(filterBy)) filterBy = 'All';
 let blocks = [];
 
 // Update according to filter
@@ -499,6 +581,7 @@ async function updateBlocksFilter() {
     blocks = [];
     const allBlocks = await window.call.getAllBlocks();
     const modFolders = allBlocks.modFolders;
+    forgetMissingOpenedBlocks(allBlocks.defaultBlocksFolder.concat(getModBlocks(modFolders)));
     switch (filterBy) {
         case 'All':
             blocks = allBlocks.defaultBlocksFolder.concat(getModBlocks(modFolders));
@@ -521,7 +604,7 @@ async function updateBlocksFilter() {
  * Handle choosing which game version to show mod blocks for.
  * undefined means all versions.
  */
-let selectedVersion = undefined;
+let selectedVersion = loadSetting('selectedVersion', undefined);
 let shownVersions = [];
 
 // Newest version first, e.g. "Update 60" before "Update 59".
@@ -539,7 +622,11 @@ function updateVersionFilter(modFolders) {
     const versions = [...new Set(modFolders.flatMap(modFolder =>
         modFolder.updates.map(update => update.name)))].sort(compareVersions);
 
-    if (!versions.includes(selectedVersion)) selectedVersion = undefined;
+    // Fall back to all versions if the chosen one no longer has mods
+    if (selectedVersion != undefined && !versions.includes(selectedVersion)) {
+        selectedVersion = undefined;
+        saveSetting('selectedVersion', null);
+    }
 
     // Only rebuild the options if the versions have changed
     if (versions.join('|') == shownVersions.join('|')) return;
@@ -562,6 +649,7 @@ function updateVersionFilter(modFolders) {
 
 versionSelect.addEventListener('change', () => {
     selectedVersion = versionSelect.value == '' ? undefined : versionSelect.value;
+    saveSetting('selectedVersion', selectedVersion ?? null);
     updateBlocks();
 });
 
@@ -671,8 +759,14 @@ function getModLabel(block) {
 }
 
 // Change filtering method
-let prevFilterButton = document.getElementById('filterAll');
-document.querySelectorAll('button.filter-btn').forEach((button) => {
+const filterButtons = document.querySelectorAll('button.filter-btn');
+
+// Show the filter chosen last time
+let prevFilterButton = [...filterButtons].find(button => button.innerText == filterBy);
+filterButtons.forEach(button => button.classList.toggle('btn-pressed', button == prevFilterButton));
+versionSelect.classList.toggle('d-none', filterBy != 'Mods');
+
+filterButtons.forEach((button) => {
     button.addEventListener('click', async (e) => {
         if (prevFilterButton == button) return;
 
@@ -681,6 +775,7 @@ document.querySelectorAll('button.filter-btn').forEach((button) => {
 
         prevFilterButton = button;
         filterBy = button.innerText;
+        saveSetting('filterBy', filterBy);
 
         versionSelect.classList.toggle('d-none', filterBy != 'Mods');
 
