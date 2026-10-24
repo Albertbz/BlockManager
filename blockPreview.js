@@ -98,10 +98,7 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
     const buffers = initBuffers(gl);
 
     // Load textures
-    const textures = [];
-    for (let i = 0; i < texturePaths.length; i++) {
-        textures[i] = await loadTexture(gl, texturePaths[i]);
-    }
+    const textures = await loadTextures(gl, texturePaths);
 
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -217,74 +214,75 @@ function loadShader(gl, type, source) {
     return shader;
 }
 
-//
-// Initialize a texture and load an image.
-// When the image finished loading copy it into the texture.
-//
-async function loadTexture(gl, url) {
-    const texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture); // create texture object on GPU
-    const ext = gl.getExtension("WEBGL_compressed_texture_s3tc"); // will be null if not supported
-    if (ext) {
-        // the file is already in the correct compressed format
-        const dataArrayBuffer = await fetch(url)
-            .then((response) => response.arrayBuffer());
-        for (let level = 0; level <= 11; level++) {
-            const width = 2048 / 2 ** level;
-            const height = 2048 / 2 ** level;
-            const levelDataArrayBuffer = extractMipLevel(dataArrayBuffer, level, width, height);
-            gl.compressedTexImage2D(
-                gl.TEXTURE_2D,
-                level, // set the base image level
-                ext.COMPRESSED_RGBA_S3TC_DXT5_EXT, // the compressed format we are using
-                width,
-                height, // width, height of the image
-                0, // border, always 0
-                new DataView(levelDataArrayBuffer)
-            );
-        }
-
-        return texture;
+// Blocks often use the same texture on several sides, so each file is
+// only loaded once, and different files are loaded at the same time.
+async function loadTextures(gl, texturePaths) {
+    const loading = new Map();
+    for (const path of new Set(texturePaths)) {
+        loading.set(path, loadTexture(gl, path));
     }
+    return Promise.all(texturePaths.map(path => loading.get(path)));
 }
 
-function extractMipLevel(dataArrayBuffer, level, width, height) {
-    // Calculate the size of the mip level data
-    const blockSize = 16; // 4x4 block size for DXT5 compression
-    const numBlocks = Math.ceil(width / 4) * Math.ceil(height / 4);
-    const mipSize = numBlocks * blockSize;
+// The preview is only 135 pixels wide, so mipmaps larger than this are
+// never shown. Leaving them out makes loading a lot faster.
+const maxPreviewTextureSize = 256;
 
-    // Create a new ArrayBuffer for the mip level data
-    const mipArrayBuffer = new ArrayBuffer(mipSize);
+//
+// Load a DDS file (BC3/DXT5) into a texture.
+//
+async function loadTexture(gl, url) {
+    const ext = gl.getExtension("WEBGL_compressed_texture_s3tc"); // will be null if not supported
+    if (!ext) return undefined;
 
-    // Copy the relevant portion of the original dataArrayBuffer into the mipArrayBuffer
-    const dataViewSrc = new DataView(dataArrayBuffer);
-    const dataViewDest = new DataView(mipArrayBuffer);
+    const buffer = await fetch(url).then((response) => response.arrayBuffer());
 
-    let srcOffset = 128;  // Initial offset in the source dataArrayBuffer
-    let destOffset = 0; // Initial offset in the destination mipArrayBuffer
+    // Read the size and mipmap count from the DDS header, which is
+    // 20 bytes longer when it has a DX10 header.
+    const header = new DataView(buffer);
+    const height = header.getUint32(12, true);
+    const width = header.getUint32(16, true);
+    const mipMapCount = Math.max(1, header.getUint32(28, true));
+    const hasDX10Header = String.fromCharCode(...new Uint8Array(buffer, 84, 4)) == 'DX10';
+    let offset = hasDX10Header ? 148 : 128;
 
-    // Determine the offset in the source dataArrayBuffer for the desired mip level
-    for (let i = 0; i < level; i++) {
-        const mipWidth = 2048 / 2 ** i;
-        const mipHeight = 2048 / 2 ** i;
-        const mipBlocks = Math.ceil(mipWidth / 4) * Math.ceil(mipHeight / 4);
-        srcOffset += mipBlocks * blockSize;
-    }
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    // Copy the data block by block
-    for (let j = 0; j < numBlocks; j++) {
-        // Copy 16 bytes (128 bits) from the source to the destination
-        for (let k = 0; k < blockSize; k++) {
-            dataViewDest.setUint8(destOffset + k, dataViewSrc.getUint8(srcOffset + k));
+    // Upload the mipmaps no larger than maxPreviewTextureSize (or just the
+    // smallest one there is, if all are larger), as levels 0, 1, 2...
+    let uploadedLevels = 0;
+    let lastSize = 0;
+    for (let i = 0; i < mipMapCount; i++) {
+        const levelWidth = Math.max(1, width >> i);
+        const levelHeight = Math.max(1, height >> i);
+        const size = Math.ceil(levelWidth / 4) * Math.ceil(levelHeight / 4) * 16; // 16 bytes per 4x4 block
+        if (offset + size > buffer.byteLength) break;
+
+        const isLast = i == mipMapCount - 1;
+        if (Math.max(levelWidth, levelHeight) <= maxPreviewTextureSize || (isLast && uploadedLevels == 0)) {
+            gl.compressedTexImage2D(
+                gl.TEXTURE_2D,
+                uploadedLevels,
+                ext.COMPRESSED_RGBA_S3TC_DXT5_EXT,
+                levelWidth,
+                levelHeight,
+                0, // border, always 0
+                new Uint8Array(buffer, offset, size) // no copying needed
+            );
+            uploadedLevels++;
+            lastSize = Math.max(levelWidth, levelHeight);
         }
-
-        srcOffset += blockSize;  // Move to the next block in the source
-        destOffset += blockSize; // Move to the next block in the destination
+        offset += size;
     }
 
-    // Return the ArrayBuffer containing the mip level data
-    return mipArrayBuffer;
+    // Without mipmaps all the way down to 1x1, mipmapped sampling would
+    // show nothing, so sample the largest level directly instead.
+    if (lastSize != 1) {
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
+
+    return texture;
 }
 
 export { loadCanvas }
