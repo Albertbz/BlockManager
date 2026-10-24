@@ -384,6 +384,10 @@ select {
 	cursor: zoom-out;
 }
 
+.animating {
+	overflow: hidden;
+}
+
 .toggled .dropdown-arrow {
 	transform: rotate(90deg);
 }

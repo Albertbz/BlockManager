@@ -183,30 +183,63 @@ function makeBlockDiv(block) {
         loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed);
     });
 
-    function setExpanded(isExpanded) {
+    let contentAnimation;
+
+    function setExpanded(isExpanded, animate = true) {
         dropDownDiv.classList.toggle('toggled', isExpanded);
-        contentDiv.classList.toggle('d-none', !isExpanded);
+
+        // When toggled again while animating, continue from where it is
+        let from;
+        if (contentAnimation) {
+            from = getContentKeyframe(getComputedStyle(contentDiv));
+            contentAnimation.cancel();
+            contentAnimation = undefined;
+        }
 
         // The preview is shown while the expanded block is on screen
         if (isExpanded) {
+            contentDiv.classList.remove('d-none');
             previewObserver.observe(previewDiv);
         } else {
             previewObserver.unobserve(previewDiv);
-
-            // Remove the preview a couple of frames after hiding it. Removing
-            // it right away can briefly show a white square where it was, as
-            // the screen may be drawn once more after its image is freed.
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                if (contentDiv.classList.contains('d-none')) previewDiv.replaceChildren();
-            }));
         }
+
+        if (!animate) {
+            if (!isExpanded) hideContent();
+            return;
+        }
+
+        // The content smoothly grows from or shrinks into the top of the block
+        const expanded = getContentKeyframe(getComputedStyle(contentDiv));
+        const collapsed = { height: '0px', marginBottom: '0px', opacity: 0 };
+        const keyframes = isExpanded ? [from ?? collapsed, expanded] : [from ?? expanded, collapsed];
+
+        contentDiv.classList.add('animating');
+        contentAnimation = contentDiv.animate(keyframes, { duration: 200, easing: 'ease-in-out' });
+        contentAnimation.onfinish = () => {
+            contentAnimation = undefined;
+            contentDiv.classList.remove('animating');
+            if (!isExpanded) hideContent();
+        };
+    }
+
+    function hideContent() {
+        contentDiv.classList.add('d-none');
+        contentDiv.classList.remove('animating');
+
+        // Remove the preview a couple of frames after hiding it. Removing
+        // it right away can briefly show a white square where it was, as
+        // the screen may be drawn once more after its image is freed.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (contentDiv.classList.contains('d-none')) previewDiv.replaceChildren();
+        }));
     }
 
     // Blocks that were opened stay opened
-    setExpanded(openedBlocks.has(block.path));
+    setExpanded(openedBlocks.has(block.path), false);
 
     dropDownDiv.addEventListener('click', (e) => {
-        const isExpanded = contentDiv.classList.contains('d-none');
+        const isExpanded = !dropDownDiv.classList.contains('toggled');
         setExpanded(isExpanded);
         setBlockOpened(block, isExpanded);
     });
@@ -215,6 +248,10 @@ function makeBlockDiv(block) {
     div.appendChild(contentDiv);
 
     return div;
+}
+
+function getContentKeyframe(style) {
+    return { height: style.height, marginBottom: style.marginBottom, opacity: style.opacity };
 }
 
 function makeDropDownDiv(block) {
@@ -469,23 +506,54 @@ document.getElementById('makeNewBlock').addEventListener('click', (e) => {
 /**
  * Sort button open and close functionality
  */
-document.getElementById('sortButton').addEventListener('click', (e) => {
-    const sortButton = e.target;
-    const dropdownContentDiv = document.getElementById('dropdownContent');
-    const isVisible = !dropdownContentDiv.classList.toggle('d-none');
+const sortButton = document.getElementById('sortButton');
+const dropdownContentDiv = document.getElementById('dropdownContent');
 
-    if (isVisible) {
-        function handleClickOutside(e) {
-            if (e.target == dropdownContentDiv || e.target == sortButton || dropdownContentDiv.contains(e.target)) return;
-    
-            dropdownContentDiv.classList.add('d-none');
-            document.removeEventListener('click', handleClickOutside);
-        }
+// The dropdown grows down out of the sort button when opened, and shrinks
+// back into it when closed
+const dropdownKeyframes = [
+    { opacity: 0, transform: 'translateY(-4px) scaleY(0.7)' },
+    { opacity: 1, transform: 'none' }
+];
+let isDropdownOpen = false;
+let dropdownAnimation;
 
-        document.addEventListener('click', handleClickOutside);
+function setDropdownOpen(isOpen) {
+    isDropdownOpen = isOpen;
+
+    // When toggled again while animating, continue from where it is. Going
+    // the other way, the time left is how far it had come.
+    const elapsed = dropdownAnimation?.currentTime;
+    dropdownAnimation?.cancel();
+
+    if (isOpen) {
+        dropdownContentDiv.classList.remove('d-none');
+        document.addEventListener('click', handleClickOutsideDropdown);
+    } else {
+        document.removeEventListener('click', handleClickOutsideDropdown);
     }
 
-    
+    const duration = 150;
+    dropdownAnimation = dropdownContentDiv.animate(dropdownKeyframes, {
+        duration,
+        easing: 'ease-out',
+        direction: isOpen ? 'normal' : 'reverse'
+    });
+    if (elapsed != null) dropdownAnimation.currentTime = duration - elapsed;
+
+    dropdownAnimation.onfinish = () => {
+        dropdownAnimation = undefined;
+        if (!isOpen) dropdownContentDiv.classList.add('d-none');
+    };
+}
+
+function handleClickOutsideDropdown(e) {
+    if (e.target == sortButton || dropdownContentDiv.contains(e.target)) return;
+    setDropdownOpen(false);
+}
+
+sortButton.addEventListener('click', (e) => {
+    setDropdownOpen(!isDropdownOpen);
 });
 
 /**
@@ -799,10 +867,27 @@ document.getElementById('searchButton').addEventListener('click', (e) => {
     searchInput.spellcheck = false;
     searchInput.classList.add('search-input');
 
-    searchButton.replaceWith(searchInput);
+    // The button smoothly widens into the text field, and narrows back into
+    // the button when left empty
+    const buttonWidth = `${searchButton.offsetWidth}px`;
+    const searchAnimationOptions = { duration: 200, easing: 'ease-in-out' };
 
+    searchButton.replaceWith(searchInput);
+    searchInput.animate([{ width: buttonWidth }, { width: `${searchInput.offsetWidth}px` }], searchAnimationOptions);
+
+    let closeAnimation;
     searchInput.addEventListener('focusout', (e) => {
-        if (searchInput.value.length == 0) searchInput.replaceWith(searchButton);
+        if (searchInput.value.length != 0) return;
+
+        closeAnimation = searchInput.animate([{ width: `${searchInput.offsetWidth}px` }, { width: buttonWidth }], searchAnimationOptions);
+        closeAnimation.onfinish = () => searchInput.replaceWith(searchButton);
+    });
+
+    // Clicking it again while it narrows widens it back, keeping it open
+    searchInput.addEventListener('focus', (e) => {
+        if (closeAnimation?.playState != 'running') return;
+        closeAnimation.onfinish = null;
+        closeAnimation.reverse();
     });
 
     searchInput.addEventListener('input', (e) => {
