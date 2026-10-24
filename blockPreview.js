@@ -1,7 +1,13 @@
 import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
 
-async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0) {
+async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0, canEnlarge = true) {
+    // Clicking the preview shows it large
+    if (canEnlarge) {
+        canvas.classList.add('enlargeable');
+        canvas.addEventListener('click', () => showLargePreview(canvas, texturePaths, isAnimated, animationSpeed));
+    }
+
     let cubeRotation = 0.0;
     let deltaTime = 0;
 
@@ -98,7 +104,7 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
     const buffers = initBuffers(gl);
 
     // Load textures
-    const textures = await loadTextures(gl, texturePaths);
+    const textures = await loadTextures(gl, texturePaths, getMaxTextureSize(canvas));
 
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -143,6 +149,62 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
     }
     requestAnimationFrame(render);
 
+}
+
+//
+// Show a large preview covering most of the screen, which is closed again
+// by clicking anywhere. It grows out of the small preview when opened, and
+// shrinks back into it when closed.
+//
+const largePreviewAnimationOptions = { duration: 250, easing: 'ease-out' };
+
+function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed) {
+    const overlay = document.createElement('div');
+    overlay.classList.add('large-preview');
+
+    const size = Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.9);
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+    overlay.appendChild(canvas);
+
+    // Removing the canvas also stops its rendering and frees its WebGL context
+    let isClosing = false;
+    function close() {
+        if (isClosing) return;
+        isClosing = true;
+        document.removeEventListener('keydown', onKeyDown);
+
+        const options = { ...largePreviewAnimationOptions, easing: 'ease-in', direction: 'reverse' };
+        overlay.animate([{ opacity: 0 }, { opacity: 1 }], options);
+        canvas.animate(getGrowKeyframes(smallCanvas, canvas), options).finished.then(() => overlay.remove());
+    }
+    function onKeyDown(e) {
+        if (e.key == 'Escape') close();
+    }
+    overlay.addEventListener('click', close);
+    document.addEventListener('keydown', onKeyDown);
+
+    document.body.appendChild(overlay);
+    overlay.animate([{ opacity: 0 }, { opacity: 1 }], largePreviewAnimationOptions);
+    canvas.animate(getGrowKeyframes(smallCanvas, canvas), largePreviewAnimationOptions);
+    loadCanvas(canvas, texturePaths, isAnimated, animationSpeed, false);
+}
+
+// Keyframes moving the large canvas from where the small one is to where the
+// large one is. If the small one is gone, it just grows from the middle.
+function getGrowKeyframes(smallCanvas, largeCanvas) {
+    const largeRect = largeCanvas.getBoundingClientRect();
+    let from = 'scale(0.2)';
+    if (smallCanvas.isConnected) {
+        const smallRect = smallCanvas.getBoundingClientRect();
+        const dx = (smallRect.left + smallRect.width / 2) - (largeRect.left + largeRect.width / 2);
+        const dy = (smallRect.top + smallRect.height / 2) - (largeRect.top + largeRect.height / 2);
+        from = `translate(${dx}px, ${dy}px) scale(${smallRect.width / largeRect.width})`;
+    }
+    return [{ transform: from }, { transform: 'none' }];
 }
 
 function getNextOffset(offset) {
@@ -216,22 +278,24 @@ function loadShader(gl, type, source) {
 
 // Blocks often use the same texture on several sides, so each file is
 // only loaded once, and different files are loaded at the same time.
-async function loadTextures(gl, texturePaths) {
+async function loadTextures(gl, texturePaths, maxTextureSize) {
     const loading = new Map();
     for (const path of new Set(texturePaths)) {
-        loading.set(path, loadTexture(gl, path));
+        loading.set(path, loadTexture(gl, path, maxTextureSize));
     }
     return Promise.all(texturePaths.map(path => loading.get(path)));
 }
 
-// The preview is only 135 pixels wide, so mipmaps larger than this are
-// never shown. Leaving them out makes loading a lot faster.
-const maxPreviewTextureSize = 256;
+// Mipmaps much larger than the canvas are never shown. Leaving them out
+// makes loading a lot faster. The small 135 pixel preview uses up to 256.
+function getMaxTextureSize(canvas) {
+    return 2 ** Math.ceil(Math.log2(Math.max(canvas.width, canvas.height)));
+}
 
 //
 // Load a DDS file (BC3/DXT5) into a texture.
 //
-async function loadTexture(gl, url) {
+async function loadTexture(gl, url, maxTextureSize) {
     const ext = gl.getExtension("WEBGL_compressed_texture_s3tc"); // will be null if not supported
     if (!ext) return undefined;
 
@@ -249,7 +313,7 @@ async function loadTexture(gl, url) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    // Upload the mipmaps no larger than maxPreviewTextureSize (or just the
+    // Upload the mipmaps no larger than maxTextureSize (or just the
     // smallest one there is, if all are larger), as levels 0, 1, 2...
     let uploadedLevels = 0;
     let lastSize = 0;
@@ -260,7 +324,7 @@ async function loadTexture(gl, url) {
         if (offset + size > buffer.byteLength) break;
 
         const isLast = i == mipMapCount - 1;
-        if (Math.max(levelWidth, levelHeight) <= maxPreviewTextureSize || (isLast && uploadedLevels == 0)) {
+        if (Math.max(levelWidth, levelHeight) <= maxTextureSize || (isLast && uploadedLevels == 0)) {
             gl.compressedTexImage2D(
                 gl.TEXTURE_2D,
                 uploadedLevels,

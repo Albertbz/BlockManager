@@ -32,7 +32,12 @@ function drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offs
     const eye = glMatrix.vec3.fromValues(3.7 * Math.sin(cubeRotation), 2.3, 3.7 * Math.cos(cubeRotation))
     // const eye = glMatrix.vec3.fromValues(0, -4, 4)
 
-    glMatrix.mat4.lookAt(modelViewMatrix, eye, glMatrix.vec3.fromValues(0, 0, 0), glMatrix.vec3.fromValues(0, 1, 0));
+    // Seen from above, the cube's nearest bottom corner reaches further down
+    // than its top reaches up, so aiming at its middle cut that corner off at
+    // the bottom. Aiming a bit lower keeps the whole cube inside the canvas.
+    const target = glMatrix.vec3.fromValues(0, -0.27, 0);
+
+    glMatrix.mat4.lookAt(modelViewMatrix, eye, target, glMatrix.vec3.fromValues(0, 1, 0));
 
     const normalMatrix = glMatrix.mat4.create();
     glMatrix.mat4.invert(normalMatrix, modelViewMatrix);

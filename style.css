@@ -364,6 +364,26 @@ select {
 	width: 135px;
 }
 
+.enlargeable {
+	cursor: zoom-in;
+	transition: filter 0.15s;
+}
+
+.enlargeable:hover {
+	filter: brightness(0.8);
+}
+
+.large-preview {
+	position: fixed;
+	inset: 0;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: rgb(0, 0, 0, 0.6);
+	cursor: zoom-out;
+}
+
 .toggled .dropdown-arrow {
 	transform: rotate(90deg);
 }
