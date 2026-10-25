@@ -19,16 +19,18 @@ const SPACING = 1.08;
 // game's BlockTextures/DDS folder. Without it, only colours are shown.
 // With isInteractive turned off, it only turns by itself, and can't be
 // dragged, zoomed or pointed at, like the block previews.
+// With shareRenderer, it is drawn by a renderer that all such previews
+// share, and each picture is handed over to its canvas, as making and
+// removing a WebGL context for each one is slow.
 //
-function createRecipePreview(container, layerInput, layerValue, getMaterialLabel, texturesUrl, { isInteractive = true } = {}) {
+function createRecipePreview(container, layerInput, layerValue, getMaterialLabel, texturesUrl, { isInteractive = true, shareRenderer = false } = {}) {
     const canvas = document.createElement('canvas');
     const label = document.createElement('div');
     label.classList.add('recipe-preview-label', 'outline', 'd-none');
     container.replaceChildren(canvas, label);
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+    const renderer = shareRenderer ? getSharedRenderer() : createRenderer(canvas);
+    const output = shareRenderer ? canvas.getContext('bitmaprenderer') : undefined;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
@@ -81,6 +83,9 @@ function createRecipePreview(container, layerInput, layerValue, getMaterialLabel
     let radius = 1;
     let needsFraming = false;
     let shownSize;
+    let isReadyToDraw = true;
+    let recipeCount = 0;
+    let compiling = Promise.resolve();
 
     function setRecipe(recipe) {
         for (const cube of cubes.children) disposeMaterialMesh(cube);
@@ -95,6 +100,7 @@ function createRecipePreview(container, layerInput, layerValue, getMaterialLabel
         sizeY = Math.max(1, recipe.SizeY);
         layerCount = Math.max(1, Math.ceil(recipe.Array.length / (sizeX * sizeY)));
 
+        const texturesLoaded = [];
         recipe.Array.forEach((material, i) => {
             if (material == EMPTY) return;
             const x = i % sizeX;
@@ -102,11 +108,25 @@ function createRecipePreview(container, layerInput, layerValue, getMaterialLabel
             const layer = Math.floor(i / (sizeX * sizeY));
 
             // Items are turned a bit differently each
-            const { mesh: cube } = createMaterialMesh(material, texturesUrl, i * 1.7);
+            const { mesh: cube, ready } = createMaterialMesh(material, texturesUrl, i * 1.7);
             setPosition(cube, x, y, layer);
             Object.assign(cube.userData, { material, x, y, layer });
             cubes.add(cube);
+            texturesLoaded.push(ready);
         });
+
+        // Drawing a kind of material for the first time compiles a shader,
+        // which held up the page for a moment while scrolling past many
+        // previews. So a shared renderer compiles them in the background
+        // first, once the textures (which change the kind) have loaded.
+        if (shareRenderer) {
+            isReadyToDraw = false;
+            const recipeNumber = ++recipeCount;
+            compiling = Promise.all(texturesLoaded)
+                .then(() => renderer.compileAsync(scene, camera))
+                .catch(err => console.error(err))
+                .then(() => { if (recipeNumber == recipeCount) isReadyToDraw = true; });
+        }
 
         radius = 0.5 * SPACING * Math.hypot(sizeX, sizeY, layerCount);
 
@@ -224,7 +244,8 @@ function createRecipePreview(container, layerInput, layerValue, getMaterialLabel
         const height = container.clientHeight;
         if (width == 0 || height == 0) return;
 
-        renderer.setSize(width, height, false);
+        // A shared renderer is set to the size when this preview is drawn
+        if (!shareRenderer) renderer.setSize(width, height, false);
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
         if (needsFraming) frame();
@@ -304,28 +325,86 @@ function createRecipePreview(container, layerInput, layerValue, getMaterialLabel
         }
     }
 
-    renderer.setAnimationLoop(() => {
-        if (!canvas.isConnected) {
-            dispose();
-            return;
-        }
-        if (container.clientWidth == 0) return;
+    function render() {
+        if (container.clientWidth == 0 || !isReadyToDraw) return;
         controls.update();
         updateHovered();
-        renderer.render(scene, camera);
-    });
 
-    // Only a limited number of WebGL contexts can exist at once
+        if (shareRenderer) {
+            const width = container.clientWidth, height = container.clientHeight;
+            const size = renderer.getSize(new THREE.Vector2());
+            if (size.x != width || size.y != height) renderer.setSize(width, height, false);
+            renderer.render(scene, camera);
+            // Handing the picture over is much faster than copying it
+            output.transferFromImageBitmap(renderer.domElement.transferToImageBitmap());
+        } else {
+            renderer.render(scene, camera);
+        }
+    }
+
+    if (shareRenderer) {
+        requestAnimationFrame(function loop() {
+            if (!canvas.isConnected) {
+                dispose();
+                return;
+            }
+            render();
+            requestAnimationFrame(loop);
+        });
+    } else {
+        renderer.setAnimationLoop(() => {
+            if (!canvas.isConnected) {
+                dispose();
+                return;
+            }
+            render();
+        });
+    }
+
+    // Only a limited number of WebGL contexts can exist at once. A shared
+    // renderer is kept, but what only this preview used is freed, once it
+    // is no longer being compiled, as that fails for freed materials.
     function dispose() {
-        renderer.setAnimationLoop(null);
         resizeObserver.disconnect();
+        // The controls listen for keys on the document, but only stop when
+        // the canvas is still on it, so the preview would never be freed
+        document.removeEventListener('keydown', controls._interceptControlDown, { capture: true });
+        document.removeEventListener('keyup', controls._interceptControlUp, { capture: true });
         controls.dispose();
-        for (const cube of cubes.children) disposeMaterialMesh(cube);
-        renderer.dispose();
-        renderer.forceContextLoss();
+        if (shareRenderer) {
+            compiling.then(() => {
+                for (const cube of cubes.children) disposeMaterialMesh(cube);
+                ghostMaterial.dispose();
+                placeholder.material.dispose();
+                layerPlane.geometry.dispose();
+                layerPlane.material.dispose();
+                layerPlane.children[0].geometry.dispose();
+                layerPlane.children[0].material.dispose();
+            });
+        } else {
+            for (const cube of cubes.children) disposeMaterialMesh(cube);
+            renderer.setAnimationLoop(null);
+            renderer.dispose();
+            renderer.forceContextLoss();
+        }
     }
 
     return { setRecipe, highlight, showBuilderLayer, setBuilderLayerShown };
+}
+
+function createRenderer(canvas) {
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+    return renderer;
+}
+
+// The renderer shared by the previews that share one, made when first
+// needed. It isn't shown itself, so it draws off screen.
+let sharedRenderer;
+function getSharedRenderer() {
+    if (sharedRenderer == undefined) sharedRenderer = createRenderer(new OffscreenCanvas(1, 1));
+    return sharedRenderer;
 }
 
 export { createRecipePreview }

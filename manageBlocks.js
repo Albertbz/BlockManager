@@ -33,6 +33,7 @@ function saveSetting(key, value) {
 
 function populateBlocksDiv() {
     const blocksDiv = document.getElementById('blocksDiv');
+    savePendingScrollTop();
     const hasChild = blocksDiv.firstElementChild != null;
     if (hasChild) {
         blocksDiv.removeChild(blocksDiv.firstElementChild);
@@ -48,8 +49,25 @@ function populateBlocksDiv() {
 
     // Go back to where this view was scrolled to, and keep track of it
     scrollableDiv.scrollTop = getSavedScrollTop();
-    scrollableDiv.addEventListener('scroll', () => saveScrollTop(scrollableDiv.scrollTop));
+    scrollableDiv.addEventListener('scroll', () => saveScrollTopSoon(scrollableDiv, getCurrentView()));
 }
+
+// Saving on every scroll event made scrolling slower, so it is only saved
+// once scrolling pauses, and right away when the page is left or the list
+// is rebuilt
+let pendingScrollSave;
+let scrollSaveTimeout;
+function saveScrollTopSoon(scrollableDiv, view) {
+    pendingScrollSave = () => saveScrollTop(scrollableDiv.scrollTop, view);
+    clearTimeout(scrollSaveTimeout);
+    scrollSaveTimeout = setTimeout(savePendingScrollTop, 150);
+}
+
+function savePendingScrollTop() {
+    pendingScrollSave?.();
+    pendingScrollSave = undefined;
+}
+window.addEventListener('pagehide', savePendingScrollTop);
 
 /**
  * Remember how far each view (filter, version and search) has been
@@ -72,9 +90,9 @@ function getSavedScrollTop() {
     return getSavedScrollPositions()[getCurrentView()] ?? 0;
 }
 
-function saveScrollTop(scrollTop) {
+function saveScrollTop(scrollTop, view = getCurrentView()) {
     const scrollPositions = getSavedScrollPositions();
-    scrollPositions[getCurrentView()] = scrollTop;
+    scrollPositions[view] = scrollTop;
     try {
         sessionStorage.setItem('scrollPositions', JSON.stringify(scrollPositions));
     } catch { }
@@ -220,8 +238,8 @@ function makeBlockDiv(block) {
             const canvas = makePreviewCanvas(size);
             previewDiv.replaceChildren(canvas);
             const hardEdges = block.properties.HardEdgesBetweenDifferentTextures != false;
-            loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed, true, getHeightPaths(block), hardEdges);
-            loadRecipePreview(recipePreviewDiv, block.properties.Recipe);
+            loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed, true, getHeightPaths(block), hardEdges, true);
+            loadRecipePreview(recipePreviewDiv, block.properties.Recipe, true);
         },
         // Removing them also stops them and frees their WebGL contexts
         unload: () => {
@@ -492,8 +510,9 @@ function isCraftable(recipe) {
 }
 
 // The recipe, turning by itself like the block preview. Blocks without a
-// recipe can't be crafted, which is said instead.
-function loadRecipePreview(recipePreviewDiv, recipe) {
+// recipe can't be crafted, which is said instead. The small previews in the
+// list share one renderer, like the block previews share a WebGL context.
+function loadRecipePreview(recipePreviewDiv, recipe, shareRenderer = false) {
     if (!isCraftable(recipe)) {
         const textElem = document.createElement('span');
         textElem.innerHTML = '<em>Not craftable</em>';
@@ -502,7 +521,7 @@ function loadRecipePreview(recipePreviewDiv, recipe) {
     }
 
     const recipePreview = createRecipePreview(recipePreviewDiv, undefined, undefined,
-        material => getMaterialName(material, 1), blockTexturesUrl, { isInteractive: false });
+        material => getMaterialName(material, 1), blockTexturesUrl, { isInteractive: false, shareRenderer });
     recipePreview.setRecipe(recipe);
 }
 

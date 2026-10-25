@@ -4,7 +4,11 @@ import { drawScene } from "./draw-scene.js";
 // heightPaths has each face's height map, if the block has them, which
 // displace the faces like in the game. Without hardEdges, different
 // textures continue into each other (HardEdgesBetweenDifferentTextures).
-async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0, canEnlarge = true, heightPaths = [], hardEdges = true) {
+// With shareContext, the preview is drawn with a WebGL context that all
+// such previews share, and each picture is handed over to the canvas.
+// Making and removing a context for each preview is slow, which made
+// scrolling past many of them stutter.
+async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0, canEnlarge = true, heightPaths = [], hardEdges = true, shareContext = false) {
     // Clicking the preview shows it large
     if (canEnlarge) {
         canvas.classList.add('enlargeable');
@@ -14,6 +18,106 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
     let cubeRotation = 0.0;
     let deltaTime = 0;
 
+    const context = shareContext ? getSharedContext() : createContext(canvas);
+    if (context == undefined) return;
+    const { gl, programInfo } = context;
+    const output = shareContext ? canvas.getContext('bitmaprenderer') : undefined;
+
+    const scale = isAnimated ? 4.0 : 1.0;
+
+    // Displaced faces are divided into squares of a few pixels each
+    const gridSize = getGridSize(canvas);
+
+    // Load textures and height maps
+    const [textures, heightMaps] = await Promise.all([
+        loadTextures(gl, texturePaths, getMaxTextureSize(canvas)),
+        loadHeightMaps(heightPaths, 2 * gridSize * scale, hardEdges),
+    ]);
+
+    // Here's where we call the routine that builds all the
+    // objects we'll be drawing.
+    const buffers = initBuffers(gl, heightMaps, gridSize, scale, hardEdges);
+
+    let then = 0;
+    let offset = glMatrix.vec2.fromValues(0.0, 0.0);
+    let animationCounter = 0;
+
+    const framesPerSecond = 16 * (animationSpeed / 255);
+    const secondsPerFrame = 1 / framesPerSecond;
+
+    // Draw the scene repeatedly
+    function render(now) {
+        // Stop rendering once the canvas has been removed, and free its
+        // WebGL context, as only a limited number can exist, or what it
+        // used of the shared one.
+        if (!canvas.isConnected) {
+            if (shareContext) {
+                freeResources(gl, textures, buffers);
+            } else {
+                const loseContextExt = gl.getExtension('WEBGL_lose_context');
+                if (loseContextExt) loseContextExt.loseContext();
+            }
+            return;
+        }
+
+        now *= 0.001; // convert to seconds
+        deltaTime = now - then;
+        then = now;
+
+        if (shareContext) {
+            const { width, height } = canvas;
+            if (gl.canvas.width != width || gl.canvas.height != height) {
+                gl.canvas.width = width;
+                gl.canvas.height = height;
+            }
+            gl.viewport(0, 0, width, height);
+        }
+
+        drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offset, canvas.clientWidth / canvas.clientHeight);
+
+        // Handing the picture over is much faster than copying it
+        if (shareContext) output.transferFromImageBitmap(gl.canvas.transferToImageBitmap());
+
+        if (isAnimated) {
+            animationCounter += deltaTime;
+
+            if (animationCounter >= secondsPerFrame) {
+                offset = getNextOffset(offset);
+                animationCounter = 0;
+            }
+        }
+
+        cubeRotation += deltaTime * 0.5;
+
+        requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+
+}
+
+// The context shared by the previews that share one, made when first
+// needed. It isn't shown itself, so it is drawn off screen.
+let sharedContext;
+function getSharedContext() {
+    if (sharedContext == undefined) sharedContext = createContext(new OffscreenCanvas(1, 1));
+    return sharedContext;
+}
+
+// The textures and buffers of a preview in the shared context
+function freeResources(gl, textures, buffers) {
+    for (const texture of new Set(textures)) {
+        if (texture) gl.deleteTexture(texture);
+    }
+    for (const faceBuffers of buffers) {
+        for (const buffer of [faceBuffers.position, faceBuffers.normal, faceBuffers.textureCoord, faceBuffers.indices]) {
+            gl.deleteBuffer(buffer);
+        }
+    }
+}
+
+// A WebGL context for the canvas, with the shader program that draws the
+// block, or undefined if WebGL isn't available
+function createContext(canvas) {
     // Initialize the GL context
     const gl = canvas.getContext("webgl");
 
@@ -22,13 +126,16 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
         alert(
             "Unable to initialize WebGL. Your browser or machine may not support it."
         );
-        return;
+        return undefined;
     }
 
     // Set clear color to black, fully opaque
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
     // Clear the color buffer with specified clear color
     gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // Flip image pixels into the bottom-to-top order that WebGL expects.
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
     // Vertex shader program
     const vsSource = `
@@ -102,63 +209,7 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
         },
     };
 
-    const scale = isAnimated ? 4.0 : 1.0;
-
-    // Displaced faces are divided into squares of a few pixels each
-    const gridSize = getGridSize(canvas);
-
-    // Load textures and height maps
-    const [textures, heightMaps] = await Promise.all([
-        loadTextures(gl, texturePaths, getMaxTextureSize(canvas)),
-        loadHeightMaps(heightPaths, 2 * gridSize * scale, hardEdges),
-    ]);
-
-    // Here's where we call the routine that builds all the
-    // objects we'll be drawing.
-    const buffers = initBuffers(gl, heightMaps, gridSize, scale, hardEdges);
-
-    // Flip image pixels into the bottom-to-top order that WebGL expects.
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-
-    let then = 0;
-    let offset = glMatrix.vec2.fromValues(0.0, 0.0);
-    let animationCounter = 0;
-
-    const framesPerSecond = 16 * (animationSpeed / 255);
-    const secondsPerFrame = 1 / framesPerSecond;
-
-    // Draw the scene repeatedly
-    function render(now) {
-        // Stop rendering once the canvas has been removed, and free
-        // its WebGL context, as only a limited number can exist.
-        if (!canvas.isConnected) {
-            const loseContextExt = gl.getExtension('WEBGL_lose_context');
-            if (loseContextExt) loseContextExt.loseContext();
-            return;
-        }
-
-        now *= 0.001; // convert to seconds
-        deltaTime = now - then;
-        then = now;
-
-        drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offset);
-
-        if (isAnimated) {
-            animationCounter += deltaTime;
-            
-            if (animationCounter >= secondsPerFrame) {
-                offset = getNextOffset(offset);
-                animationCounter = 0;
-            }
-        }
-
-        cubeRotation += deltaTime * 0.5;
-
-        requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
-
+    return { gl, programInfo };
 }
 
 function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed, heightPaths, hardEdges) {

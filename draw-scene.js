@@ -1,4 +1,5 @@
-function drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offset) {
+// aspect is the width/height ratio of what is drawn
+function drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offset, aspect) {
     gl.clearColor(0.0, 0.0, 0.0, 0.0); // Clear to black, fully opaque
     gl.clearDepth(1.0); // Clear everything
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -10,13 +11,11 @@ function drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offs
 
     // Create a perspective matrix, a special matrix that is
     // used to simulate the distortion of perspective in a camera.
-    // Our field of view is 40 degrees, with a width/height
-    // ratio that matches the display size of the canvas
-    // and we only want to see objects between 0.1 units
+    // Our field of view is 40 degrees, with the given width/height
+    // ratio, and we only want to see objects between 0.1 units
     // and 100 units away from the camera.
 
     const fieldOfView = 45 * (Math.PI / 180); // in radians
-    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     const zNear = 0.1;
     const zFar = 100.0;
     const projectionMatrix = glMatrix.mat4.create();
