@@ -324,12 +324,14 @@ input[type=range]:hover::-webkit-slider-thumb {
 }
 
 /* The buttons in the generator's steps are as tall as the text fields, and
-   grow if their text needs two lines (like Reset's) */
+   grow if their text needs two lines (like Reset's). Their text is in the
+   middle, also for those laid out as flex boxes in a row (like Random). */
 .form-control.btn,
 .form-control-tight.btn,
 .recipe-builder-arrow,
 .recipe-builder-actions .btn {
 	min-height: var(--control-height);
+	align-items: center;
 }
 
 input {
