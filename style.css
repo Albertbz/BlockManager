@@ -305,8 +305,18 @@ select {
  * Manage Blocks
  */
 
-.w-70 {
-	width: 70%;
+/* The list of blocks takes up most of the window's width, and all of it
+   when the window is narrow. On large screens it stops growing, so what's
+   in a block isn't spread far apart. */
+.blocks-panel {
+	width: 90%;
+	max-width: 1250px;
+}
+
+@media (max-width: 1000px) {
+	.blocks-panel {
+		width: 100%;
+	}
 }
 
 .blur {
@@ -341,10 +351,41 @@ select {
 	background-color: rgba(0, 0, 0, 0.2);
 	border-radius: 5px;
 	border: 1px solid rgba(0, 0, 0, 0.6);
+	/* How an opened block is laid out depends on how wide it is */
+	container-type: inline-size;
+}
+
+/* A long name is cut short rather than pushing the ID out of the block */
+.block-title {
+	min-width: 0;
+}
+
+.block-name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.block-title .block-mod-label,
+.block-id {
+	flex-shrink: 0;
+	white-space: nowrap;
 }
 
 .block:not(:last-child) {
 	margin-bottom: 0.25rem;
+}
+
+/* The block that was just made or edited lights up briefly */
+.block-highlight {
+	animation: block-highlight 1.6s ease-out;
+}
+
+@keyframes block-highlight {
+	0%, 30% {
+		border-color: rgba(255, 255, 255, 0.9);
+		box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+	}
 }
 
 .block span {
@@ -370,44 +411,159 @@ select {
 	cursor: pointer;
 }
 
-/* The properties of an opened block keep each on one line, rather than
-   making room for the previews */
+/* An opened block shows its properties on the left, the buttons on the
+   right, and the previews in the middle of the space between them. When
+   the block is too narrow for that, the previews go below the properties
+   and buttons instead. */
+.block-content {
+	display: grid;
+	grid-template-columns: minmax(0, max-content) minmax(min-content, 1fr) auto;
+	grid-template-areas: "properties previews buttons";
+	column-gap: 0.75rem;
+	padding-bottom: 0.5rem;
+}
+
+@container (max-width: 760px) {
+	.block-content {
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-areas:
+			"properties buttons"
+			"previews previews";
+		row-gap: 0.5rem;
+	}
+
+	/* Lined up with the properties and buttons above it */
+	.block-previews {
+		flex-wrap: wrap;
+		margin-inline: 0.75rem;
+	}
+}
+
 .block-properties {
-	flex: 1 0 auto;
+	grid-area: properties;
+	align-self: start;
+	min-width: 0;
+}
+
+/* The names of the properties are dimmed, with their values lined up next
+   to them. Each value keeps to one line, and is cut short if there isn't
+   room for all of it. */
+.block-property-values {
+	display: grid;
+	grid-template-columns: max-content minmax(0, max-content);
+	column-gap: 0.75rem;
+	row-gap: 1px;
+}
+
+.block .block-property-label {
+	opacity: 0.7;
+}
+
+.block-property-value {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The yes or no properties, as chips below the others */
+.block-property-flags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 0.5rem;
+}
+
+.block .block-property-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 1px 8px 1px 5px;
+	border: 1px solid;
+	border-radius: 999px;
+	font-size: small;
 	white-space: nowrap;
 }
 
-/* The space below an opened block is padding rather than a margin, so the
-   previews can reach into it without being cut off while it animates */
-.block-content {
-	padding-bottom: 0.75rem;
+.block .chip-yes {
+	background-color: rgba(70, 170, 90, 0.35);
+	border-color: rgba(70, 170, 90, 0.8);
 }
 
-/* The previews in Manage Blocks are as tall as the opened block, down into
-   the space below it so they are in its middle, and get their sizes from
-   that when they are made */
-.block-preview,
-.block-recipe-preview {
-	margin-bottom: -0.75rem;
+.block .chip-no {
+	background-color: rgba(0, 0, 0, 0.25);
+	border-color: rgba(255, 255, 255, 0.15);
+	color: rgba(255, 255, 255, 0.65);
+}
+
+.block-property-chip svg {
+	width: 14px;
+	height: 14px;
+	fill: currentColor;
+	filter: drop-shadow(0 0 1px black);
+}
+
+/* Who made the block and its ID are dimmed, so its name stands out */
+.block .block-creator {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: small;
+	opacity: 0.7;
+}
+
+.block .block-id {
+	opacity: 0.6;
+}
+
+/* The caption of a preview is centered below it */
+.captioned-preview {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.block .preview-caption {
+	margin-top: 2px;
+	font-size: x-small;
+	opacity: 0.7;
+}
+
+/* The previews are shown on a darker stage, which fills the space between
+   the properties and the buttons */
+.block-previews {
+	grid-area: previews;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-width: 0;
+	padding: 6px 8px 4px;
+	background-color: rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(0, 0, 0, 0.3);
+	border-radius: 6px;
 }
 
 .block-preview {
-	align-self: stretch;
+	flex: 0 0 auto;
 	align-items: center;
 	justify-content: center;
-	min-height: 135px;
-	width: 135px;
+	min-height: 150px;
+	width: 150px;
 }
 
 /* The generator's preview fills the space below the textures, which
    only take up the height they need */
 .box .texture-picker {
-	flex: 0 0 auto;
+	flex: 0 1 auto;
 	height: auto;
+	min-height: 0;
 }
 
+/* With many textures, the preview keeps part of the space and the
+   textures scroll instead */
 .box .preview-part {
 	flex: 1 1 0;
+	min-height: 40%;
 	margin-top: 0.75rem;
 }
 
@@ -461,11 +617,10 @@ select {
 	position: relative;
 	display: flex;
 	flex: 0 0 auto;
-	align-self: stretch;
 	align-items: center;
 	justify-content: center;
 	width: 200px;
-	min-height: 135px;
+	min-height: 150px;
 	margin-inline: 8px;
 }
 
@@ -476,13 +631,11 @@ select {
 /* The Edit and Delete buttons of an opened block share its height, and
    are about as wide as they are tall */
 .block-buttons {
+	grid-area: buttons;
 	display: flex;
-	flex: 1;
 	flex-direction: column;
-	align-self: stretch;
 	align-items: flex-end;
 	gap: 0.5rem;
-	margin-top: 0.5rem;
 }
 
 .block-buttons .btn {

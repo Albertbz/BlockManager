@@ -1,3 +1,8 @@
+// An edited block was saved rather than a new one made
+if (new URLSearchParams(location.search).get('isEditing') == 'true') {
+    document.getElementById('title').innerText = 'Edits applied!';
+}
+
 
 document.getElementById('openInExplorer').addEventListener('click', () => {
     window.call.openGenerationLocation();
@@ -10,6 +15,6 @@ document.getElementById('generateNewBlock').addEventListener('click', () => {
 })
 
 document.getElementById('finishGenerating').addEventListener('click', () => {
-    window.call.loadManageBlocks();
+    window.call.showGeneratedBlock();
     window.close();
 })

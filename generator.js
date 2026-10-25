@@ -1124,10 +1124,15 @@ let previewHeightPaths;
 // Shown in place of the preview when there is none
 let previewMessage = 'Add a regular texture to see the preview';
 
+// The textures are also converted in the background meanwhile, so the
+// block is generated much faster
 function schedulePreview() {
     updateNoHardEdgesVisibility();
     clearTimeout(previewTimeout);
-    previewTimeout = setTimeout(updatePreview, 300);
+    previewTimeout = setTimeout(() => {
+        updatePreview();
+        window.call.prepareTextures(textureFiles);
+    }, 300);
 }
 
 function getRegularTextures() {
@@ -1254,8 +1259,10 @@ function showPreview() {
     loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, true, previewHeightPaths, !hasNoHardEdges());
 }
 
-// The texture for each side of the cube
+// The texture for each side of the cube. The textures can be in the folder
+// of an edited block, so the paths are made into URLs.
 function getPreviewTexturePaths(texturesDDS) {
+    texturesDDS = Object.fromEntries(Object.entries(texturesDDS).map(([name, filePath]) => [name, toFileUrl(filePath)]));
     let texturePaths = [];
 
     switch (Object.keys(texturesDDS).length) {

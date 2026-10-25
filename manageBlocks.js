@@ -40,6 +40,7 @@ function populateBlocksDiv() {
 
     // The old blocks are gone, so stop watching their previews
     previewObserver.disconnect();
+    blockOpeners.clear();
 
     // Add all blocks
     const scrollableDiv = makeBlocksDiv();
@@ -175,6 +176,9 @@ const previewObserver = new IntersectionObserver((entries) => {
     }
 });
 
+// How to open each shown block, by its folder path
+const blockOpeners = new Map();
+
 function makeBlockDiv(block) {
     const div = document.createElement('div');
     div.classList.add('header', 'block');
@@ -194,12 +198,12 @@ function makeBlockDiv(block) {
 
     // The space the previews have in the opened block, measured before it
     // starts growing, as they would otherwise be stretched along while it
-    // animates. They reach down into the space below the properties and
-    // buttons, so they are in the middle of the opened block.
-    let previewArea;
-    function measurePreviewArea() {
-        const height = contentDiv.clientHeight;
-        return { height, size: height - parseFloat(getComputedStyle(contentDiv).paddingBottom) };
+    // animates. They are as tall as the properties, whether next to or below
+    // them, with their captions below them.
+    const propertiesDiv = contentDiv.querySelector('div.block-properties');
+    let previewSize;
+    function measurePreviewSize() {
+        return Math.max(propertiesDiv.offsetHeight, MIN_PREVIEW_SIZE);
     }
 
     previewLoaders.set(previewDiv, {
@@ -208,8 +212,8 @@ function makeBlockDiv(block) {
             // clears it, which would make it flicker while the block opens
             // or closes. The block preview is as large as the space next to
             // the properties.
-            const { height, size } = previewArea?.height > 0 ? previewArea : measurePreviewArea();
-            for (const div of [previewDiv, recipePreviewDiv]) div.style.height = `${height}px`;
+            const size = previewSize > 0 ? previewSize : measurePreviewSize();
+            for (const div of [previewDiv, recipePreviewDiv]) div.style.height = `${size}px`;
             previewDiv.style.width = `${size}px`;
             recipePreviewDiv.style.width = `${Math.round(size * RECIPE_PREVIEW_ASPECT)}px`;
 
@@ -242,7 +246,7 @@ function makeBlockDiv(block) {
         // The preview is shown while the expanded block is on screen
         if (isExpanded) {
             contentDiv.classList.remove('d-none');
-            previewArea = measurePreviewArea();
+            previewSize = measurePreviewSize();
             previewObserver.observe(previewDiv);
         } else {
             previewObserver.unobserve(previewDiv);
@@ -288,6 +292,14 @@ function makeBlockDiv(block) {
         setBlockOpened(block, isExpanded);
     });
 
+    blockOpeners.set(block.path.toLowerCase(), () => {
+        if (!dropDownDiv.classList.contains('toggled')) {
+            setExpanded(true, false);
+            setBlockOpened(block, true);
+        }
+        return div;
+    });
+
     div.appendChild(dropDownDiv);
     div.appendChild(contentDiv);
 
@@ -303,22 +315,32 @@ function makeDropDownDiv(block) {
     dropDownDiv.classList.add('header', 'box-horizontal', 'justify-between', 'dropdown-top');
 
     const leftDiv = document.createElement('div');
-    leftDiv.classList.add('header', 'box-horizontal', 'justify-left');
+    leftDiv.classList.add('header', 'box-horizontal', 'justify-left', 'block-title');
 
     const arrow = document.createElement('img');
     arrow.classList.add('dropdown-arrow', 'align-center', 'me-2', 'ms-2');
     arrow.src = './images/arrow.png';
 
     const name = document.createElement('span');
-    name.classList.add('align-center');
+    name.classList.add('align-center', 'block-name');
     name.innerText = block.properties.Name;
+    name.title = block.properties.Name;
 
     const id = document.createElement('span');
-    id.classList.add('me-2', 'align-center');
+    id.classList.add('me-2', 'align-center', 'block-id');
     id.innerText = `[${block.properties.UniqueID}]`;
 
     leftDiv.appendChild(arrow);
     leftDiv.appendChild(name);
+
+    // Who made the block is said next to its name
+    const creatorName = block.properties.CreatorName;
+    if (creatorName) {
+        const creator = document.createElement('span');
+        creator.classList.add('align-center', 'ms-1', 'block-creator');
+        creator.innerText = `by ${creatorName}`;
+        leftDiv.appendChild(creator);
+    }
 
     const modLabel = getModLabel(block);
     if (modLabel != undefined) {
@@ -336,16 +358,22 @@ function makeDropDownDiv(block) {
 
 function makeContentDiv(block) {
     const contentDiv = document.createElement('div');
-    contentDiv.classList.add('header', 'box-horizontal', 'd-none', 'justify-between', 'block-content');
+    contentDiv.classList.add('header', 'd-none', 'block-content');
 
     const propertiesDiv = makePropertiesDiv(block);
     const previewDiv = makePreviewDiv();
     const recipePreviewDiv = makeRecipePreviewDiv(block.properties.Recipe);
     const buttonDiv = makeButtonDiv(block);
 
+    // The previews are kept together, between the properties and the
+    // buttons, or below them when the block is narrow
+    const previewsDiv = document.createElement('div');
+    previewsDiv.classList.add('block-previews');
+    previewsDiv.appendChild(makeCaptionedPreview(previewDiv, 'Block'));
+    previewsDiv.appendChild(makeCaptionedPreview(recipePreviewDiv, 'Recipe'));
+
     contentDiv.appendChild(propertiesDiv);
-    contentDiv.appendChild(previewDiv);
-    contentDiv.appendChild(recipePreviewDiv);
+    contentDiv.appendChild(previewsDiv);
     contentDiv.appendChild(buttonDiv);
 
     return contentDiv;
@@ -353,41 +381,79 @@ function makeContentDiv(block) {
 
 function makePropertiesDiv(block) {
     const propertiesDiv = document.createElement('div');
-    propertiesDiv.classList.add('box', 'ms-2', 'left', 'block-properties');
+    propertiesDiv.classList.add('ms-2', 'block-properties');
 
-    const creatorElem = document.createElement('span');
-    creatorElem.innerHTML = '<b>Creator:</b> ' + block.properties.CreatorName;
-    propertiesDiv.appendChild(creatorElem);
+    // The properties with a value, with their names and values lined up
+    const valuesDiv = document.createElement('div');
+    valuesDiv.classList.add('block-property-values');
 
-    const yieldElem = document.createElement('span');
-    yieldElem.innerHTML = '<b>Yield:</b> ' + block.properties.Yield;
-    propertiesDiv.appendChild(yieldElem);
+    const values = [
+        ['Yield', block.properties.Yield],
+        ['Broken by', getBrokenBy(block.properties.SimilarTo)],
+        ['Drops', getDrop(block.properties.UniqueIDToDrop)],
+    ];
+    // When grouped by category, the group's title already says it
+    if (!groupByCategory) values.push(['Category', getCategory(block.properties.CategoryName)]);
 
-    const brokenByElem = document.createElement('span');
-    brokenByElem.innerHTML = '<b>Broken by:</b> ' + getBrokenBy(block.properties.SimilarTo);
-    propertiesDiv.appendChild(brokenByElem);
+    for (const [label, value] of values) {
+        const labelElem = document.createElement('span');
+        labelElem.classList.add('block-property-label');
+        labelElem.innerText = label;
 
-    const categoryElem = document.createElement('span');
-    categoryElem.innerHTML = '<b>Category:</b> ' + getCategory(block.properties.CategoryName);
-    propertiesDiv.appendChild(categoryElem);
+        // Values that are cut short when the window is narrow are shown in
+        // full when pointed at
+        const valueElem = document.createElement('span');
+        valueElem.classList.add('block-property-value');
+        valueElem.innerText = value;
+        valueElem.title = value;
 
-    const dropsElem = document.createElement('span');
-    dropsElem.innerHTML = '<b>Drops:</b> ' + getDrop(block.properties.UniqueIDToDrop);
-    propertiesDiv.appendChild(dropsElem);
+        valuesDiv.appendChild(labelElem);
+        valuesDiv.appendChild(valueElem);
+    }
 
-    const movableElem = document.createElement('span');
-    movableElem.innerHTML = '<b>Movable:</b> ' + getMovable(block.properties.AllowMove);
-    propertiesDiv.appendChild(movableElem);
+    // The properties that are either yes or no, as a row of chips
+    const flagsDiv = document.createElement('div');
+    flagsDiv.classList.add('block-property-flags');
+    flagsDiv.appendChild(makePropertyChip('Movable', getMovable(block.properties.AllowMove)));
+    flagsDiv.appendChild(makePropertyChip('Crystal assist', getCrystalAssist(block.properties.AllowCrystalAssistedBlockPlacement)));
+    flagsDiv.appendChild(makePropertyChip('Rotatable', getRotatable(block.properties.AllowRotation)));
 
-    const crystalAssistElem = document.createElement('span');
-    crystalAssistElem.innerHTML = '<b>Crystal assist:</b> ' + getCrystalAssist(block.properties.AllowCrystalAssistedBlockPlacement);
-    propertiesDiv.appendChild(crystalAssistElem);
-
-    const rotatableElem = document.createElement('span');
-    rotatableElem.innerHTML = '<b>Rotatable:</b> ' + getRotatable(block.properties.AllowRotation);
-    propertiesDiv.appendChild(rotatableElem);
+    propertiesDiv.appendChild(valuesDiv);
+    propertiesDiv.appendChild(flagsDiv);
 
     return propertiesDiv;
+}
+
+// The usual check mark and cross icons, from Material Design (Apache 2.0)
+const YES_ICON_PATH = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z';
+const NO_ICON_PATH = 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
+
+// A chip with a check mark for a yes, and a cross and dimmed for a no
+function makePropertyChip(label, yesNo) {
+    const isYes = yesNo == 'Yes';
+
+    const chip = document.createElement('span');
+    chip.classList.add('block-property-chip', isYes ? 'chip-yes' : 'chip-no');
+    chip.title = `${label}: ${yesNo}`;
+    chip.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${isYes ? YES_ICON_PATH : NO_ICON_PATH}"/></svg>`;
+    chip.append(label);
+
+    return chip;
+}
+
+// A preview with a small caption at its bottom, saying what it shows
+function makeCaptionedPreview(previewDiv, caption) {
+    const div = document.createElement('div');
+    div.classList.add('captioned-preview');
+
+    const captionElem = document.createElement('span');
+    captionElem.classList.add('preview-caption');
+    captionElem.innerText = caption;
+
+    div.appendChild(previewDiv);
+    div.appendChild(captionElem);
+
+    return div;
 }
 
 function makePreviewDiv() {
@@ -399,6 +465,10 @@ function makePreviewDiv() {
 
 // The recipe preview is wider than it is tall, as recipes are often wide
 const RECIPE_PREVIEW_ASPECT = 1.5;
+
+// The smallest the block preview gets, as the properties alone may not be
+// very tall
+const MIN_PREVIEW_SIZE = 150;
 
 // Clicking the recipe shows it large, like the block preview
 function makeRecipePreviewDiv(recipe) {
@@ -930,21 +1000,23 @@ filterButtons.forEach(button => button.classList.toggle('btn-pressed', button ==
 versionSelect.classList.toggle('d-none', filterBy != 'Mods');
 
 filterButtons.forEach((button) => {
-    button.addEventListener('click', async (e) => {
-        if (prevFilterButton == button) return;
-
-        prevFilterButton.classList.remove('btn-pressed');
-        button.classList.add('btn-pressed');
-
-        prevFilterButton = button;
-        filterBy = button.innerText;
-        saveSetting('filterBy', filterBy);
-
-        versionSelect.classList.toggle('d-none', filterBy != 'Mods');
-
-        updateBlocks();
-    })
+    button.addEventListener('click', (e) => selectFilterButton(button));
 });
+
+async function selectFilterButton(button) {
+    if (prevFilterButton == button) return;
+
+    prevFilterButton.classList.remove('btn-pressed');
+    button.classList.add('btn-pressed');
+
+    prevFilterButton = button;
+    filterBy = button.innerText;
+    saveSetting('filterBy', filterBy);
+
+    versionSelect.classList.toggle('d-none', filterBy != 'Mods');
+
+    await updateBlocks();
+}
 
 
 /**
@@ -1017,4 +1089,41 @@ async function updateBlocks() {
     populateBlocksDiv();
 }
 
-updateBlocks();
+/**
+ * After making or editing a block, it is opened and scrolled to. If the
+ * filter hides it, all blocks are shown instead.
+ */
+async function showBlock(blockPath) {
+    let openBlock = blockOpeners.get(blockPath.toLowerCase());
+    if (openBlock == undefined && filterBy != 'All') {
+        await selectFilterButton([...filterButtons].find(button => button.innerText == 'All'));
+        openBlock = blockOpeners.get(blockPath.toLowerCase());
+    }
+    if (openBlock == undefined) return;
+
+    // The whole block is shown if it fits, otherwise its top
+    const blockDiv = openBlock();
+    const scrollableDiv = blockDiv.closest('.scrollable');
+    const top = getPageTop(blockDiv) - getPageTop(scrollableDiv);
+    const margin = Math.max(8, (scrollableDiv.clientHeight - blockDiv.offsetHeight) / 2);
+    scrollableDiv.scrollTop = top - margin;
+
+    blockDiv.classList.add('block-highlight');
+    blockDiv.addEventListener('animationend', () => blockDiv.classList.remove('block-highlight'), { once: true });
+}
+
+// Where the element is in the page's layout. Unlike getBoundingClientRect,
+// this isn't changed by the page scaling in when it is opened.
+function getPageTop(element) {
+    let top = 0;
+    for (let el = element; el != null; el = el.offsetParent) top += el.offsetTop;
+    return top;
+}
+
+async function init() {
+    const blockToShow = await window.call.takeBlockToShow();
+    await updateBlocks();
+    if (blockToShow != undefined) await showBlock(blockToShow);
+}
+
+init();

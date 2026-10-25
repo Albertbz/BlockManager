@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('call', {
     getAllModFolders: () => ipcRenderer.invoke('getAllModFolders'),
     generationCompletePopup: (location) => ipcRenderer.invoke('generationCompletePopup', location),
     openGenerationLocation: () => ipcRenderer.invoke('openGenerationLocation'),
+    showGeneratedBlock: () => ipcRenderer.invoke('showGeneratedBlock'),
+    takeBlockToShow: () => ipcRenderer.invoke('takeBlockToShow'),
     getAllBlocks: () => ipcRenderer.invoke('getAllBlocks'),
     displayDeleteDialog: (block) => ipcRenderer.invoke('displayDeleteDialog', block),
     refreshMainWindow: () => ipcRenderer.invoke('refreshMainWindow'),
@@ -22,6 +24,7 @@ contextBridge.exposeInMainWorld('call', {
     getTempTextures: () => ipcRenderer.invoke('getTempTextures'),
     removeBlockToDelete: () => ipcRenderer.invoke('removeBlockToDelete'),
     generatePreviewBlock: (textures, heightTextures) => ipcRenderer.invoke('generatePreviewBlock', textures, heightTextures),
+    prepareTextures: (textures) => ipcRenderer.invoke('prepareTextures', textures),
     getTextureThumbnail: (filePath) => ipcRenderer.invoke('getTextureThumbnail', filePath),
     getBlockTexturesUrl: () => ipcRenderer.invoke('getBlockTexturesUrl')
 })
