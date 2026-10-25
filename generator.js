@@ -150,145 +150,210 @@ function validateFolderNameInput(input) {
 
 
 /**
- * Texture choosing mechanism.
+ * Texture choosing mechanism. The texture type says which faces get their
+ * own texture, and every kind of texture has a slot for each of them.
 */
-const textureFiles = {
-    regular: [],
-    small: [],
-    normal: [],
-    glow: [],
-    height: []
+const textureFaces = {
+    1: [['all', 'All']],
+    2: [['sides', 'Sides'], ['updown', 'Up/down']],
+    3: [['sides', 'Sides'], ['up', 'Up'], ['down', 'Down']],
+    6: [['up', 'Up'], ['down', 'Down'], ['left', 'Left'], ['right', 'Right'], ['front', 'Front'], ['back', 'Back']]
 };
+const textureKinds = ['regular', 'small', 'normal', 'glow', 'height'];
+const textureFileExtensions = ['.png', '.jpg', '.jpeg', '.dds'];
+const textureSlotDragType = 'application/x-texture-slot';
+
+// The file in each slot. There are six of each, so textures in slots that
+// a texture type doesn't use are kept if another type is chosen again.
+const textureSlots = Object.fromEntries(textureKinds.map(kind => [kind, Array(6).fill(undefined)]));
+let textureAmount = 1;
+// The slot that the textures chosen in the file picker go to
+let pickingSlot;
 
 const loadingTemp = loadTemp();
 
-function addEventListenersToTextureSelectors() {
-    document.querySelectorAll('div.texture-selector-parent').forEach((textureSelectorDiv, i) => {
-        let textureFilesInput = textureSelectorDiv.previousElementSibling;
-
-        updateValidity(textureSelectorDiv);
-
-        const type = Object.keys(textureFiles)[i];
-        addTexturesToDiv(textureFiles[type], textureSelectorDiv);
-
-        textureFilesInput.addEventListener('change', (e) => {
-            addTexturesToDiv(textureFiles[type], textureSelectorDiv);
-        })
-    });
+function getTextureSlotsDiv(kind) {
+    return document.querySelector(`div.texture-slots[data-kind="${kind}"]`);
 }
 
-function removeTexturesInDiv(div) {
-    const textureChildDivs = div.querySelectorAll('div.texture-selector-child');
-    for (let i = 0; i < textureChildDivs.length; i++) {
-        div.removeChild(textureChildDivs[i]);
-    }
+function getTextureInput(kind) {
+    return getTextureSlotsDiv(kind).previousElementSibling;
 }
 
-function addTexturesToDiv(fileArray, selectorDiv) {
-    const input = selectorDiv.previousElementSibling;
-    removeTexturesInDiv(selectorDiv);
-
-    const newFiles = [...input.files].map(item => item.path);
-    fileArray.push(...newFiles);
-
-    // Remove any overflowing textures
-    if (fileArray.length > 6) {
-        fileArray.splice(6, fileArray.length);
-    }
-
-    const amountOfTextures = fileArray.length;
-    for (let i = 0; i < amountOfTextures; i++) {
-        const div = document.createElement('div');
-        const label = document.createElement('label');
-        const textureImg = document.createElement('img');
-        const crossImg = document.createElement('img');
-        const select = createSelect(amountOfTextures, i);
-        select.addEventListener('change', (e) => {
-            updateValidity(selectorDiv);
-            removeInvalidHighlight(input);
-            schedulePreview();
+function setUpTextureSlots() {
+    document.querySelectorAll('#textureTypeDiv input').forEach(button => {
+        button.addEventListener('click', () => {
+            if (textureAmount == button.dataset.amount) return;
+            setTextureAmount(parseInt(button.dataset.amount));
+            texturesChanged(textureKinds);
         });
+    });
 
-        div.classList.add('texture-selector-child');
-        div.appendChild(label);
-        div.appendChild(select);
-
-        label.classList.add('form-label', 'texture-label')
-        label.appendChild(textureImg);
-        label.appendChild(crossImg);
-
-        setTextureImgSrc(textureImg, fileArray[i]);
-        textureImg.dataset.path = fileArray[i];
-        textureImg.classList.add('texture-img');
-        textureImg.addEventListener('click', (e) => {
-            fileArray.splice(i, 1);
+    textureKinds.forEach(kind => {
+        const input = getTextureInput(kind);
+        input.addEventListener('change', () => {
+            addTextureFiles(pickingSlot.kind, pickingSlot.index, [...input.files].map(file => file.path));
             input.value = null;
-            addTexturesToDiv(fileArray, selectorDiv);
-            removeInvalidHighlight(input);
-        })
+        });
+    });
 
-        crossImg.src = "./images/trash-can.png";
-        crossImg.classList.add('trash-can');
+    setTextureAmount(textureAmount);
+    texturesChanged([]);
+}
 
-        if (amountOfTextures >= 6) {
-            selectorDiv.lastElementChild.classList.add('d-none');
-        }
-        else {
-            selectorDiv.lastElementChild.classList.remove('d-none');
-        }
+function setTextureAmount(amount) {
+    textureAmount = amount;
+    document.querySelectorAll('#textureTypeDiv input').forEach(button => {
+        button.classList.toggle('btn-pressed', button.dataset.amount == amount);
+    });
+    textureKinds.forEach(renderTextureSlots);
+}
 
-        selectorDiv.insertBefore(div, selectorDiv.lastElementChild);
-    }
-
-    updateValidity(selectorDiv);
-
+// The textures of the kinds have changed
+function texturesChanged(changedKinds) {
+    changedKinds.forEach(kind => removeInvalidHighlight(getTextureInput(kind)));
+    textureKinds.forEach(updateValidity);
     schedulePreview();
 }
 
-function updateValidity(textureDiv) {
-    const required = textureDiv.dataset.required;
-    const input = textureDiv.previousElementSibling;
-    const amountOfTextures = textureDiv.querySelectorAll('div.texture-selector-child').length;
-    if (required) {
-        switch (amountOfTextures) {
-            case 1:
-                input.setCustomValidity("");
-                break;
-            case 2:
-                input.setCustomValidity("");
-                break;
-            case 3:
-                input.setCustomValidity("");
-                break;
-            case 6:
-                input.setCustomValidity("");
-                break;
-            default:
-                input.setCustomValidity("Invalid field.");
-        };
-        if (!hasSameAmountAsRegular(amountOfTextures, true)) {
-            input.setCustomValidity("Invalid field.");
-        }
-    }
-    else {
-        if (!hasSameAmountAsRegular(amountOfTextures, false)) {
-            input.setCustomValidity("Invalid field.");
-        }
-        else {
-            input.setCustomValidity("");
-        }
-    }
-
-    // Two textures for the same face would overwrite each other.
-    if (hasDuplicateFaces(textureDiv)) {
-        input.setCustomValidity("Each texture must be for a different face.");
-    }
+function renderTextureSlots(kind) {
+    const slots = textureFaces[textureAmount].map(([face, faceName], index) => createTextureSlot(kind, index, faceName));
+    getTextureSlotsDiv(kind).replaceChildren(...slots);
 }
 
-function hasDuplicateFaces(textureDiv) {
-    const faces = [...textureDiv.querySelectorAll('div.texture-selector-child select')]
-        .map(select => select.value);
-    return new Set(faces).size != faces.length;
+function createTextureSlot(kind, index, faceName) {
+    const filePath = textureSlots[kind][index];
+
+    const slot = document.createElement('div');
+    slot.classList.add('texture-slot');
+
+    const square = document.createElement('div');
+    square.classList.add('texture-slot-square');
+    slot.appendChild(square);
+
+    const faceLabel = document.createElement('span');
+    faceLabel.classList.add('texture-slot-face');
+    faceLabel.innerText = faceName;
+    slot.appendChild(faceLabel);
+
+    if (filePath == undefined) {
+        square.classList.add('empty', 'custom-file-uploader');
+        square.innerText = 'Add';
+        square.title = `Add a texture for ${faceName.toLowerCase()}`;
+        square.addEventListener('click', () => {
+            pickingSlot = { kind, index };
+            getTextureInput(kind).click();
+        });
+    } else {
+        const textureImg = document.createElement('img');
+        setTextureImgSrc(textureImg, filePath);
+        textureImg.classList.add('texture-img');
+        textureImg.draggable = false;
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.classList.add('remove-texture-btn');
+        removeButton.title = 'Remove texture';
+        removeButton.draggable = false;
+        removeButton.addEventListener('click', () => {
+            textureSlots[kind][index] = undefined;
+            renderTextureSlots(kind);
+            texturesChanged([kind]);
+        });
+
+        square.append(textureImg, removeButton);
+        square.title = `${getFileName(filePath)}\nDrag to another slot to move it`;
+        square.draggable = true;
+        square.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData(textureSlotDragType, JSON.stringify({ kind, index }));
+            e.dataTransfer.effectAllowed = 'move';
+            square.classList.add('dragging');
+        });
+        square.addEventListener('dragend', () => square.classList.remove('dragging'));
+    }
+
+    // Textures from other slots and files can be dropped on it
+    square.addEventListener('dragover', (e) => {
+        const isSlot = e.dataTransfer.types.includes(textureSlotDragType);
+        if (!isSlot && !e.dataTransfer.types.includes('Files')) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = isSlot ? 'move' : 'copy';
+        square.classList.add('drag-over');
+    });
+    square.addEventListener('dragleave', () => square.classList.remove('drag-over'));
+    square.addEventListener('drop', (e) => {
+        e.preventDefault();
+        square.classList.remove('drag-over');
+
+        const draggedSlot = e.dataTransfer.getData(textureSlotDragType);
+        if (draggedSlot != '') {
+            moveTexture(JSON.parse(draggedSlot), { kind, index });
+        } else {
+            const filePaths = [...e.dataTransfer.files].map(file => file.path)
+                .filter(filePath => textureFileExtensions.some(extension => filePath.toLowerCase().endsWith(extension)));
+            addTextureFiles(kind, index, filePaths);
+        }
+    });
+
+    return slot;
+}
+
+function getFileName(filePath) {
+    return filePath.split(/[\\/]/).pop();
+}
+
+// The first file goes in the slot, and the rest in the empty slots after it
+function addTextureFiles(kind, index, filePaths) {
+    if (filePaths.length == 0) return;
+
+    const slots = textureSlots[kind];
+    const targetIndices = [index];
+    for (let i = 1; i < textureAmount; i++) {
+        const targetIndex = (index + i) % textureAmount;
+        if (slots[targetIndex] == undefined) targetIndices.push(targetIndex);
+    }
+    filePaths.slice(0, targetIndices.length).forEach((filePath, i) => slots[targetIndices[i]] = filePath);
+
+    renderTextureSlots(kind);
+    texturesChanged([kind]);
+}
+
+// The textures of the two slots swap places, which can be of different kinds
+function moveTexture(from, to) {
+    if (from.kind == to.kind && from.index == to.index) return;
+
+    const fromTexture = textureSlots[from.kind][from.index];
+    textureSlots[from.kind][from.index] = textureSlots[to.kind][to.index];
+    textureSlots[to.kind][to.index] = fromTexture;
+
+    const changedKinds = [...new Set([from.kind, to.kind])];
+    changedKinds.forEach(renderTextureSlots);
+    texturesChanged(changedKinds);
+}
+
+// Files dropped next to a slot would otherwise be opened in the window
+document.addEventListener('dragover', (e) => e.preventDefault());
+document.addEventListener('drop', (e) => e.preventDefault());
+
+// The textures of the kind, with the face each is for
+function getTextures(kind) {
+    return textureFaces[textureAmount]
+        .map(([face], index) => [textureSlots[kind][index], face])
+        .filter(([filePath]) => filePath != undefined);
+}
+
+// Regular textures are needed for every face, and the other kinds
+// either for every face or none
+function updateValidity(kind) {
+    const input = getTextureInput(kind);
+    const isRequired = getTextureSlotsDiv(kind).dataset.required;
+    const amountOfTextures = getTextures(kind).length;
+
+    if (amountOfTextures == textureAmount || (!isRequired && amountOfTextures == 0)) {
+        input.setCustomValidity('');
+    } else {
+        input.setCustomValidity(isRequired ? 'A texture is needed for every face.' : 'Either none or a texture for every face is needed.');
+    }
 }
 
 // DDS files can't be shown directly, so show a thumbnail made by main.
@@ -308,24 +373,8 @@ function toFileUrl(filePath) {
     return 'file:///' + parts.map((part, i) => i == 0 ? part : encodeURIComponent(part)).join('/');
 }
 
-function hasSameAmountAsRegular(amountOfTextures, required) {
-    const regularTexturesDiv = document.getElementById('regularTexturesDiv');
-    const textureChildren = regularTexturesDiv.querySelectorAll('div.texture-selector-child');
-    const amountOfTextureChildren = textureChildren.length;
-
-    if (required) {
-        return amountOfTextureChildren == amountOfTextures;
-    }
-    else {
-        return ((amountOfTextureChildren == amountOfTextures) && amountOfTextures > 0)
-            || amountOfTextures == 0;
-    }
-}
-
 function hasInvalidInputs(button) {
-    document.querySelectorAll('div.texture-selector-parent').forEach(function (div) {
-        updateValidity(div);
-    });
+    textureKinds.forEach(updateValidity);
 
     const currentStep = button.parentElement.parentElement.parentElement.previousElementSibling;
     const invalidInputs = currentStep.querySelectorAll(':invalid');
@@ -359,56 +408,6 @@ function addInvalidHighlight(input) {
 function removeInvalidHighlight(input) {
     input.classList.remove('highlight-invalid');
 }
-
-function createSelect(amountOfTextures, textureNum) {
-    const select = document.createElement('select');
-
-    let options = [];
-
-    switch (amountOfTextures) {
-        case 1:
-            options[0] = createOption('all', 'All');
-            break;
-        case 2:
-            options[0] = createOption('sides', 'Sides');
-            options[1] = createOption('updown', 'Up/down');
-            break;
-        case 3:
-            options[0] = createOption('sides', 'Sides');
-            options[1] = createOption('up', 'Up');
-            options[2] = createOption('down', 'Down')
-            break;
-        case 6:
-            options[0] = createOption('up', 'Up');
-            options[1] = createOption('down', 'Down');
-            options[2] = createOption('left', 'Left');
-            options[3] = createOption('right', 'Right');
-            options[4] = createOption('front', 'Front');
-            options[5] = createOption('back', 'Back');
-            break;
-        default:
-            for (let i = 0; i < amountOfTextures; i++) {
-                options[i] = createOption('invalid', 'Invalid');
-            }
-    }
-
-    for (let i = 0; i < options.length; i++) {
-        select.appendChild(options[i]);
-    }
-
-    select.value = options[textureNum].value;
-    select.classList.add('form-control', 'mb-2');
-
-    return select;
-}
-
-function createOption(value, innerText) {
-    const option = document.createElement('option');
-    option.value = value;
-    option.innerText = innerText;
-    return option;
-}
-
 
 /**
  * Automatically update yield fields
@@ -656,15 +655,14 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     const makeAnimated = formData.get('makeAnimated') == 'on' ? true : false;
 
     // Get all textures and corresponding mode
-    const amountOfRegularTextures = document.getElementById('regularTexturesDiv').childElementCount - 1;
-    const mode = amountOfRegularTextures == 6 ? 4 : amountOfRegularTextures;
-    const regularTextures = getTexturesSrcAndValue(document.getElementById('textureFilesInput'));
-    const smallTextures = getTexturesSrcAndValue(document.getElementById('smallTextureFilesInput'));
-    const normalTextures = getTexturesSrcAndValue(document.getElementById('normalTextureFilesInput'));
+    const mode = textureAmount == 6 ? 4 : textureAmount;
+    const regularTextures = getTextures('regular');
+    const smallTextures = getTextures('small');
+    const normalTextures = getTextures('normal');
     const hasNormalTextures = normalTextures.length != 0;
-    const glowTextures = getTexturesSrcAndValue(document.getElementById('glowTextureFilesInput'));
+    const glowTextures = getTextures('glow');
     const hasGlowTextures = glowTextures.length != 0;
-    const heightTextures = getTexturesSrcAndValue(document.getElementById('heightTextureFilesInput'));
+    const heightTextures = getTextures('height');
     const hasHeightTextures = heightTextures.length != 0;
 
     // Get recipe properties and picture
@@ -723,24 +721,6 @@ document.getElementById('blockForm').addEventListener('submit', async function (
         window.call.generationCompletePopup(location);
     }
 });
-
-function getTexturesSrcAndValue(textureInput) {
-    const selectorParent = textureInput.nextElementSibling;
-    const selectorChildren = selectorParent.querySelectorAll('div.texture-selector-child');
-
-    let texturesSrcAndValue = [];
-    for (let i = 0; i < selectorChildren.length; i++) {
-        texturesSrcAndValue[i] = getTextureSrcAndValue(selectorChildren[i]);
-    }
-
-    return texturesSrcAndValue;
-}
-
-function getTextureSrcAndValue(child) {
-    const img = child.firstElementChild.firstElementChild;
-    const select = child.lastElementChild;
-    return [img.dataset.path, select.value];
-}
 
 /**
  * Handle uniqueIDToDrop inputs
@@ -968,9 +948,7 @@ function getFormState() {
             if (element.type == 'button') return [element.value, element.classList.contains('btn-pressed')];
             return element.value;
         });
-    const textures = [...document.querySelectorAll('input[type=file]')]
-        .filter(input => input.nextElementSibling?.classList.contains('texture-selector-parent'))
-        .map(getTexturesSrcAndValue);
+    const textures = textureKinds.map(getTextures);
 
     return JSON.stringify([fields, textures]);
 }
@@ -1022,11 +1000,10 @@ async function loadTemp() {
 
         // Set textures.
         const textures = await window.call.getTempTextures();
-        addFilesToTextureFiles(textures.regular, textureFiles.regular);
-        addFilesToTextureFiles(textures.small, textureFiles.small);
-        addFilesToTextureFiles(textures.normal, textureFiles.normal);
-        addFilesToTextureFiles(textures.glow, textureFiles.glow);
-        addFilesToTextureFiles(textures.height, textureFiles.height);
+        const mode = tempBlock.properties.Textures?.Mode;
+        const amount = mode == 4 ? 6 : mode;
+        textureAmount = textureFaces[amount] != undefined ? amount : 1;
+        textureKinds.forEach(kind => addFilesToTextureSlots(textures[kind], textureSlots[kind]));
 
         // Set recipe. Blocks without one keep the default (not craftable).
         if (tempBlock.properties.Recipe != undefined) {
@@ -1050,7 +1027,7 @@ async function loadTemp() {
         existingLocationInput.addEventListener('click', (e) => updateSaveButton(existingLocationInput));
     };
 
-    addEventListenersToTextureSelectors();
+    setUpTextureSlots();
     handleDiscardBlockButtons(isEditing);
 }
 
@@ -1086,28 +1063,13 @@ function updateUniqueIDToDropDiv() {
     }
 }
 
-function addFilesToTextureFiles(newFiles, existingFiles) {
-    switch (newFiles.length) {
-        case 1:
-            existingFiles.push(newFiles[0])
-            break;
-        case 2:
-            existingFiles.push(newFiles[0]);
-            existingFiles.push(newFiles[1]);
-            break;
-        case 3:
-            existingFiles.push(newFiles[1]);
-            existingFiles.push(newFiles[2]);
-            existingFiles.push(newFiles[0]);
-            break;
-        case 6:
-            existingFiles.push(newFiles[5]);
-            existingFiles.push(newFiles[1]);
-            existingFiles.push(newFiles[3]);
-            existingFiles.push(newFiles[4]);
-            existingFiles.push(newFiles[2]);
-            existingFiles.push(newFiles[0]);
-            break;
+// The files of a block are named after their face, like "up_normal.dds"
+function addFilesToTextureSlots(files, slots) {
+    const faces = textureFaces[textureAmount].map(([face]) => face);
+    for (const file of files) {
+        const face = getFileName(file).toLowerCase().split(/[_.]/)[0];
+        const index = faces.indexOf(face);
+        if (index != -1) slots[index] = file;
     }
 }
 
@@ -1131,30 +1093,29 @@ function schedulePreview() {
     clearTimeout(previewTimeout);
     previewTimeout = setTimeout(() => {
         updatePreview();
-        window.call.prepareTextures(textureFiles);
+        window.call.prepareTextures(Object.fromEntries(textureKinds.map(kind =>
+            [kind, getTextures(kind).map(([filePath]) => filePath)])));
     }, 300);
 }
 
 function getRegularTextures() {
-    return getTexturesSrcAndValue(document.getElementById('textureFilesInput'));
+    return getTextures('regular');
 }
 
-// The height maps are only shown when there is one for each texture
+// The height maps are only shown when there is one for each face
 function getPreviewHeightTextures() {
-    const heightTextures = getTexturesSrcAndValue(document.getElementById('heightTextureFilesInput'));
-    const heightTexturesDiv = document.getElementById('heightTextureFilesInput').nextElementSibling;
-    const isValid = heightTextures.length == getRegularTextures().length && !hasDuplicateFaces(heightTexturesDiv);
-    return isValid ? heightTextures : [];
+    const heightTextures = getTextures('height');
+    return heightTextures.length == textureAmount ? heightTextures : [];
 }
 
 // Hard edges are only between different textures, so the option is only
 // shown when there are several
 function updateNoHardEdgesVisibility() {
-    document.getElementById('noHardEdgesDiv').classList.toggle('d-none', getRegularTextures().length <= 1);
+    document.getElementById('noHardEdgesDiv').classList.toggle('d-none', textureAmount <= 1);
 }
 
 function hasNoHardEdges() {
-    return document.getElementById('noHardEdgesInput').checked && getRegularTextures().length > 1;
+    return document.getElementById('noHardEdgesInput').checked && textureAmount > 1;
 }
 
 function getPreviewTexturesKey() {
@@ -1217,8 +1178,7 @@ showPreview();
 
 function getInvalidTexturesMessage(textures) {
     if (textures.length == 0) return 'Add a regular texture to see the preview';
-    if (![1, 2, 3, 6].includes(textures.length)) return 'Use 1, 2, 3 or 6 regular textures to see the preview';
-    if (hasDuplicateFaces(document.getElementById('regularTexturesDiv'))) return 'Give each texture a different face to see the preview';
+    if (textures.length != textureAmount) return 'Add a regular texture for every face to see the preview';
     return undefined;
 }
 

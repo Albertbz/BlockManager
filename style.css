@@ -1071,55 +1071,135 @@ select {
  * Textures
  */
 
-.texture-label {
-	position: relative;
-	top: 0;
-	left: 0;
-}
-
 .texture-img {
-	position: relative;
-	top: 0;
-	left: 0;
-	width: 80px;
-	height: 80px;
-}
-
-.texture-img:hover {
-	filter: blur(0.5px);
-	cursor: pointer;
-}
-
-.texture-img:hover+.trash-can {
 	display: block;
-}
-
-.trash-can {
 	width: 80px;
 	height: 80px;
-	position: absolute;
-	top: 0;
-	left: 0;
-	display: none;
-	pointer-events: none;
 }
 
-.texture-selector-parent {
+/* Removes the texture. A cross centered on the corner, shown when the
+   texture is hovered, so the rest can be dragged. */
+.remove-texture-btn {
+	position: absolute;
+	top: -13px;
+	right: -13px;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: none;
+	background: none;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+
+.texture-slot-square:hover .remove-texture-btn {
+	opacity: 1;
+}
+
+/* The two lines of the cross, centered in the button */
+.remove-texture-btn::before,
+.remove-texture-btn::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 19px;
+	height: 3px;
+	border-radius: 1.5px;
+	background-color: white;
+	box-shadow: 0 0 2px black;
+	transition: background-color 0.2s;
+}
+
+.remove-texture-btn::before {
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.remove-texture-btn::after {
+	transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.remove-texture-btn:hover::before,
+.remove-texture-btn:hover::after {
+	background-color: rgb(255, 70, 70);
+}
+
+.texture-slot-square .texture-img {
+	transition: filter 0.2s;
+}
+
+/* The texture darkens to show that it can be grabbed */
+.texture-slot-square:hover .texture-img {
+	filter: brightness(0.7);
+}
+
+.texture-slots {
 	display: flex;
 	flex: 0 1 auto;
 	flex-flow: row wrap;
+	gap: 6px 8px;
 	width: 100%;
+	/* Room for the crosses sticking out of the corners */
+	padding: 8px 8px 0 0;
+	box-sizing: border-box;
 }
 
-.texture-selector-child {
+.texture-slot {
 	display: flex;
-	flex: 0 1 auto;
+	flex: 0 0 auto;
 	flex-flow: column;
-	padding-right: 4px;
+	align-items: center;
 }
 
-.texture-selector-child .form-label {
+.texture-slot-square {
+	position: relative;
+	width: 80px;
+	height: 80px;
+	border-radius: 6px;
+	box-sizing: border-box;
+	cursor: grab;
+}
+
+.texture-slot-square:active {
+	cursor: grabbing;
+}
+
+.texture-slot-square.empty {
+	justify-content: center;
 	margin-bottom: 0;
+	cursor: pointer;
+}
+
+.texture-slot-square .texture-img {
+	border-radius: 6px;
+}
+
+.texture-slot-square.dragging {
+	opacity: 0.4;
+}
+
+/* Where a dragged texture or file would go */
+.texture-slot-square.drag-over {
+	outline: 2px solid rgb(0, 117, 255);
+	outline-offset: 2px;
+}
+
+.texture-slot-square.empty.drag-over {
+	background-color: rgb(0, 117, 255, 0.3);
+}
+
+.texture-slot-face {
+	margin-top: 2px;
+	font-size: 0.85rem;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
+}
+
+#textureTypeDiv .form-control {
+	flex: 1 1 0;
+	width: auto;
+	min-width: 0;
+	white-space: normal;
 }
 
 
@@ -1273,7 +1353,7 @@ input[type=file] {
 	cursor: pointer;
 }
 
-.highlight-invalid+.texture-selector-parent>.custom-file-uploader {
+.highlight-invalid+.texture-slots .custom-file-uploader {
 	border: 2px dashed red;
 }
 
