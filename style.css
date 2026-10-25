@@ -983,40 +983,33 @@ select {
 	height: 100%;
 }
 
+/* A small version of the recipe picker: blurred glass with the options as
+   buttons. Centered under the sort button. */
 .dropdown-content {
 	position: absolute;
 	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	width: 80px;
-	left: -29px;
-	top: 24px;
-	/* Same colors as the version dropdown's list */
-	background-color: rgb(40, 40, 40);
+	flex-direction: column;
+	gap: 3px;
+	box-sizing: border-box;
+	width: 96px;
+	left: -37px;
+	top: 26px;
+	padding: 4px;
+	border-radius: 8px;
+	background-color: rgb(30, 30, 30, 0.85);
+	box-shadow: 0 4px 16px rgb(0, 0, 0, 0.5);
 	z-index: 1;
-	border: 1px solid rgb(0, 0, 0, 0.8);
-	border-radius: 4px;
-	/* Keep the header's darker background inside the rounded corners */
-	overflow: hidden;
 }
 
-/* "Sort by" is a label, not an option, so it is set apart by being
-   lighter than both the options and their hover color. More specific
-   than .sort-text, so its margins don't leave an uncolored gap. */
+/* "Sort by" is a label, not an option, so it is dimmer and set apart by a
+   line, like the recipe picker's headings. More specific than .sort-text. */
 .dropdown-content .sort-header {
-	width: 100%;
-	margin: 0;
-	padding: 6px 0;
+	margin: 1px 0 1px;
+	padding-bottom: 4px;
 	text-align: center;
-	background-color: rgb(75, 75, 75);
-	border-bottom: 1px solid rgb(0, 0, 0, 0.8);
+	color: rgb(255, 255, 255, 0.75);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	cursor: default;
-}
-
-/* Space between the header and the first option. Padding rather than
-   margin, so the option's hover color fills it too. */
-.sort-header + .sort-type-btn {
-	padding-top: 4px;
 }
 
 .sort-text {
@@ -1046,14 +1039,16 @@ select {
 	position: relative;
 	width: 100%;
 	margin: 0;
-	/* Plain rows like the version dropdown's options */
-	border: none;
-	border-radius: 0;
-	background-color: transparent;
+	/* Same as the recipe picker's options */
+	border-color: rgb(0, 0, 0, 0.6);
 }
 
 .sort-type-btn:hover:not(:disabled) {
-	background-color: rgb(255, 255, 255, 0.1);
+	background-color: rgb(255, 255, 255, 0.12);
+}
+
+.sort-type-btn.selected {
+	border-color: rgb(0, 117, 255);
 }
 
 .search-btn {

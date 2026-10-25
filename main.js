@@ -4,7 +4,8 @@ const { pathToFileURL } = require('url');
 const { createDDSImage, decompressDDSImage, readDDSImage, hasDDSMipMaps, getDDSSize, extractDDSMipMaps } = require('./dds');
 const fs = require('fs');
 const os = require('os');
-const { execFileSync } = require('child_process');
+const { execFileSync, execFile } = require('child_process');
+const execFileAsync = require('util').promisify(execFile);
 const sharp = require('sharp');
 
 // Folders for temporary files. These are not part of the repository,
@@ -490,6 +491,10 @@ async function generateCustomBlock(event, location, propertiesFileContent, regul
     const backupPath = `${location}.BlockManagerOld`;
 
     try {
+        // An edited block is still the same block, so it keeps the date it was made
+        const createdMs = generationWasEdit && fs.existsSync(temp.path)
+            ? fs.statSync(temp.path).birthtimeMs : undefined;
+
         fs.rmSync(stagingPath, { recursive: true, force: true });
         await writeBlockFiles(stagingPath, propertiesFileContent,
             regularTextures, smallTextures, normalTextures, glowTextures, heightTextures);
@@ -506,6 +511,7 @@ async function generateCustomBlock(event, location, propertiesFileContent, regul
             throw err;
         }
         fs.rmSync(backupPath, { recursive: true, force: true });
+        if (createdMs != undefined) await setCreationTime(location, createdMs);
 
         // If an edited block was saved somewhere else, remove the original.
         if (generationWasEdit && fs.existsSync(temp.path)
@@ -523,6 +529,19 @@ async function generateCustomBlock(event, location, propertiesFileContent, regul
         return false;
     } finally {
         generatingWin.hide();
+    }
+}
+
+// Node can't change when a folder was created, so PowerShell does it. The block
+// is fine either way, so if this fails it just counts as made now.
+async function setCreationTime(folderPath, createdMs) {
+    try {
+        await execFileAsync('powershell', ['-NoProfile', '-NonInteractive', '-Command',
+            '(Get-Item -LiteralPath $env:BM_PATH).CreationTimeUtc = '
+            + '[DateTimeOffset]::FromUnixTimeMilliseconds([long]$env:BM_CREATED).UtcDateTime'],
+            { windowsHide: true, env: { ...process.env, BM_PATH: folderPath, BM_CREATED: String(Math.round(createdMs)) } });
+    } catch (err) {
+        console.error(err);
     }
 }
 
@@ -751,6 +770,9 @@ function addBlocksTo(blocks, blocksFolderPath) {
 
         // Add block path (for deletion)
         block.path = blockPath;
+
+        // Add when the block was made (for sorting)
+        block.createdMs = fs.statSync(blockPath).birthtimeMs;
 
         // Add properties
         try {

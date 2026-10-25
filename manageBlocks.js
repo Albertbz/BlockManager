@@ -763,18 +763,19 @@ let sortBy = {
 // Use the sorting chosen last time, if any
 try {
     const savedSortBy = JSON.parse(localStorage.getItem('sortBy'));
-    if (['Name', 'ID'].includes(savedSortBy?.type) && ['Down', 'Up'].includes(savedSortBy?.order)) {
+    if (['Name', 'ID', 'Created'].includes(savedSortBy?.type) && ['Down', 'Up'].includes(savedSortBy?.order)) {
         sortBy = savedSortBy;
     }
 } catch { }
 
 const sortTypeButtons = document.querySelectorAll('button.sort-type-btn');
 
-// Show the arrow on the chosen sort type, pointing in the chosen order
+// Mark the chosen sort type, with an arrow pointing in the chosen order
 function showSortArrow() {
     document.querySelectorAll('img.sort-arrow').forEach(img => img.remove());
 
     const button = [...sortTypeButtons].find(button => button.firstElementChild.innerText == sortBy.type);
+    sortTypeButtons.forEach(other => other.classList.toggle('selected', other == button));
     const img = document.createElement('img');
     img.classList.add('sort-arrow');
     img.src = `./images/sort-${sortBy.order.toLowerCase()}-arrow.png`;
@@ -827,6 +828,12 @@ function updateBlocksSort() {
                 const aID = a.properties.UniqueID;
                 const bID = b.properties.UniqueID;
                 return sortBy.order == 'Down' ? aID - bID : bID - aID;
+            });
+            break;
+        case 'Created':
+            // Down is oldest first, like the lowest ID first
+            blocks.sort(function (a, b) {
+                return sortBy.order == 'Down' ? a.createdMs - b.createdMs : b.createdMs - a.createdMs;
             });
             break;
     }

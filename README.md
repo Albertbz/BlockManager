@@ -14,7 +14,7 @@ can see more detailed information about the block, as well as a preview of both 
 You can also choose to edit or delete the block with the buttons to the right:
 ![Image of expanded view of block](readme_images/2.png)
 At the top you can filter by all blocks, independent blocks or blocks from mods (and then choose the game version), turn the grouping by
-category on or off, sort by name or ID, and search for a block by name. The application remembers which blocks you had open and which
+category on or off, sort by name, ID or when the block was created, and search for a block by name. The application remembers which blocks you had open and which
 filter you chose.
 
 If you ever edit a block then it will just open the Block Generator window with all values already there, and then you can just save 
