@@ -3,6 +3,7 @@ import { createRecipePreview } from "./recipePreview.js";
 import { createRecipeBuilder } from "./recipeBuilder.js";
 import { getMaterialName } from "./recipeMaterials.js";
 import "./sliderScroll.js";
+import { updateSliderFill } from "./sliderFill.js";
 import { growFromButton, setPageOutAnimation, shrinkIntoButton } from "./pageTransition.js";
 
 // The generator grows out of the button to stop creating the block (which
@@ -433,6 +434,7 @@ yieldSliderInput.addEventListener('input', function (e) {
 
 yieldNumberInput.addEventListener('input', function (e) {
     yieldSliderInput.value = e.target.value;
+    updateSliderFill(yieldSliderInput);
 });
 
 /**
@@ -984,6 +986,7 @@ async function loadTemp() {
         folderNameInputs.forEach(validateFolderNameInput);
         formElem.elements['uniqueID'].value = tempBlock.properties.UniqueID;
         formElem.elements['yieldSlider'].value = tempBlock.properties.Yield;
+        updateSliderFill(formElem.elements['yieldSlider']);
         formElem.elements['yieldNumber'].value = tempBlock.properties.Yield;
         formElem.elements['similarTo'].value = tempBlock.properties.SimilarTo;
 
@@ -1009,6 +1012,7 @@ async function loadTemp() {
         if (tempBlock.properties.AnimationSpeed != undefined) {
             formElem.elements['makeAnimated'].checked = true;
             formElem.elements['animationSpeedSlider'].value = tempBlock.properties.AnimationSpeed;
+            updateSliderFill(formElem.elements['animationSpeedSlider']);
             formElem.elements['animationSpeedNumber'].value = tempBlock.properties.AnimationSpeed;
             enableAnimation();
         }
@@ -1480,6 +1484,7 @@ animationSpeedSliderInput.addEventListener('input', function (e) {
 
 animationSpeedNumberInput.addEventListener('input', function (e) {
     animationSpeedSliderInput.value = e.target.value;
+    updateSliderFill(animationSpeedSliderInput);
 });
 
 document.getElementById('makeAnimatedInput').addEventListener('change', (e) => {

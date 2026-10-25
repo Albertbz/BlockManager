@@ -1,6 +1,7 @@
 import * as THREE from "./three/three.module.min.js";
 import { OrbitControls } from "./three/OrbitControls.js";
 import { createMaterialMesh, disposeMaterialMesh, cubeGeometry, edgesGeometry, edgeMaterial, hoveredEdgeMaterial } from "./recipeMeshes.js";
+import { updateSliderFill } from "./sliderFill.js";
 
 const EMPTY = 11; // 11 means invalid/nothing.
 
@@ -26,7 +27,7 @@ const SPACING = 1.08;
 function createRecipePreview(container, layerInput, layerValue, getMaterialLabel, texturesUrl, { isInteractive = true, shareRenderer = false } = {}) {
     const canvas = document.createElement('canvas');
     const label = document.createElement('div');
-    label.classList.add('recipe-preview-label', 'outline', 'd-none');
+    label.classList.add('recipe-preview-label', 'floating', 'outline', 'd-none');
     container.replaceChildren(canvas, label);
 
     const renderer = shareRenderer ? getSharedRenderer() : createRenderer(canvas);
@@ -139,6 +140,7 @@ function createRecipePreview(container, layerInput, layerValue, getMaterialLabel
                 layerInput.max = layerCount;
                 layerInput.value = layerCount;
                 layerInput.disabled = layerCount == 1;
+                updateSliderFill(layerInput);
             }
             controls.autoRotate = true;
             needsFraming = true;

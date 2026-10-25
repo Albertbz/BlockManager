@@ -67,7 +67,7 @@
                                     Name of block
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This is the name of the block that will
                                             show up in the game. Can not contain
                                             \ / : * ? " &lt; &gt; | or end with a period.
@@ -81,7 +81,7 @@
                                     Name of creator
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This should most likely be your own name.
                                             Can not contain \ / : * ? " &lt; &gt; |
                                             or end with a period.
@@ -95,7 +95,7 @@
                                     ID of block
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This ID has to be unique. Can be anything
                                             between 1 and 2147483648. Pressing "Random"
                                             gives you a random number in this range.
@@ -113,7 +113,7 @@
                                     Yield
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This is the amount of blocks that the player
                                             will receive when crafting the block. Can
                                             be between 1 and 50.
@@ -131,7 +131,7 @@
                                     Tool used to break
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This determines what tools can break the
                                             block. If choosing pickaxe or axe, then
                                             a sledgehammer will also work.
@@ -153,7 +153,7 @@
                                     Category name
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This can be used to group blocks in a
                                             category that is then shown in the recipes
                                             tab in the game.
@@ -167,7 +167,7 @@
                                     Block to drop
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This defines what block is dropped when
                                             the block is broken. If choosing "Custom",
                                             then you must provide the ID of the block
@@ -175,7 +175,7 @@
                                         </div>
                                     </div>
                                 </label>
-                                <div class="form-group mb-2 h-22" id="uniqueIDToDropDiv">
+                                <div class="form-group mb-2 h-control" id="uniqueIDToDropDiv">
                                     <div class="form-group form-control">
                                         <input class="form-control btn btn-pressed" type="button" value="Itself"
                                             id="uniqueIDToDropItselfInput">
@@ -195,7 +195,7 @@
                                     Allow movement after placement
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             Whether to allow movement after the block
                                             has been placed. Useful when making blocks
                                             for a VoxelAPI mod that should not be allowed
@@ -213,7 +213,7 @@
                                     Allow crystal assisted block placement
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             Whether to allow the use of crystal assisted
                                             block placement for the block. Useful if you
                                             want to make sure that only a single block can
@@ -231,7 +231,7 @@
                                     Allow rotation
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             Whether to allow the block to be placed rotated.
                                             Useful for blocks with a fixed direction (like a
                                             compass), or for blocks whose textures would tile
@@ -249,7 +249,7 @@
                                     Make animated
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             Make the block animated. If you enable this, then
                                             the textures you provide in the next step must have
                                             16 smaller images inside them. For example, for the
@@ -304,7 +304,7 @@
                                     Texture type
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             Which faces of the block get their own texture.
                                             Every kind of texture below then has a slot
                                             for each of them.
@@ -327,7 +327,7 @@
                                     Texture file(s) [2048x2048]
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             Here you must provide the texture files
                                             (in .png, .jpg or .dds format) for the block.
                                             These must be 2048x2048 pixels.
@@ -352,7 +352,7 @@
                                     Preview
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             How the block will look with the textures above.
                                             It is made again whenever they change.
                                             Click it to see it larger.
@@ -371,7 +371,7 @@
                                     Small texture file(s) [512x512]
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             These textures determine how snow accumulates
                                             on the block. The brighter the texture, the less
                                             snow accumulates. If not provided, then these will be
@@ -394,7 +394,7 @@
                                     Normal map file(s) [2048x2048]
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             If you want the block to have depth, then provide
                                             the normal map files here. Keep in mind that depth
                                             can only be seen in sunlight and is not visible
@@ -417,7 +417,7 @@
                                     Glow map file(s) [1024x1024]
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             If you want your texture to glow at all times,
                                             then provide textures with the parts that you
                                             want to glow here. Keep in mind that this glow
@@ -440,7 +440,7 @@
                                     Height map file(s) [2048x2048]
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             If you want the block to have tessellation (actual
                                             3D depth on its surface), then provide the height map
                                             files here. These should be greyscale images, where the
@@ -465,7 +465,7 @@
                                         No hard edges
                                         <div class="tooltip">
                                             <span class="questionmark">?</span>
-                                            <div class="tooltip-content d-none">
+                                            <div class="tooltip-content floating d-none">
                                                 Enable this if the textures are painted to
                                                 continue into each other where they meet, like a
                                                 top whose border runs on into the sides. The
@@ -525,7 +525,7 @@
                                     Load most recently generated recipe
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This will load the most recently generated recipe
                                             that was made in the game. To make one of these,
                                             put the recipe together the way that you want it,
@@ -546,7 +546,7 @@
                                     Select recipe manually
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             If you would rather select the recipe file
                                             generated by the game manually, then do so here.
                                             Keep in mind that this still has to be a valid recipe
@@ -561,7 +561,7 @@
                                     Build recipe
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             Build the recipe here one layer at a time, seen from
                                             above. Click a square with a + to put a material there,
                                             or a filled square to change it. Right-click a filled
@@ -606,7 +606,7 @@
                                     Recipe materials
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This is a short overview of what materials the recipe
                                             needs, as well as how many. If no recipe has been chosen,
                                             then the block will not be craftable. This is useful if
@@ -623,7 +623,7 @@
                                     Recipe layout
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This shows how the materials are put together. Drag
                                             to turn it around and scroll to zoom. Point at a
                                             block to see what it is. The layer being built in the
@@ -640,7 +640,7 @@
                                     Layers shown
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             How many of the recipe's layers are shown, from the
                                             bottom up. The layers above are only faintly shown,
                                             so the blocks inside the recipe can be seen.
@@ -657,7 +657,7 @@
                                     Show the layer being built
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             Whether to show the layer that the recipe builder
                                             is on as a see-through plane in the preview.
                                         </div>
@@ -712,7 +712,7 @@
                                     Save in existing location (default when editing)
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This option only shows up when you are editing
                                             an existing block. This will simply save the block
                                             where it already is.
@@ -726,7 +726,7 @@
                                     Save in blocks folder (default)
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             This will save the block in the blocks folder located
                                             at the path shown. This is where all individual blocks
                                             are located.
@@ -740,7 +740,7 @@
                                     Save in some mod folder
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             If you are making a block for a mod, then you can choose
                                             to save the block directly in the mod here. Simply click
                                             on the mod and choose which update you want to save it to.
@@ -755,7 +755,7 @@
                                     Save somewhere manually
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             If you want to save the block somewhere else entirely,
                                             then you can manually choose a folder to save it to here.
                                         </div>
@@ -768,7 +768,7 @@
                                     Preview
                                     <div class="tooltip">
                                         <span class="questionmark">?</span>
-                                        <div class="tooltip-content d-none">
+                                        <div class="tooltip-content floating d-none">
                                             The block and its recipe, the same way they are shown
                                             in Manage Blocks. Click on either of them to see it large.
                                         </div>

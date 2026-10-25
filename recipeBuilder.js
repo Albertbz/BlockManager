@@ -264,7 +264,7 @@ function createRecipeBuilder({ grid, layerText, downButton, upButton, clearLayer
         message?.remove();
         clearTimeout(messageTimeout);
         message = document.createElement('div');
-        message.classList.add('recipe-builder-message', 'outline');
+        message.classList.add('recipe-builder-message', 'floating', 'outline');
         message.textContent = text;
         message.style.left = `${x + 12}px`;
         message.style.top = `${y + 12}px`;
@@ -301,13 +301,13 @@ function createRecipeBuilder({ grid, layerText, downButton, upButton, clearLayer
     let resetTimeout;
     function setResetConfirming(isConfirming) {
         clearTimeout(resetTimeout);
-        resetButton.classList.toggle('confirming', isConfirming);
+        resetButton.classList.toggle('btn-danger', isConfirming);
         resetButton.textContent = isConfirming ? 'Click again to remove everything' : 'Reset';
         if (isConfirming) resetTimeout = setTimeout(() => setResetConfirming(false), 3000);
     }
 
     resetButton.addEventListener('click', () => {
-        if (!resetButton.classList.contains('confirming')) {
+        if (!resetButton.classList.contains('btn-danger')) {
             setResetConfirming(true);
             return;
         }
@@ -326,7 +326,7 @@ function createRecipeBuilder({ grid, layerText, downButton, upButton, clearLayer
     function openPicker(square, x, y, z, currentMaterial) {
         closePicker();
         picker = document.createElement('div');
-        picker.classList.add('recipe-picker', 'blur');
+        picker.classList.add('recipe-picker', 'floating', 'scrollable');
 
         if (currentMaterial != undefined) {
             const removeButton = document.createElement('button');

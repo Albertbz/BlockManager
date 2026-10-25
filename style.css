@@ -11,6 +11,12 @@
 	font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
+/* How tall the generator's buttons, text fields, dropdowns, sliders and
+   toggles are, so they line up */
+:root {
+	--control-height: 26px;
+}
+
 body {
 	margin: 0;
 	color: white;
@@ -61,11 +67,11 @@ body {
 }
 
 input:not(:focus):not(:placeholder-shown):invalid {
-	border-color: red;
+	border-color: rgb(200, 40, 40);
 }
 
 .highlight-invalid {
-	border-color: red;
+	border-color: rgb(200, 40, 40);
 }
 
 select:focus-visible,
@@ -79,10 +85,42 @@ input::-webkit-inner-spin-button {
 	margin: 0;
 }
 
+/* Sliders are a dark groove like the text fields, with a knob like the
+   toggles'. Left of the knob is the blue of pressed buttons, up to its
+   middle (--fill is how far along it is, see sliderFill.js). */
 input[type=range] {
-	height: 22px;
+	-webkit-appearance: none;
+	height: var(--control-height);
 	box-sizing: border-box;
 	margin: 0;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+	height: 8px;
+	border: 1px solid rgb(0, 0, 0, 0.8);
+	border-radius: 999px;
+	--fill-end: calc(8px + (100% - 16px) * var(--fill, 0));
+	background: linear-gradient(to right,
+		rgb(0, 117, 255) var(--fill-end), rgb(0, 0, 0, 0.4) var(--fill-end));
+}
+
+input[type=range]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	/* Centered on the track */
+	margin-top: -5px;
+	border: 1px solid rgb(0, 0, 0, 0.8);
+	border-radius: 50%;
+	background: #ddd;
+	transition: background-color 0.2s;
+}
+
+input[type=range]:hover::-webkit-slider-thumb {
+	background: #bbb;
 }
 
 .text-center {
@@ -95,6 +133,10 @@ input[type=range] {
 
 .h-22 {
 	height: 22px !important;
+}
+
+.h-control {
+	height: var(--control-height) !important;
 }
 
 .w-fit {
@@ -256,6 +298,20 @@ input[type=range] {
 	font-size: medium;
 }
 
+/* For buttons that delete or throw away something */
+.btn-danger {
+	border-color: rgb(160, 30, 30);
+	background-color: rgb(200, 40, 40, 0.6);
+}
+
+.btn-danger:hover:not(:disabled) {
+	background-color: rgb(150, 25, 25, 0.8);
+}
+
+.btn-danger:active:not(:disabled) {
+	background-color: rgb(200, 40, 40, 0.6);
+}
+
 .btn-pressed {
 	border-color: rgb(0, 74, 159) !important;
 	background-color: rgb(0, 117, 255) !important;
@@ -267,12 +323,21 @@ input[type=range] {
 	height: 44px;
 }
 
+/* The buttons in the generator's steps are as tall as the text fields, and
+   grow if their text needs two lines (like Reset's) */
+.form-control.btn,
+.form-control-tight.btn,
+.recipe-builder-arrow,
+.recipe-builder-actions .btn {
+	min-height: var(--control-height);
+}
+
 input {
 	box-sizing: border-box;
 	border: 1px solid rgb(0, 0, 0, 0.8);
 	background-color: rgb(0, 0, 0, 0.1);
 	border-radius: 4px;
-	height: 22px;
+	height: var(--control-height);
 	color: white;
 	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 	text-indent: 2px;
@@ -284,13 +349,21 @@ input::placeholder {
 }
 
 select {
-	height: 22px;
+	height: var(--control-height);
 	box-sizing: border-box;
 	color: white;
 	background-color: rgb(0, 0, 0, 0.4);
 	border: 1px solid rgb(0, 0, 0, 0.8);
 	border-radius: 4px;
 	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
+}
+
+/* The list that opens is dark like the rest of the app. Its background is
+   the dropdown's own, which can't be see-through there (white would show
+   through below the options), so the dropdown is solid while open. */
+select option,
+select:focus {
+	background-color: rgb(40, 40, 40);
 }
 
 .d-none {
@@ -334,6 +407,16 @@ select {
 	backdrop-filter: blur(5px);
 }
 
+/* Everything that floats over the page, from menus to tooltips, is a
+   darker blurred glass with a shadow */
+.floating {
+	backdrop-filter: blur(30px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 6px;
+	background-color: rgb(30, 30, 30, 0.85);
+	box-shadow: 0 4px 16px rgb(0, 0, 0, 0.5);
+}
+
 .blocks {
 	width: 100%;
 	height: fit-content;
@@ -349,7 +432,7 @@ select {
 
 .block {
 	background-color: rgba(0, 0, 0, 0.2);
-	border-radius: 5px;
+	border-radius: 6px;
 	border: 1px solid rgba(0, 0, 0, 0.6);
 	/* How an opened block is laid out depends on how wide it is */
 	container-type: inline-size;
@@ -614,7 +697,7 @@ select {
 	flex: 1 1 0;
 	min-height: 220px;
 	background-color: rgb(0, 0, 0, 0.25);
-	border-radius: 4px;
+	border-radius: 6px;
 	overflow: hidden;
 }
 
@@ -685,8 +768,6 @@ select {
 .recipe-preview-label {
 	position: absolute;
 	padding: 2px 6px;
-	background-color: rgb(0, 0, 0, 0.6);
-	border-radius: 4px;
 	white-space: nowrap;
 	pointer-events: none;
 }
@@ -750,14 +831,6 @@ select {
 
 .recipe-builder-actions .btn {
 	flex: 1 1 0;
-	padding: 5px 8px;
-	font-size: medium;
-}
-
-/* Reset has to be clicked again, which is made to stand out */
-.recipe-builder-actions .btn.confirming {
-	border-color: rgb(160, 30, 30);
-	background-color: rgb(200, 40, 40, 0.6);
 }
 
 .recipe-builder-grid {
@@ -771,7 +844,7 @@ select {
 	aspect-ratio: 1;
 	padding: 0;
 	border: 1px solid rgb(255, 255, 255, 0.15);
-	border-radius: 3px;
+	border-radius: 4px;
 	background-color: rgb(0, 0, 0, 0.3);
 	color: white;
 	cursor: pointer;
@@ -825,8 +898,6 @@ select {
 	position: fixed;
 	z-index: 20;
 	padding: 3px 7px;
-	background-color: rgb(0, 0, 0, 0.75);
-	border-radius: 4px;
 	white-space: nowrap;
 	pointer-events: none;
 	animation: fade-out 2s ease-in forwards;
@@ -849,8 +920,6 @@ select {
 	max-height: 70vh;
 	overflow-y: auto;
 	padding: 8px;
-	background-color: rgb(30, 30, 30, 0.85);
-	box-shadow: 0 4px 16px rgb(0, 0, 0, 0.5);
 }
 
 .recipe-picker-remove {
@@ -886,7 +955,7 @@ select {
 }
 
 .recipe-picker-option:hover {
-	background-color: rgb(255, 255, 255, 0.12);
+	background-color: rgb(0, 0, 0, 0.4);
 }
 
 .recipe-picker-option.selected {
@@ -983,8 +1052,8 @@ select {
 	height: 100%;
 }
 
-/* A small version of the recipe picker: blurred glass with the options as
-   buttons. Centered under the sort button. */
+/* A small version of the recipe picker, with the options as buttons.
+   Centered under the sort button. */
 .dropdown-content {
 	position: absolute;
 	display: flex;
@@ -995,9 +1064,6 @@ select {
 	left: -37px;
 	top: 26px;
 	padding: 4px;
-	border-radius: 8px;
-	background-color: rgb(30, 30, 30, 0.85);
-	box-shadow: 0 4px 16px rgb(0, 0, 0, 0.5);
 	z-index: 1;
 }
 
@@ -1041,10 +1107,6 @@ select {
 	margin: 0;
 	/* Same as the recipe picker's options */
 	border-color: rgb(0, 0, 0, 0.6);
-}
-
-.sort-type-btn:hover:not(:disabled) {
-	background-color: rgb(255, 255, 255, 0.12);
 }
 
 .sort-type-btn.selected {
@@ -1140,7 +1202,7 @@ select {
 
 .remove-texture-btn:hover::before,
 .remove-texture-btn:hover::after {
-	background-color: rgb(255, 70, 70);
+	background-color: rgb(200, 40, 40);
 }
 
 .texture-slot-square .texture-img {
@@ -1304,9 +1366,9 @@ input[type=checkbox] {
 }
 
 .checkbox {
-	width: 35px;
-	height: 22px;
-	border: 1px solid black;
+	width: 42px;
+	height: var(--control-height);
+	border: 1px solid rgb(0, 0, 0, 0.8);
 	background: rgb(0, 0, 0, 0.2);
 	transition: background .3s ease;
 	position: relative;
@@ -1326,8 +1388,8 @@ input[type=checkbox] {
 .checkbox label::before {
 	content: '';
 	display: block;
-	width: 18px;
-	height: 18px;
+	width: 20px;
+	height: 20px;
 	border-radius: 50%;
 
 	transition: all .3s ease;
@@ -1338,7 +1400,7 @@ input[type=checkbox] {
 }
 
 .checkbox input[type=checkbox]:checked+label::before {
-	left: 16px;
+	left: 18px;
 }
 
 .checkbox:has(input[type=checkbox]:checked) {
@@ -1363,7 +1425,7 @@ input[type=file] {
 	width: 80px;
 	height: 80px;
 	cursor: pointer;
-	border: 2px dashed rgb(0, 0, 0);
+	border: 2px dashed rgb(0, 0, 0, 0.8);
 	border-radius: 6px;
 	background-color: rgb(0, 0, 0, 0.2);
 	box-sizing: border-box;
@@ -1381,7 +1443,7 @@ input[type=file] {
 }
 
 .highlight-invalid+.texture-slots .custom-file-uploader {
-	border: 2px dashed red;
+	border: 2px dashed rgb(200, 40, 40);
 }
 
 
@@ -1393,8 +1455,8 @@ input[type=file] {
 	display: flex;
 	flex: 0 0 auto;
 	height: 60px;
-	border: 2px dashed rgb(0, 0, 0);
-	border-radius: 7px;
+	border: 2px dashed rgb(0, 0, 0, 0.8);
+	border-radius: 6px;
 	align-items: center;
 	justify-content: center;
 	color: rgb(255, 255, 255, 0.8);
@@ -1437,7 +1499,7 @@ ul.form-stepper {
 
 ul.form-stepper .form-stepper-title {
 	display: flex;
-	border: 1px solid black;
+	border: 1px solid rgb(0, 0, 0, 0.8);
 	border-radius: 999px;
 	padding: 5px 0px;
 	text-align: center;
@@ -1461,7 +1523,7 @@ ul.form-stepper li:not(.form-stepper-active) .form-stepper-title:active {
    state is told apart by more than the color: the current step is a
    darker blue, finished ones have a checkmark, and skipped ones (with
    something missing) are red with an exclamation mark. Steps not reached
-   are white. */
+   are dark like other buttons. */
 ul.form-stepper .form-stepper-active .form-stepper-title,
 ul.form-stepper .form-stepper-completed .form-stepper-title,
 ul.form-stepper .form-stepper-skipped .form-stepper-title {
@@ -1476,7 +1538,7 @@ ul.form-stepper .form-stepper-active .form-stepper-title {
 }
 
 ul.form-stepper .form-stepper-skipped .form-stepper-title {
-	background-color: rgb(201, 18, 18);
+	background-color: rgb(200, 40, 40);
 }
 
 /* The icons are badges on the title's corner, so they don't move its text */
@@ -1494,7 +1556,7 @@ ul.form-stepper .form-stepper-skipped .form-stepper-title::before {
 	justify-content: center;
 	width: 15px;
 	height: 15px;
-	border: 1px solid black;
+	border: 1px solid rgb(0, 0, 0, 0.8);
 	border-radius: 50%;
 	background-color: white;
 	font-size: 10px;
@@ -1509,12 +1571,13 @@ ul.form-stepper .form-stepper-completed .form-stepper-title::before {
 
 ul.form-stepper .form-stepper-skipped .form-stepper-title::before {
 	content: "!";
-	color: rgb(201, 18, 18);
+	color: rgb(200, 40, 40);
 }
 
 ul.form-stepper .form-stepper-unfinished .form-stepper-title {
-	background-color: rgb(248, 247, 255);
-	color: black;
+	background-color: rgb(0, 0, 0, 0.2);
+	color: white;
+	text-shadow: -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black;
 }
 
 .form-stepper-horizontal {
@@ -1550,9 +1613,9 @@ ul.form-stepper>li:not(:last-of-type) {
 	top: 50%;
 }
 
-/* The lines are blue up to the current step, and grey after it */
+/* The lines are blue up to the current step, and dim after it */
 .form-stepper-horizontal li:after {
-	background-color: #dee2e6;
+	background-color: rgb(0, 0, 0, 0.4);
 }
 
 .form-stepper-horizontal li.form-stepper-completed:after,
@@ -1624,7 +1687,7 @@ ul.form-stepper>li:not(:last-of-type) {
 }
 .tooltip .questionmark {
 	text-align: center;
-	border: 1px solid black;
+	border: 1px solid rgb(0, 0, 0, 0.8);
 	background-color: rgb(0, 0, 0, 0.3);
 	height: 19px;
 	width: 19px;
@@ -1635,11 +1698,8 @@ ul.form-stepper>li:not(:last-of-type) {
 
 .tooltip .tooltip-content {
 	position: absolute;
-	background-color: rgb(0, 0, 0, 0.7);
 	z-index: 2;
 	width: 175px;
-	border: 1px solid black;
-	border-radius: 10px;
 	padding: 7px;
 	top: 25px;
 	left: 0;
@@ -1652,10 +1712,6 @@ ul.form-stepper>li:not(:last-of-type) {
 .version-select {
 	height: auto;
 	cursor: pointer;
-}
-
-.version-select option {
-	background-color: rgb(40, 40, 40);
 }
 
 .mod-group-title {
