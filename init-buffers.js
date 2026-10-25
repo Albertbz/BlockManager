@@ -35,9 +35,9 @@ const UNITS_PER_CM = 2 / BLOCK_CM;
 //
 function initBuffers(gl, heightMaps = [], gridSize = 1, uvScale = 1, hardEdges = true) {
     const displacements = faces.map((_, i) => heightMaps[i] ? getDisplacement(i, heightMaps, uvScale, hardEdges) : undefined);
-    return faces.map((face, i) => {
+    return faces.map((_, i) => {
         const displacement = displacements[i];
-        return initFaceBuffers(gl, face, displacement, displacements, displacement ? gridSize : 1);
+        return initFaceBuffers(gl, i, displacement, displacements, displacement ? gridSize : 1);
     });
 }
 
@@ -63,16 +63,48 @@ function getDisplacement(faceIndex, heightMaps, uvScale, hardEdges) {
     return { faceIndex, heightMap, outward, bends, neighbours, hardCorners, uvScale };
 }
 
-function initFaceBuffers(gl, face, displacement, displacements, gridSize) {
+// A displaced face has many thousands of points, so they are made without
+// making any arrays for them, which would take far longer
+function initFaceBuffers(gl, faceIndex, displacement, displacements, gridSize) {
+    const face = faces[faceIndex];
+    const { sStep, tStep, uvSStep, uvTStep } = faceSteps[faceIndex];
+    const [x0, y0, z0] = face.corners[0];
+    const [u0, v0] = face.uvs[0];
+
     const vertexCount = (gridSize + 1) ** 2;
     const positions = new Float32Array(vertexCount * 3);
     const textureCoordinates = new Float32Array(vertexCount * 2);
     for (let j = 0; j <= gridSize; j++) {
         for (let i = 0; i <= gridSize; i++) {
             const v = j * (gridSize + 1) + i;
-            const { position, uv } = getPoint(face, displacement, displacements, i / gridSize, j / gridSize);
-            positions.set(position, v * 3);
-            textureCoordinates.set(uv, v * 2);
+            const s = i / gridSize, t = j / gridSize;
+
+            let x = x0 + s * sStep[0] + t * tStep[0];
+            let y = y0 + s * sStep[1] + t * tStep[1];
+            let z = z0 + s * sStep[2] + t * tStep[2];
+            if (displacement) {
+                // Displaced by its height, along the face's normal bent
+                // toward the edges it bends at
+                const { outward, bends } = displacement;
+                let [dx, dy, dz] = face.normal;
+                for (let k = 0; k < 4; k++) {
+                    if (!bends[k]) continue;
+                    const weight = bendWeight(getEdgeDistance(k, s, t));
+                    dx += outward[k][0] * weight;
+                    dy += outward[k][1] * weight;
+                    dz += outward[k][2] * weight;
+                }
+
+                const amount = getBlendedAmount(displacement, displacements, s, t) * UNITS_PER_CM;
+                x += dx * amount;
+                y += dy * amount;
+                z += dz * amount;
+            }
+            positions[v * 3] = x;
+            positions[v * 3 + 1] = y;
+            positions[v * 3 + 2] = z;
+            textureCoordinates[v * 2] = u0 + s * uvSStep[0] + t * uvTStep[0];
+            textureCoordinates[v * 2 + 1] = v0 + s * uvSStep[1] + t * uvTStep[1];
         }
     }
 
@@ -80,8 +112,12 @@ function initFaceBuffers(gl, face, displacement, displacements, gridSize) {
     for (let j = 0, k = 0; j < gridSize; j++) {
         for (let i = 0; i < gridSize; i++) {
             const v = j * (gridSize + 1) + i;
-            indices.set([v, v + 1, v + gridSize + 2, v, v + gridSize + 2, v + gridSize + 1], k);
-            k += 6;
+            indices[k++] = v;
+            indices[k++] = v + 1;
+            indices[k++] = v + gridSize + 2;
+            indices[k++] = v;
+            indices[k++] = v + gridSize + 2;
+            indices[k++] = v + gridSize + 1;
         }
     }
 
@@ -96,44 +132,28 @@ function initFaceBuffers(gl, face, displacement, displacements, gridSize) {
     };
 }
 
-// The point at s, t on the face (each 0 to 1), displaced by its height
-function getPoint(face, displacement, displacements, s, t) {
-    const position = bilerp(face.corners, s, t);
-    const uv = bilerp(face.uvs, s, t);
-    if (!displacement) return { position, uv };
-
-    const { outward, bends } = displacement;
-    const distances = getEdgeDistances(s, t);
-
-    let direction = face.normal;
-    for (let k = 0; k < 4; k++) {
-        if (bends[k]) direction = add(direction, scale(outward[k], bendWeight(distances[k])));
-    }
-
-    const amount = getBlendedAmount(displacement, displacements, s, t);
-    return { position: add(position, scale(direction, amount * UNITS_PER_CM)), uv };
-}
-
 // The face's own displacement (cm) at s, t, along its bend direction
 function getAmount(displacement, s, t) {
     const { heightMap, bends, hardCorners, faceIndex, uvScale } = displacement;
-    const distances = getEdgeDistances(s, t);
 
     let hardDistance = Infinity;
     for (let k = 0; k < 4; k++) {
-        if (!bends[k]) hardDistance = Math.min(hardDistance, distances[k]);
+        if (!bends[k]) hardDistance = Math.min(hardDistance, getEdgeDistance(k, s, t));
     }
 
     let cornerFade = 1;
     for (let c = 0; c < 4; c++) {
         if (!hardCorners[c]) continue;
-        const distance = Math.hypot(distances[c & 1], distances[2 + (c >> 1)]);
+        const distance = Math.hypot(getEdgeDistance(c & 1, s, t), getEdgeDistance(2 + (c >> 1), s, t));
         hardDistance = Math.min(hardDistance, distance);
         cornerFade *= smoothstep(CORNER_FADE_IN_CM, CORNER_FADE_OUT_CM, distance);
     }
 
-    const uv = bilerp(faces[faceIndex].uvs, s, t);
-    const height = sampleHeight(heightMap, uv[0] / uvScale, uv[1] / uvScale);
+    const [u0, v0] = faces[faceIndex].uvs[0];
+    const { uvSStep, uvTStep } = faceSteps[faceIndex];
+    const u = u0 + s * uvSStep[0] + t * uvTStep[0];
+    const v = v0 + s * uvSStep[1] + t * uvTStep[1];
+    const height = sampleHeight(heightMap, u / uvScale, v / uvScale);
     return DEPTH_CM * (height - heightMap.faceLevel) * cornerFade * smoothstep(0, HARD_CM, hardDistance);
 }
 
@@ -143,40 +163,47 @@ function getAmount(displacement, s, t) {
 // same displacement on all its faces.
 function getBlendedAmount(displacement, displacements, s, t) {
     const { bends, neighbours, faceIndex } = displacement;
-    const corners = faces[faceIndex].corners;
-    const distances = getEdgeDistances(s, t);
 
     // The nearest edge along s and along t (0 or 1 is also the s or t of
     // that edge), and how much each blends
     const sEdge = s < 0.5 ? 0 : 1, tEdge = t < 0.5 ? 2 : 3;
-    const edgeWeight = (k) => bends[k] ? 1 - smoothstep(0, HARD_CM, distances[k]) : 0;
-    const ws = edgeWeight(sEdge), wt = edgeWeight(tEdge);
+    const ws = bends[sEdge] ? 1 - smoothstep(0, HARD_CM, getEdgeDistance(sEdge, s, t)) : 0;
+    const wt = bends[tEdge] ? 1 - smoothstep(0, HARD_CM, getEdgeDistance(tEdge, s, t)) : 0;
 
     const own = getAmount(displacement, s, t);
     if (ws == 0 && wt == 0) return own;
 
-    // The average of the given faces at a point on all of them
-    const averageAt = (point, faceIndices) => faceIndices.reduce((sum, i) =>
-        sum + getAmount(displacements[i], ...getFaceST(i, point)), 0) / faceIndices.length;
+    // The displacement of a face at the point at s, t on this face
+    const amountAt = (otherIndex, s, t) => getAmountAt(displacements[otherIndex], faceIndex, s, t);
 
-    const sEdgeAverage = ws > 0 ? averageAt(bilerp(corners, sEdge, t), [faceIndex, neighbours[sEdge]]) : 0;
-    const tEdgeAverage = wt > 0 ? averageAt(bilerp(corners, s, tEdge - 2), [faceIndex, neighbours[tEdge]]) : 0;
+    const sEdgeAverage = ws > 0 ? (amountAt(faceIndex, sEdge, t) + amountAt(neighbours[sEdge], sEdge, t)) / 2 : 0;
+    const tEdgeAverage = wt > 0 ? (amountAt(faceIndex, s, tEdge - 2) + amountAt(neighbours[tEdge], s, tEdge - 2)) / 2 : 0;
     const cornerAverage = ws > 0 && wt > 0
-        ? averageAt(bilerp(corners, sEdge, tEdge - 2), [faceIndex, neighbours[sEdge], neighbours[tEdge]]) : 0;
+        ? (amountAt(faceIndex, sEdge, tEdge - 2) + amountAt(neighbours[sEdge], sEdge, tEdge - 2) + amountAt(neighbours[tEdge], sEdge, tEdge - 2)) / 3
+        : 0;
 
     return own * (1 - ws) * (1 - wt) + sEdgeAverage * ws * (1 - wt) + tEdgeAverage * (1 - ws) * wt + cornerAverage * ws * wt;
 }
 
-// The s, t on a face of a point on it
-function getFaceST(faceIndex, point) {
-    const face = faces[faceIndex];
-    const relative = sub(point, face.corners[0]);
-    return [dot(relative, getAxis(face, 1)) / 2, dot(relative, getAxis(face, 3)) / 2];
+// The displacement at the point at s, t on the face pointFaceIndex
+function getAmountAt(displacement, pointFaceIndex, s, t) {
+    if (displacement.faceIndex == pointFaceIndex) return getAmount(displacement, s, t);
+
+    // The point relative to the displaced face's first corner, and the
+    // s, t of it on that face
+    const pointFace = faces[pointFaceIndex], { sStep, tStep } = faceSteps[pointFaceIndex];
+    const face = faces[displacement.faceIndex], { sAxis, tAxis } = faceSteps[displacement.faceIndex];
+    const rx = pointFace.corners[0][0] + s * sStep[0] + t * tStep[0] - face.corners[0][0];
+    const ry = pointFace.corners[0][1] + s * sStep[1] + t * tStep[1] - face.corners[0][1];
+    const rz = pointFace.corners[0][2] + s * sStep[2] + t * tStep[2] - face.corners[0][2];
+    return getAmount(displacement,
+        (rx * sAxis[0] + ry * sAxis[1] + rz * sAxis[2]) / 2,
+        (rx * tAxis[0] + ry * tAxis[1] + rz * tAxis[2]) / 2);
 }
 
-// The distances (cm) from s, t to the edges -s, +s, -t and +t
-function getEdgeDistances(s, t) {
-    return [s, 1 - s, t, 1 - t].map(d => d * BLOCK_CM);
+// The distance (cm) from s, t to edge k: -s, +s, -t or +t
+function getEdgeDistance(k, s, t) {
+    return (k == 0 ? s : k == 1 ? 1 - s : k == 2 ? t : 1 - t) * BLOCK_CM;
 }
 
 // 1 at the edge, 0 from BEND_CM away
@@ -190,28 +217,37 @@ function sampleHeight(heightMap, u, v) {
     const x = u * size - 0.5, y = v * size - 0.5;
     const x0 = Math.floor(x), y0 = Math.floor(y);
     const fx = x - x0, fy = y - y0;
-    const wrap = (n) => ((n % size) + size) % size;
-    const at = (px, py) => data[wrap(py) * size + wrap(px)];
-    const top = at(x0, y0) * (1 - fx) + at(x0 + 1, y0) * fx;
-    const bottom = at(x0, y0 + 1) * (1 - fx) + at(x0 + 1, y0 + 1) * fx;
-    return top * (1 - fy) + bottom * fy;
+    const left = wrap(x0, size), right = wrap(x0 + 1, size);
+    const top = wrap(y0, size) * size, bottom = wrap(y0 + 1, size) * size;
+    const upper = data[top + left] * (1 - fx) + data[top + right] * fx;
+    const lower = data[bottom + left] * (1 - fx) + data[bottom + right] * fx;
+    return upper * (1 - fy) + lower * fy;
+}
+
+function wrap(n, size) {
+    return ((n % size) + size) % size;
 }
 
 // Normals of the displaced surface, from the neighbouring points
 // (only those on the face itself at its border)
 function getNormals(positions, gridSize, faceNormal) {
     const normals = new Float32Array(positions.length);
-    const at = (i, j) => {
-        const v = (j * (gridSize + 1) + i) * 3;
-        return [positions[v], positions[v + 1], positions[v + 2]];
-    };
+    const row = gridSize + 1;
     for (let j = 0; j <= gridSize; j++) {
         for (let i = 0; i <= gridSize; i++) {
-            const alongS = sub(at(Math.min(i + 1, gridSize), j), at(Math.max(i - 1, 0), j));
-            const alongT = sub(at(i, Math.min(j + 1, gridSize)), at(i, Math.max(j - 1, 0)));
-            let normal = normalize(cross(alongS, alongT));
-            if (dot(normal, faceNormal) < 0) normal = scale(normal, -1);
-            normals.set(normal, (j * (gridSize + 1) + i) * 3);
+            const right = (j * row + Math.min(i + 1, gridSize)) * 3, left = (j * row + Math.max(i - 1, 0)) * 3;
+            const up = (Math.min(j + 1, gridSize) * row + i) * 3, down = (Math.max(j - 1, 0) * row + i) * 3;
+            const ax = positions[right] - positions[left], ay = positions[right + 1] - positions[left + 1], az = positions[right + 2] - positions[left + 2];
+            const bx = positions[up] - positions[down], by = positions[up + 1] - positions[down + 1], bz = positions[up + 2] - positions[down + 2];
+
+            const nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx;
+            let length = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+            if (nx * faceNormal[0] + ny * faceNormal[1] + nz * faceNormal[2] < 0) length = -length;
+
+            const v = (j * row + i) * 3;
+            normals[v] = nx / length;
+            normals[v + 1] = ny / length;
+            normals[v + 2] = nz / length;
         }
     }
     return normals;
@@ -239,21 +275,27 @@ function getFaceIndex(normal) {
     return faces.findIndex(face => dot(face.normal, normal) > 0.5);
 }
 
-function bilerp(corners, s, t) {
-    return corners[0].map((_, k) =>
-        corners[0][k] * (1 - s) * (1 - t) + corners[1][k] * s * (1 - t) + corners[2][k] * s * t + corners[3][k] * (1 - s) * t);
-}
-
 function smoothstep(edge0, edge1, x) {
     const t = Math.min(Math.max((x - edge0) / (edge1 - edge0), 0), 1);
     return t * t * (3 - 2 * t);
 }
 
-const add = (a, b) => a.map((x, k) => x + b[k]);
 const sub = (a, b) => a.map((x, k) => x - b[k]);
 const scale = (a, f) => a.map(x => x * f);
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const normalize = (a) => scale(a, 1 / (Math.hypot(...a) || 1));
+
+// The steps from each face's first corner to its opposite edges along s and
+// t, in position and in texture coordinates, and the unit s and t axes. The
+// faces are squares, so moving along these is the same as interpolating the
+// corners.
+const faceSteps = faces.map(face => ({
+    sStep: sub(face.corners[1], face.corners[0]),
+    tStep: sub(face.corners[3], face.corners[0]),
+    uvSStep: [face.uvs[1][0] - face.uvs[0][0], face.uvs[1][1] - face.uvs[0][1]],
+    uvTStep: [face.uvs[3][0] - face.uvs[0][0], face.uvs[3][1] - face.uvs[0][1]],
+    sAxis: getAxis(face, 1),
+    tAxis: getAxis(face, 3),
+}));
 
 export { initBuffers };

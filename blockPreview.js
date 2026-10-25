@@ -477,9 +477,31 @@ function decodeBC4(bytes, size) {
     return data;
 }
 
+// The value that would be in the middle if sorted, found by only sorting
+// the part it is in again and again (much faster than sorting it all)
 function getMedian(data) {
-    const sorted = Float32Array.from(data).sort();
-    return sorted[sorted.length >> 1];
+    const values = Float32Array.from(data);
+    const middle = values.length >> 1;
+    let low = 0, high = values.length - 1;
+    while (low < high) {
+        // Smaller values than the pivot go before larger ones
+        const pivot = values[(low + high) >> 1];
+        let i = low, j = high;
+        while (i <= j) {
+            while (values[i] < pivot) i++;
+            while (values[j] > pivot) j--;
+            if (i <= j) {
+                [values[i], values[j]] = [values[j], values[i]];
+                i++;
+                j--;
+            }
+        }
+
+        if (middle <= j) high = j;
+        else if (middle >= i) low = i;
+        else break;
+    }
+    return values[middle];
 }
 
 export { loadCanvas, showLargeView }
