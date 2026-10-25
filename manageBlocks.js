@@ -234,6 +234,8 @@ function makeBlockDiv(block) {
             for (const div of [previewDiv, recipePreviewDiv]) div.style.height = `${size}px`;
             previewDiv.style.width = `${size}px`;
             recipePreviewDiv.style.width = `${Math.round(size * RECIPE_PREVIEW_ASPECT)}px`;
+            // Which the spacing around them depends on
+            contentDiv.querySelector('div.block-previews').style.setProperty('--preview-size', `${size}px`);
 
             const canvas = makePreviewCanvas(size);
             previewDiv.replaceChildren(canvas);

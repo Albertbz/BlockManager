@@ -1,4 +1,4 @@
-import { loadCanvas } from "./blockPreview.js";
+import { loadCanvas, showLargeView } from "./blockPreview.js";
 import { createRecipePreview } from "./recipePreview.js";
 import { createRecipeBuilder } from "./recipeBuilder.js";
 import { getMaterialName } from "./recipeMaterials.js";
@@ -73,6 +73,14 @@ const navigateToFormStep = (stepNumber) => {
     }
 
     updateSubmitButtonState();
+
+    // The finalization previews only exist while they are shown, as each
+    // one takes up a WebGL context
+    if (stepNumber == 4) {
+        showFinalPreviews();
+    } else {
+        removeFinalPreviews();
+    }
 };
 
 function formStepSkipped(stepNumber) {
@@ -523,13 +531,7 @@ function updateRecipeMaterials(updateBuilder = true) {
     const recipePropertiesTextarea = document.getElementById('recipePropertiesTextarea');
     const recipeMaterialsDiv = document.getElementById('recipeMaterialsDiv');
 
-    const recipePropertiesRaw = recipePropertiesTextarea.value;
-    let recipeProperties;
-    try {
-        recipeProperties = JSON.parse(recipePropertiesRaw.replace('"Recipe": ', '').replace('},', '}'));
-    } catch (err) {
-        console.error(err);
-    }
+    const recipeProperties = getRecipe(true);
 
     const recipeLayoutElems = document.querySelectorAll('.recipe-layout');
     recipeLayoutElems.forEach(elem => elem.classList.add('d-none'));
@@ -566,6 +568,17 @@ function updateRecipeMaterials(updateBuilder = true) {
         recipePreview.setRecipe(recipeProperties);
     }
 
+}
+
+// The recipe written in the recipe text, if it can be read
+function getRecipe(logErrors = false) {
+    const recipePropertiesRaw = document.getElementById('recipePropertiesTextarea').value;
+    try {
+        return JSON.parse(recipePropertiesRaw.replace('"Recipe": ', '').replace('},', '}'));
+    } catch (err) {
+        if (logErrors) console.error(err);
+        return undefined;
+    }
 }
 
 function removeInvalidMaterials(materialsArray) {
@@ -1139,11 +1152,13 @@ async function updatePreview() {
         previewTexturePaths = undefined;
         previewMessage = invalidMessage;
         showPreview();
+        updateFinalBlockPreview();
         return;
     }
 
     isGeneratingPreview = true;
     showPreviewMessage('Generating preview...');
+    updateFinalBlockPreview();
 
     const previewDDS = await window.call.generatePreviewBlock(textures, heightTextures);
     isGeneratingPreview = false;
@@ -1158,6 +1173,7 @@ async function updatePreview() {
     previewMessage = 'The preview could not be made';
     previewHeightPaths = previewDDS == undefined || heightTextures.length == 0 ? [] : getPreviewTexturePaths(previewDDS.heights);
     showPreview();
+    updateFinalBlockPreview();
 }
 
 // The animation settings only change how the preview is shown
@@ -1217,6 +1233,140 @@ function showPreview() {
     let animationSpeed = document.getElementById('animationSpeedNumberInput').value;
 
     loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, true, previewHeightPaths, !hasNoHardEdges());
+}
+
+/**
+ * Handle the previews in the finalization step. They show the block and its
+ * recipe the same way as in Manage Blocks.
+ */
+const finalPreviewsDiv = document.getElementById('finalPreviewsDiv');
+const finalBlockPreviewDiv = document.getElementById('finalBlockPreviewDiv');
+const finalRecipePreviewDiv = document.getElementById('finalRecipePreviewDiv');
+
+// The recipe is wider than it is tall, like in Manage Blocks, and neither
+// gets smaller than the smallest previews there
+const FINAL_RECIPE_PREVIEW_ASPECT = 1.5;
+const MIN_FINAL_PREVIEW_SIZE = 150;
+let finalPreviewSize = MIN_FINAL_PREVIEW_SIZE;
+
+// The previews are as tall as the space left down to the bottom of the step,
+// unless they would then not fit next to each other
+function measureFinalPreviewSize() {
+    const scrollArea = finalPreviewsDiv.parentElement;
+    const scrollAreaStyle = getComputedStyle(scrollArea);
+    const style = getComputedStyle(finalPreviewsDiv);
+    const caption = finalPreviewsDiv.querySelector('.preview-caption');
+    const captionStyle = getComputedStyle(caption);
+
+    const bottom = scrollArea.getBoundingClientRect().bottom - parseFloat(scrollAreaStyle.paddingBottom)
+        - parseFloat(scrollAreaStyle.borderBottomWidth);
+    const height = bottom - finalPreviewsDiv.getBoundingClientRect().top
+        - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)
+        - parseFloat(style.borderTopWidth) - parseFloat(style.borderBottomWidth)
+        - caption.offsetHeight - parseFloat(captionStyle.marginTop);
+    // The space on the sides changes with their size, so it's counted below
+    const width = finalPreviewsDiv.clientWidth;
+
+    // They are spread out evenly by how large they look, which needs them
+    // to be a quarter of their height apart, and from the sides (see the
+    // .block-previews style)
+    const size = Math.min(height, width / 2.75);
+    return Math.max(Math.floor(size), MIN_FINAL_PREVIEW_SIZE);
+}
+
+function setFinalPreviewSize(size) {
+    finalPreviewSize = size;
+    finalBlockPreviewDiv.style.width = `${size}px`;
+    finalBlockPreviewDiv.style.height = `${size}px`;
+    finalRecipePreviewDiv.style.width = `${Math.round(size * FINAL_RECIPE_PREVIEW_ASPECT)}px`;
+    finalRecipePreviewDiv.style.height = `${size}px`;
+    finalPreviewsDiv.style.setProperty('--preview-size', `${size}px`);
+}
+
+// They are made again in their new size when the window is resized
+new ResizeObserver(() => {
+    if (!isFinalStepShown() || measureFinalPreviewSize() == finalPreviewSize) return;
+    showFinalPreviews();
+}).observe(finalPreviewsDiv.parentElement);
+
+// Clicking the recipe shows it large, like the block preview
+finalRecipePreviewDiv.addEventListener('click', () => {
+    const recipe = getRecipe();
+    if (!isCraftable(recipe)) return;
+
+    showLargeView(finalRecipePreviewDiv, () => {
+        const largeDiv = document.createElement('div');
+        largeDiv.classList.add('large-recipe-preview');
+        loadFinalRecipePreview(largeDiv, recipe);
+        return largeDiv;
+    });
+});
+
+// The preview may change while the finalization step is shown, like when it
+// is done being made after going there
+function updateFinalBlockPreview() {
+    if (isFinalStepShown()) showFinalBlockPreview();
+}
+
+function isFinalStepShown() {
+    return !document.getElementById('step-4').classList.contains('d-none');
+}
+
+function showFinalPreviews() {
+    setFinalPreviewSize(measureFinalPreviewSize());
+    showFinalBlockPreview();
+    showFinalRecipePreview();
+}
+
+// Removing them also stops them and frees their WebGL contexts
+function removeFinalPreviews() {
+    finalBlockPreviewDiv.replaceChildren();
+    finalRecipePreviewDiv.replaceChildren();
+}
+
+function showFinalBlockPreview() {
+    if (isGeneratingPreview || previewTexturePaths == undefined) {
+        const message = document.createElement('span');
+        message.classList.add('outline', 'preview-message');
+        message.innerText = isGeneratingPreview ? 'Generating preview...' : previewMessage;
+        finalBlockPreviewDiv.replaceChildren(message);
+        return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = finalPreviewSize;
+    canvas.height = finalPreviewSize;
+    finalBlockPreviewDiv.replaceChildren(canvas);
+
+    const isAnimated = document.getElementById('makeAnimatedInput').checked;
+    const animationSpeed = document.getElementById('animationSpeedNumberInput').value;
+
+    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, true, previewHeightPaths, !hasNoHardEdges());
+}
+
+function showFinalRecipePreview() {
+    const recipe = getRecipe();
+    finalRecipePreviewDiv.classList.toggle('enlargeable', isCraftable(recipe));
+    loadFinalRecipePreview(finalRecipePreviewDiv, recipe);
+}
+
+function isCraftable(recipe) {
+    return Array.isArray(recipe?.Array) && recipe.Array.some(material => material != 11);
+}
+
+// The recipe, turning by itself like the block preview. Blocks without a
+// recipe can't be crafted, which is said instead.
+function loadFinalRecipePreview(div, recipe) {
+    if (!isCraftable(recipe)) {
+        const textElem = document.createElement('span');
+        textElem.innerHTML = '<em>Not craftable</em>';
+        div.replaceChildren(textElem);
+        return;
+    }
+
+    const preview = createRecipePreview(div, undefined, undefined,
+        material => getMaterialName(material, 1), blockTexturesUrl, { isInteractive: false });
+    preview.setRecipe(recipe);
 }
 
 // The texture for each side of the cube. The textures can be in the folder

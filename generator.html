@@ -763,6 +763,27 @@
                                 </label>
                                 <input class="form-control btn btn-path" type="button" name="saveBlockManually"
                                     id="saveBlockManuallyInput" webkitdirectory directory value="Click here to browse">
+
+                                <label class="form-label mt-2">
+                                    Preview
+                                    <div class="tooltip">
+                                        <span class="questionmark">?</span>
+                                        <div class="tooltip-content d-none">
+                                            The block and its recipe, the same way they are shown
+                                            in Manage Blocks. Click on either of them to see it large.
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="block-previews final-previews" id="finalPreviewsDiv">
+                                    <div class="captioned-preview">
+                                        <div class="block-preview center" id="finalBlockPreviewDiv"></div>
+                                        <span class="preview-caption">Block</span>
+                                    </div>
+                                    <div class="captioned-preview">
+                                        <div class="block-recipe-preview" id="finalRecipePreviewDiv"></div>
+                                        <span class="preview-caption">Recipe</span>
+                                    </div>
+                                </div>
                             </div>
 
                         </div>

@@ -523,24 +523,48 @@ select {
 	align-items: center;
 }
 
-.block .preview-caption {
+.block .preview-caption,
+.final-previews .preview-caption {
 	margin-top: 2px;
 	font-size: x-small;
 	opacity: 0.7;
 }
 
+/* The Finalization previews are much larger, so their captions are too */
+.final-previews .preview-caption {
+	font-size: small;
+}
+
 /* The previews are shown on a darker stage, which fills the space between
-   the properties and the buttons */
+   the properties and the buttons. They are spread out evenly by how large
+   they look, with as much space between them as to the sides. The recipe
+   is drawn in the middle of a wider area, and looks about as wide as it is
+   tall, so it sticks out into the space around it by a quarter of its
+   height on both sides. --preview-size is the height of the previews. */
 .block-previews {
+	--preview-size: 150px;
+	--preview-overhang: calc(var(--preview-size) * 0.25);
 	grid-area: previews;
 	display: flex;
-	justify-content: center;
+	justify-content: space-evenly;
 	align-items: center;
+	column-gap: var(--preview-overhang);
 	min-width: 0;
-	padding: 6px 8px 4px;
+	padding: 6px var(--preview-overhang) 4px;
 	background-color: rgba(0, 0, 0, 0.2);
 	border: 1px solid rgba(0, 0, 0, 0.3);
 	border-radius: 6px;
+}
+
+/* The previews in the Finalization step, below where to save the block,
+   filling the space down to the bottom */
+.final-previews {
+	flex: 1 0 auto;
+	flex-wrap: wrap;
+}
+
+.block-previews .block-recipe-preview {
+	margin-inline: calc(var(--preview-overhang) * -1);
 }
 
 .block-preview {
@@ -621,7 +645,6 @@ select {
 	justify-content: center;
 	width: 200px;
 	min-height: 150px;
-	margin-inline: 8px;
 }
 
 .large-recipe-preview {
@@ -1295,22 +1318,31 @@ input[type=checkbox] {
 	border-radius: 999px;
 }
 
+/* The label covers the whole toggle so all of it is clickable */
 .checkbox label {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	border-radius: inherit;
+	cursor: pointer;
+}
+
+/* The knob */
+.checkbox label::before {
+	content: '';
 	display: block;
 	width: 18px;
 	height: 18px;
 	border-radius: 50%;
 
 	transition: all .3s ease;
-	cursor: pointer;
 	position: absolute;
 	top: 2px;
-	z-index: 1;
 	left: 2px;
 	background: #ddd;
 }
 
-.checkbox input[type=checkbox]:checked+label {
+.checkbox input[type=checkbox]:checked+label::before {
 	left: 16px;
 }
 
