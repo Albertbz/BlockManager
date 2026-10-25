@@ -478,7 +478,7 @@ async function getTextureThumbnail(event, filePath) {
 
 async function generateCustomBlock(event, location, propertiesFileContent, regularTextures, smallTextures, normalTextures, glowTextures, heightTextures) {
     // Editing is over once the block is made, so remember it for the popup
-    generationWasEdit = temp != undefined;
+    generationWasEdit = temp != undefined && !temp.isDuplicate;
     const title = generationWasEdit ? 'Applying edits...' : 'Generating...';
     await generatingWin.webContents.executeJavaScript(`document.getElementById('title').innerText = ${JSON.stringify(title)}`).catch(() => { });
     showPopup(generatingWin);
@@ -508,7 +508,7 @@ async function generateCustomBlock(event, location, propertiesFileContent, regul
         fs.rmSync(backupPath, { recursive: true, force: true });
 
         // If an edited block was saved somewhere else, remove the original.
-        if (temp != undefined && fs.existsSync(temp.path)
+        if (generationWasEdit && fs.existsSync(temp.path)
             && path.resolve(temp.path).toLowerCase() != path.resolve(location).toLowerCase()) {
             fs.rmSync(temp.path, { recursive: true });
         }
@@ -880,12 +880,13 @@ async function selectFolder() {
 
 // The block being edited. Its textures are used straight from its folder,
 // and copied unchanged into the saved block unless they are replaced (see
-// makeTexture). The old block is only removed once the new one is made.
+// makeTexture). The old block is only removed once the new one is made,
+// unless it is being duplicated, in which case it is kept.
 let temp = undefined;
-async function saveBlockInTemp(event, block) {
+async function saveBlockInTemp(event, block, isDuplicate = false) {
     try {
         fs.readdirSync(path.join(block.path, 'Textures'));
-        temp = block;
+        temp = { ...block, isDuplicate };
         return true;
     } catch (err) {
         console.error(err);

@@ -18,7 +18,7 @@ contextBridge.exposeInMainWorld('call', {
     loadGenerator: () => ipcRenderer.invoke('loadGenerator'),
     loadManageBlocks: () => ipcRenderer.invoke('loadManageBlocks'),
     displayDiscardDialog: (isEditing) => ipcRenderer.invoke('displayDiscardDialog', isEditing),
-    saveBlockInTemp: (block) => ipcRenderer.invoke('saveBlockInTemp', block),
+    saveBlockInTemp: (block, isDuplicate) => ipcRenderer.invoke('saveBlockInTemp', block, isDuplicate),
     clearTemp: () => ipcRenderer.invoke('clearTemp'),
     getTemp: () => ipcRenderer.invoke('getTemp'),
     getTempTextures: () => ipcRenderer.invoke('getTempTextures'),

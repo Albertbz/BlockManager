@@ -591,6 +591,15 @@ function makeButtonDiv(block) {
 
     buttonDiv.appendChild(editButton);
 
+    // Opens the generator with a copy of the block, saved as a new block
+    const duplicateButton = makeIconButton('Duplicate', DUPLICATE_ICON_PATH);
+    duplicateButton.addEventListener('click', async (e) => {
+        const success = await window.call.saveBlockInTemp(block, true);
+        if (success) window.call.loadGenerator();
+    });
+
+    buttonDiv.appendChild(duplicateButton);
+
     const deleteButton = makeIconButton('Delete', DELETE_ICON_PATH);
     deleteButton.addEventListener('click', async (e) => {
         await window.call.displayDeleteDialog(block);
@@ -601,8 +610,9 @@ function makeButtonDiv(block) {
     return buttonDiv;
 }
 
-// The usual pencil and trash can icons, from Material Design (Apache 2.0)
+// The usual pencil, copy and trash can icons, from Material Design (Apache 2.0)
 const EDIT_ICON_PATH = 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z';
+const DUPLICATE_ICON_PATH = 'M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z';
 const DELETE_ICON_PATH = 'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z';
 
 // A button showing an icon, which is named when pointed at

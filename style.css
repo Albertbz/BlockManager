@@ -651,7 +651,7 @@ select {
 	position: relative;
 }
 
-/* The Edit and Delete buttons of an opened block share its height, and
+/* The Edit, Duplicate and Delete buttons of an opened block share its height, and
    are about as wide as they are tall */
 .block-buttons {
 	grid-area: buttons;

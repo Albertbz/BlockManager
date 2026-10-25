@@ -968,12 +968,14 @@ function getFormState() {
 
 
 /**
- * Load block in temp if there is one.
+ * Load block in temp if there is one. It is either being edited, or
+ * duplicated, which makes a new block starting from a copy of it.
  */
 async function loadTemp() {
     const tempBlock = await window.call.getTemp();
-    const isEditing = tempBlock != undefined;
-    if (isEditing) {
+    const isDuplicating = tempBlock?.isDuplicate == true;
+    const isEditing = tempBlock != undefined && !isDuplicating;
+    if (tempBlock != undefined) {
         const formElem = document.forms['blockForm'];
 
         // Set all properties
@@ -1025,12 +1027,18 @@ async function loadTemp() {
             updateRecipeMaterials();
         }
 
-        // Change submit button text.
-        document.getElementById('submitButton').innerText = 'Save changes';
+        if (isDuplicating) {
+            // The copy needs its own unique ID, which also
+            // keeps it from being saved over the original.
+            uniqueIDButton.click();
+        } else {
+            // Change submit button text.
+            document.getElementById('submitButton').innerText = 'Save changes';
+        }
 
         // Show save location (existing location) and put
         // path in it.
-        showExistingLocation();
+        showExistingLocation(isDuplicating);
 
         const existingLocationInput = document.getElementById('existingLocationInput');
         existingLocationInput.value = tempBlock.path.substring(0, tempBlock.path.lastIndexOf("\\"));
@@ -1044,8 +1052,14 @@ async function loadTemp() {
     handleDiscardBlockButtons(isEditing);
 }
 
-function showExistingLocation() {
-    document.getElementById('existingLocationLabel').classList.remove('d-none');
+function showExistingLocation(isDuplicating) {
+    const label = document.getElementById('existingLocationLabel');
+    if (isDuplicating) {
+        label.firstChild.textContent = 'Save next to the original block (default when duplicating) ';
+        label.querySelector('.tooltip-content').innerText = 'This option only shows up when you are duplicating '
+            + 'an existing block. This will save the copy in the same folder as the original.';
+    }
+    label.classList.remove('d-none');
     document.getElementById('existingLocationInput').classList.remove('d-none');
 }
 
