@@ -2,10 +2,9 @@ const { app, BrowserWindow, ipcMain, screen, dialog, shell } = require('electron
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { createDDSImage, decompressDDSImage, readDDSImage, hasDDSMipMaps, getDDSSize, extractDDSMipMaps } = require('./dds');
-const env = require('windows-env');
 const fs = require('fs');
 const os = require('os');
-const { getGamePath } = require('steam-game-path');
+const { execFileSync } = require('child_process');
 const sharp = require('sharp');
 
 // Folders for temporary files. These are not part of the repository,
@@ -211,7 +210,7 @@ function createDDSImageWrapper(event, inputPath, outputPath, format) {
 }
 
 function getGeneratedRecipeFileContent() {
-    const localAppdataPath = env.LOCALAPPDATA;
+    const localAppdataPath = process.env.LOCALAPPDATA;
     const recipePath = localAppdataPath + '\\cyubeVR\\Saved\\Dev\\Recipe.txt';
 
     try {
@@ -563,27 +562,79 @@ function clearFolder(folderPath) {
     fs.readdirSync(folderPath).forEach(f => fs.rmSync(path.join(folderPath, f), { recursive: true, force: true }));
 }
 
-function getModsFolderPath() {
+// Where Steam is installed, from the registry
+function getSteamPath() {
+    const keys = [
+        ['HKCU\\Software\\Valve\\Steam', 'SteamPath'],
+        ['HKLM\\SOFTWARE\\WOW6432Node\\Valve\\Steam', 'InstallPath'],
+        ['HKLM\\SOFTWARE\\Valve\\Steam', 'InstallPath']
+    ];
+    for (const [key, value] of keys) {
+        try {
+            const output = execFileSync('reg', ['query', key, '/v', value], { encoding: 'utf-8', windowsHide: true });
+            const match = output.match(/REG_(?:EXPAND_)?SZ\s+(.+)/);
+            if (match) return path.normalize(match[1].trim());
+        } catch {
+            // The key doesn't exist, so try the next one
+        }
+    }
+    return undefined;
+}
+
+let cyubeVRPath;
+
+/**
+ * The folder cyubeVR is installed in, or undefined if it can't be found.
+ * Games can be in any of Steam's library folders, which are listed in
+ * libraryfolders.vdf. The game's manifest there gives its folder name.
+ */
+function getCyubeVRPath() {
+    if (cyubeVRPath != undefined) return cyubeVRPath;
+
+    const steamPath = getSteamPath();
+    if (steamPath == undefined) return undefined;
+
+    const libraryPaths = [steamPath];
     try {
-        const cyubeVRPath = getGamePath(619500).game.path;
-        const modsFolderPath = path.join(cyubeVRPath, 'cyubeVR\\Mods');
-        return modsFolderPath;
+        const libraryFolders = fs.readFileSync(path.join(steamPath, 'steamapps', 'libraryfolders.vdf'), 'utf-8');
+        for (const match of libraryFolders.matchAll(/"path"\s+"(.+?)"/g)) {
+            libraryPaths.push(match[1].replace(/\\\\/g, '\\'));
+        }
+    } catch {
+        // Then only Steam's own library is looked in
     }
-    catch {
-        return undefined;
+
+    for (const libraryPath of libraryPaths) {
+        const steamAppsPath = path.join(libraryPath, 'steamapps');
+        try {
+            const manifest = fs.readFileSync(path.join(steamAppsPath, 'appmanifest_619500.acf'), 'utf-8');
+            const installDir = manifest.match(/"installdir"\s+"(.+?)"/)?.[1];
+            const gamePath = path.join(steamAppsPath, 'common', installDir ?? 'cyubeVR');
+            if (fs.existsSync(gamePath)) {
+                // The registry can have the path in lowercase, so get
+                // the real one, as paths are compared and shown.
+                cyubeVRPath = fs.realpathSync.native(gamePath);
+                return cyubeVRPath;
+            }
+        } catch {
+            // The game isn't in this library
+        }
     }
+    return undefined;
+}
+
+function getModsFolderPath() {
+    const cyubeVRPath = getCyubeVRPath();
+    if (cyubeVRPath == undefined) return undefined;
+    return path.join(cyubeVRPath, 'cyubeVR\\Mods');
 }
 
 // The game's own block textures, which recipes are shown with
 function getBlockTexturesUrl() {
-    try {
-        const cyubeVRPath = getGamePath(619500).game.path;
-        const texturesPath = path.join(cyubeVRPath, 'cyubeVR\\Content\\Movies\\BlockTextures\\DDS');
-        return pathToFileURL(texturesPath).href;
-    }
-    catch {
-        return undefined;
-    }
+    const cyubeVRPath = getCyubeVRPath();
+    if (cyubeVRPath == undefined) return undefined;
+    const texturesPath = path.join(cyubeVRPath, 'cyubeVR\\Content\\Movies\\BlockTextures\\DDS');
+    return pathToFileURL(texturesPath).href;
 }
 
 function getAllModFolders() {

@@ -1,4 +1,0 @@
-Balls.exr
-
-	Image was obtained from https://github.com/openexr/openexr-images
-
