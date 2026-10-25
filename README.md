@@ -11,14 +11,15 @@ like this:
 Here you can see an overview of the names, creators and IDs of the blocks, grouped by their category. Blocks that are part of a mod also
 show the name of the mod and the game version it is for. If you click any of them you will be able to expand their view, where you
 can see more detailed information about the block, as well as a preview of both the block and its recipe. Clicking a preview shows it larger.
-You can also choose to edit or delete the block with the buttons to the right:
+You can also choose to edit, duplicate or delete the block with the buttons to the right:
 ![Image of expanded view of block](readme_images/2.png)
 At the top you can filter by all blocks, independent blocks or blocks from mods (and then choose the game version), turn the grouping by
 category on or off, sort by name, ID or when the block was created, and search for a block by name. The application remembers which blocks you had open and which
 filter you chose.
 
 If you ever edit a block then it will just open the Block Generator window with all values already there, and then you can just save 
-the changes by going to the Finalization step.
+the changes by going to the Finalization step. Duplicating a block works the same way, except that it is saved as a new block,
+keeping the original.
 
 Additionally, to open the Block Generator window to create a new custom block, click the + button at the bottom.
 
@@ -88,6 +89,7 @@ The recipe part looks like this:
 
 ### Finalization
 Lastly we have the finalization. This is just where you specify where to save the block - you can either save it as an independent
-block, as part of a mod, or somewhere you choose manually. When editing a block, it is saved in its existing location by default. It looks like this:
+block, as part of a mod, or somewhere you choose manually. When editing a block, it is saved in its existing location by default. Below,
+previews of the block and its recipe show what you are about to save. It looks like this:
 ![Image of finalization part](readme_images/7.png)
 If you want the block to be part of a mod, then choose the mod and the version that the mod is made for.
