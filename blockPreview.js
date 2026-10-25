@@ -2,12 +2,13 @@ import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
 
 // heightPaths has each face's height map, if the block has them, which
-// displace the faces like in the game
-async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0, canEnlarge = true, heightPaths = []) {
+// displace the faces like in the game. Without hardEdges, different
+// textures continue into each other (HardEdgesBetweenDifferentTextures).
+async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0, canEnlarge = true, heightPaths = [], hardEdges = true) {
     // Clicking the preview shows it large
     if (canEnlarge) {
         canvas.classList.add('enlargeable');
-        canvas.addEventListener('click', () => showLargePreview(canvas, texturePaths, isAnimated, animationSpeed, heightPaths));
+        canvas.addEventListener('click', () => showLargePreview(canvas, texturePaths, isAnimated, animationSpeed, heightPaths, hardEdges));
     }
 
     let cubeRotation = 0.0;
@@ -109,12 +110,12 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
     // Load textures and height maps
     const [textures, heightMaps] = await Promise.all([
         loadTextures(gl, texturePaths, getMaxTextureSize(canvas)),
-        loadHeightMaps(heightPaths, 2 * gridSize * scale),
+        loadHeightMaps(heightPaths, 2 * gridSize * scale, hardEdges),
     ]);
 
     // Here's where we call the routine that builds all the
     // objects we'll be drawing.
-    const buffers = initBuffers(gl, heightMaps, gridSize, scale);
+    const buffers = initBuffers(gl, heightMaps, gridSize, scale, hardEdges);
 
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -160,12 +161,12 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
 
 }
 
-function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed, heightPaths) {
+function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed, heightPaths, hardEdges) {
     showLargeView(smallCanvas, (size) => {
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
-        loadCanvas(canvas, texturePaths, isAnimated, animationSpeed, false, heightPaths);
+        loadCanvas(canvas, texturePaths, isAnimated, animationSpeed, false, heightPaths, hardEdges);
         return canvas;
     });
 }
@@ -372,13 +373,32 @@ function getGridSize(canvas) {
     return Math.min(128, Math.max(16, Math.round(Math.max(canvas.width, canvas.height) / 7)));
 }
 
-// Like loadTextures, faces with the same height map share it
-async function loadHeightMaps(heightPaths, minSize) {
+// Like loadTextures, faces with the same height map share it. Without
+// hard edges, the textures continue into each other, so they all have the
+// same face level: the height half of all of them together is below.
+async function loadHeightMaps(heightPaths, minSize, hardEdges) {
     const loading = new Map();
     for (const path of new Set(heightPaths)) {
         if (path) loading.set(path, loadHeightMap(path, minSize));
     }
-    return Promise.all(heightPaths.map(path => loading.get(path)));
+    const heightMaps = await Promise.all(heightPaths.map(path => loading.get(path)));
+
+    const loaded = [...new Set(heightMaps)].filter(heightMap => heightMap);
+    if (!hardEdges && loaded.length > 1) {
+        const faceLevel = getMedian(concat(loaded.map(heightMap => heightMap.data)));
+        for (const heightMap of loaded) heightMap.faceLevel = faceLevel;
+    }
+    return heightMaps;
+}
+
+function concat(arrays) {
+    const result = new Float32Array(arrays.reduce((length, array) => length + array.length, 0));
+    let offset = 0;
+    for (const array of arrays) {
+        result.set(array, offset);
+        offset += array.length;
+    }
+    return result;
 }
 
 //

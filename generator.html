@@ -436,10 +436,35 @@
                                 </label>
                                 <input type="file" name="heightTextureFiles" id="heightTextureFilesInput" multiple
                                     accept=".png,.jpg,.jpeg,.dds">
-                                <div class="texture-selector-parent">
+                                <div class="texture-selector-parent mb-2">
                                     <!-- Textures are automatically added here -->
                                     <label for="heightTextureFilesInput" class="custom-file-uploader">Select
                                         file(s)</label>
+                                </div>
+
+                                <!-- Whether different textures continue into each other,
+                                     only shown when there are several -->
+                                <div class="d-none" id="noHardEdgesDiv">
+                                    <label class="form-label">
+                                        No hard edges
+                                        <div class="tooltip">
+                                            <span class="questionmark">?</span>
+                                            <div class="tooltip-content d-none">
+                                                Enable this if the textures are painted to
+                                                continue into each other where they meet, like a
+                                                top whose border runs on into the sides. The
+                                                height maps then continue around the block's edges,
+                                                even between different textures, and share one
+                                                surface level. Otherwise, the height maps flatten out
+                                                toward the edges between different textures.
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <div class="checkbox">
+                                        <input class="form-control" type="checkbox" name="noHardEdges"
+                                            id="noHardEdgesInput">
+                                        <label for="noHardEdgesInput"></label>
+                                    </div>
                                 </div>
                             </div>
                         </div>

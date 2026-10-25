@@ -14,8 +14,9 @@ const faces = [
 // The game's displacement of block faces with height maps (the same as
 // stonebrickstudios.com/cyubevr/blockpreview.html): a point moves out by
 // 3 cm x (height - the face's level), where the cube is 50 cm wide.
-// Within 6 cm of an edge to a face with the same texture, it also moves
-// toward that face, so both faces meet there. Toward other edges, and
+// Within 6 cm of an edge to a face with the same texture (or any texture,
+// without hard edges), it also moves toward that face, so both faces meet
+// there. Toward other edges, and
 // corners where the faces don't all have the same texture, it fades out
 // within 3 cm, and the relief fades between 9 and 6 cm from such corners.
 // Where faces bend toward each other, their heights at the edge usually
@@ -29,9 +30,11 @@ const UNITS_PER_CM = 2 / BLOCK_CM;
 // (or nothing), where faces with the same texture share the same one.
 // Displaced faces are divided into gridSize x gridSize squares. uvScale
 // is what the texture coordinates are divided by (animated textures).
+// Without hardEdges, faces with different height maps also bend into each
+// other (the game's "HardEdgesBetweenDifferentTextures": false).
 //
-function initBuffers(gl, heightMaps = [], gridSize = 1, uvScale = 1) {
-    const displacements = faces.map((_, i) => heightMaps[i] ? getDisplacement(i, heightMaps, uvScale) : undefined);
+function initBuffers(gl, heightMaps = [], gridSize = 1, uvScale = 1, hardEdges = true) {
+    const displacements = faces.map((_, i) => heightMaps[i] ? getDisplacement(i, heightMaps, uvScale, hardEdges) : undefined);
     return faces.map((face, i) => {
         const displacement = displacements[i];
         return initFaceBuffers(gl, face, displacement, displacements, displacement ? gridSize : 1);
@@ -40,10 +43,13 @@ function initBuffers(gl, heightMaps = [], gridSize = 1, uvScale = 1) {
 
 // Which of its edges a face bends toward the face across, which corners
 // are hard, and its height map
-function getDisplacement(faceIndex, heightMaps, uvScale) {
+function getDisplacement(faceIndex, heightMaps, uvScale, hardEdges) {
     const face = faces[faceIndex];
     const heightMap = heightMaps[faceIndex];
-    const isLike = (direction) => heightMaps[getFaceIndex(direction)] === heightMap;
+    const isLike = (direction) => {
+        const other = heightMaps[getFaceIndex(direction)];
+        return hardEdges ? other === heightMap : other != undefined;
+    };
 
     // Edges in the order -s, +s, -t, +t, each with its outward direction
     const s = getAxis(face, 1), t = getAxis(face, 3);

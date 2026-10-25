@@ -652,6 +652,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     const allowMove = formData.get('allowMove') == 'on' ? true : false;
     const allowCrystalPlacement = formData.get('allowCrystalPlacement') == 'on' ? true : false;
     const allowRotation = formData.get('allowRotation') == 'on' ? true : false;
+    const noHardEdges = hasNoHardEdges();
     const makeAnimated = formData.get('makeAnimated') == 'on' ? true : false;
 
     // Get all textures and corresponding mode
@@ -688,6 +689,12 @@ document.getElementById('blockForm').addEventListener('submit', async function (
         AllowMove: allowMove,
         AllowCrystalAssistedBlockPlacement: allowCrystalPlacement,
         AllowRotation: allowRotation
+    }
+
+    // The game makes the edges between different textures hard, unless
+    // this says they continue into each other
+    if (noHardEdges) {
+        propertiesFileContent.HardEdgesBetweenDifferentTextures = false;
     }
 
     // If it has a category name
@@ -1003,6 +1010,9 @@ async function loadTemp() {
         if (tempBlock.properties.AllowRotation != undefined) {
             formElem.elements['allowRotation'].checked = tempBlock.properties.AllowRotation;
         }
+        if (tempBlock.properties.HardEdgesBetweenDifferentTextures == false) {
+            formElem.elements['noHardEdges'].checked = true;
+        }
         if (tempBlock.properties.AnimationSpeed != undefined) {
             formElem.elements['makeAnimated'].checked = true;
             formElem.elements['animationSpeedSlider'].value = tempBlock.properties.AnimationSpeed;
@@ -1111,8 +1121,11 @@ let isGeneratingPreview = false;
 let previewedTextures = '[]';
 let previewTexturePaths;
 let previewHeightPaths;
+// Shown in place of the preview when there is none
+let previewMessage = 'Add a regular texture to see the preview';
 
 function schedulePreview() {
+    updateNoHardEdgesVisibility();
     clearTimeout(previewTimeout);
     previewTimeout = setTimeout(updatePreview, 300);
 }
@@ -1127,6 +1140,16 @@ function getPreviewHeightTextures() {
     const heightTexturesDiv = document.getElementById('heightTextureFilesInput').nextElementSibling;
     const isValid = heightTextures.length == getRegularTextures().length && !hasDuplicateFaces(heightTexturesDiv);
     return isValid ? heightTextures : [];
+}
+
+// Hard edges are only between different textures, so the option is only
+// shown when there are several
+function updateNoHardEdgesVisibility() {
+    document.getElementById('noHardEdgesDiv').classList.toggle('d-none', getRegularTextures().length <= 1);
+}
+
+function hasNoHardEdges() {
+    return document.getElementById('noHardEdgesInput').checked && getRegularTextures().length > 1;
 }
 
 function getPreviewTexturesKey() {
@@ -1145,17 +1168,16 @@ async function updatePreview() {
     previewedTextures = texturesKey;
 
     // The preview needs a valid amount of textures, one per face.
-    if (![1, 2, 3, 6].includes(textures.length) || hasDuplicateFaces(document.getElementById('regularTexturesDiv'))) {
+    const invalidMessage = getInvalidTexturesMessage(textures);
+    if (invalidMessage != undefined) {
         previewTexturePaths = undefined;
-        blockPreviewDiv.replaceChildren();
+        previewMessage = invalidMessage;
+        showPreview();
         return;
     }
 
     isGeneratingPreview = true;
-    const message = document.createElement('span');
-    message.classList.add('outline', 'preview-message');
-    message.innerText = 'Generating preview...';
-    blockPreviewDiv.replaceChildren(message);
+    showPreviewMessage('Generating preview...');
 
     const previewDDS = await window.call.generatePreviewBlock(textures, heightTextures);
     isGeneratingPreview = false;
@@ -1167,6 +1189,7 @@ async function updatePreview() {
     }
 
     previewTexturePaths = previewDDS == undefined ? undefined : getPreviewTexturePaths(previewDDS.textures);
+    previewMessage = 'The preview could not be made';
     previewHeightPaths = previewDDS == undefined || heightTextures.length == 0 ? [] : getPreviewTexturePaths(previewDDS.heights);
     showPreview();
 }
@@ -1175,6 +1198,7 @@ async function updatePreview() {
 document.getElementById('makeAnimatedInput').addEventListener('change', showPreview);
 document.getElementById('animationSpeedSliderInput').addEventListener('change', showPreview);
 document.getElementById('animationSpeedNumberInput').addEventListener('change', showPreview);
+document.getElementById('noHardEdgesInput').addEventListener('change', showPreview);
 
 // The preview is as large as fits in its space, so it is drawn again when
 // that changes, like when the textures step is first shown
@@ -1183,14 +1207,36 @@ new ResizeObserver(() => {
     if (getPreviewSize() != (canvas?.width ?? 0)) showPreview();
 }).observe(blockPreviewDiv);
 
+// Until textures are added, it says to add them
+showPreview();
+
+function getInvalidTexturesMessage(textures) {
+    if (textures.length == 0) return 'Add a regular texture to see the preview';
+    if (![1, 2, 3, 6].includes(textures.length)) return 'Use 1, 2, 3 or 6 regular textures to see the preview';
+    if (hasDuplicateFaces(document.getElementById('regularTexturesDiv'))) return 'Give each texture a different face to see the preview';
+    return undefined;
+}
+
+function showPreviewMessage(text) {
+    const message = document.createElement('span');
+    message.classList.add('outline', 'preview-message');
+    message.innerText = text;
+    blockPreviewDiv.replaceChildren(message);
+}
+
 function getPreviewSize() {
     return Math.floor(Math.min(blockPreviewDiv.clientWidth, blockPreviewDiv.clientHeight));
 }
 
 function showPreview() {
     if (isGeneratingPreview) return;
+    if (previewTexturePaths == undefined) {
+        showPreviewMessage(previewMessage);
+        return;
+    }
+
     const size = getPreviewSize();
-    if (previewTexturePaths == undefined || size == 0) {
+    if (size == 0) {
         blockPreviewDiv.replaceChildren();
         return;
     }
@@ -1205,7 +1251,7 @@ function showPreview() {
     let isAnimated = document.getElementById('makeAnimatedInput').checked;
     let animationSpeed = document.getElementById('animationSpeedNumberInput').value;
 
-    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, true, previewHeightPaths);
+    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, true, previewHeightPaths, !hasNoHardEdges());
 }
 
 // The texture for each side of the cube

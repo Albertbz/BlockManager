@@ -215,7 +215,8 @@ function makeBlockDiv(block) {
 
             const canvas = makePreviewCanvas(size);
             previewDiv.replaceChildren(canvas);
-            loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed, true, getHeightPaths(block));
+            const hardEdges = block.properties.HardEdgesBetweenDifferentTextures != false;
+            loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed, true, getHeightPaths(block), hardEdges);
             loadRecipePreview(recipePreviewDiv, block.properties.Recipe);
         },
         // Removing them also stops them and frees their WebGL contexts
