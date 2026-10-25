@@ -79,8 +79,6 @@ function createRecipePreview(container, layerInput, layerValue, getMaterialLabel
     let sizeY = 1;
     let layerCount = 1;
     let radius = 1;
-    let horizontalRadius = 1;
-    let halfHeight = 1;
     let needsFraming = false;
     let shownSize;
 
@@ -111,8 +109,6 @@ function createRecipePreview(container, layerInput, layerValue, getMaterialLabel
         });
 
         radius = 0.5 * SPACING * Math.hypot(sizeX, sizeY, layerCount);
-        horizontalRadius = 0.5 * SPACING * Math.hypot(sizeX, sizeY);
-        halfHeight = 0.5 * SPACING * layerCount;
 
         // A recipe of the same size, like one being built a square at a
         // time, is shown the way it was already being looked at
@@ -161,25 +157,51 @@ function createRecipePreview(container, layerInput, layerValue, getMaterialLabel
         );
     }
 
-    // Place the camera so the whole recipe fits while it spins. Spinning
-    // around, it takes up the space of the cylinder around it, as seen
-    // from slightly above.
+    // Place the camera, seen from slightly above, as close as it can be while
+    // the recipe still fits all the way around as it spins. Only the cubes
+    // that are there are fitted, spinning around their middle, so recipes
+    // that don't fill their grid aren't shown small. The recipe builder fits
+    // its whole grid instead, as that is still being filled in.
     function frame() {
-        const halfVerticalFov = THREE.MathUtils.degToRad(camera.fov) / 2;
-        const halfHorizontalFov = Math.atan(Math.tan(halfVerticalFov) * camera.aspect);
+        const boxes = layerInput == undefined && cubes.children.length > 0
+            ? cubes.children.map(cube => new THREE.Box3().setFromObject(cube))
+            : [new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(), new THREE.Vector3(sizeX, layerCount, sizeY).multiplyScalar(SPACING))];
+        const center = boxes.reduce((all, box) => all.union(box), new THREE.Box3()).getCenter(new THREE.Vector3());
+        const corners = boxes.flatMap(box => [0, 1, 2, 3, 4, 5, 6, 7].map(i => new THREE.Vector3(
+            i & 1 ? box.max.x : box.min.x,
+            i & 2 ? box.max.y : box.min.y,
+            i & 4 ? box.max.z : box.min.z
+        ).sub(center)));
 
+        // The directions across, up and out of the screen
         const direction = new THREE.Vector3(1, 0.8, 1).normalize();
-        const elevation = Math.asin(direction.y);
-        const projectedHalfHeight = halfHeight * Math.cos(elevation) + horizontalRadius * Math.sin(elevation);
+        const right = new THREE.Vector3(0, 1, 0).cross(direction).normalize();
+        const up = direction.clone().cross(right);
 
-        const distance = 1.05 * Math.max(
-            horizontalRadius / Math.sin(halfHorizontalFov),
-            projectedHalfHeight / Math.tan(halfVerticalFov) + horizontalRadius * Math.cos(elevation)
-        );
+        // A corner fits on screen once the camera is far enough away that
+        // its distance across and up is within the field of view, from
+        // however much closer to the camera it is. Checked for every corner,
+        // at many points of a whole turn.
+        const tanHalfVerticalFov = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+        const tanHalfHorizontalFov = tanHalfVerticalFov * camera.aspect;
+        const turned = new THREE.Vector3();
+        let distance = 0;
+        for (let step = 0; step < 72; step++) {
+            const angle = step / 72 * 2 * Math.PI;
+            for (const corner of corners) {
+                turned.copy(corner).applyAxisAngle(THREE.Object3D.DEFAULT_UP, angle);
+                const towardsCamera = turned.dot(direction);
+                distance = Math.max(distance,
+                    towardsCamera + Math.abs(turned.dot(right)) / tanHalfHorizontalFov,
+                    towardsCamera + Math.abs(turned.dot(up)) / tanHalfVerticalFov
+                );
+            }
+        }
+        distance *= 1.05;
 
-        camera.position.copy(direction).setLength(distance);
-        controls.target.set(0, 0, 0);
-        controls.minDistance = radius * 1.2;
+        camera.position.copy(direction).setLength(distance).add(center);
+        controls.target.copy(center);
+        controls.minDistance = Math.min(radius * 1.2, distance);
         controls.maxDistance = distance * 3;
         controls.update();
         needsFraming = false;

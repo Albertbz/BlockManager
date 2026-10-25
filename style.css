@@ -377,8 +377,20 @@ select {
 	white-space: nowrap;
 }
 
-/* The previews in Manage Blocks are as tall as the opened block, and get
-   their widths from that when they are made */
+/* The space below an opened block is padding rather than a margin, so the
+   previews can reach into it without being cut off while it animates */
+.block-content {
+	padding-bottom: 0.75rem;
+}
+
+/* The previews in Manage Blocks are as tall as the opened block, down into
+   the space below it so they are in its middle, and get their sizes from
+   that when they are made */
+.block-preview,
+.block-recipe-preview {
+	margin-bottom: -0.75rem;
+}
+
 .block-preview {
 	align-self: stretch;
 	align-items: center;
@@ -454,7 +466,7 @@ select {
 	justify-content: center;
 	width: 200px;
 	min-height: 135px;
-	margin: 0 8px;
+	margin-inline: 8px;
 }
 
 .large-recipe-preview {
@@ -477,6 +489,20 @@ select {
 	flex: 1 1 0;
 	width: 80px;
 	font-size: medium;
+}
+
+/* The icon is white with a black outline, like the text of the buttons */
+.icon-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.icon-btn svg {
+	width: 28px;
+	height: 28px;
+	fill: currentColor;
+	filter: drop-shadow(0 0 1px black) drop-shadow(0 0 1px black);
 }
 
 /* Names the block under the pointer */

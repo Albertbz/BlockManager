@@ -191,10 +191,25 @@ function makeBlockDiv(block) {
 
     const previewDiv = contentDiv.querySelector('div.block-preview');
     const recipePreviewDiv = contentDiv.querySelector('div.block-recipe-preview');
+
+    // The space the previews have in the opened block, measured before it
+    // starts growing, as they would otherwise be stretched along while it
+    // animates. They reach down into the space below the properties and
+    // buttons, so they are in the middle of the opened block.
+    let previewArea;
+    function measurePreviewArea() {
+        const height = contentDiv.clientHeight;
+        return { height, size: height - parseFloat(getComputedStyle(contentDiv).paddingBottom) };
+    }
+
     previewLoaders.set(previewDiv, {
         load: () => {
-            // As tall as the opened block, which they are stretched to
-            const size = previewDiv.clientHeight;
+            // They are kept at that height, as resizing the recipe preview
+            // clears it, which would make it flicker while the block opens
+            // or closes. The block preview is as large as the space next to
+            // the properties.
+            const { height, size } = previewArea?.height > 0 ? previewArea : measurePreviewArea();
+            for (const div of [previewDiv, recipePreviewDiv]) div.style.height = `${height}px`;
             previewDiv.style.width = `${size}px`;
             recipePreviewDiv.style.width = `${Math.round(size * RECIPE_PREVIEW_ASPECT)}px`;
 
@@ -226,6 +241,7 @@ function makeBlockDiv(block) {
         // The preview is shown while the expanded block is on screen
         if (isExpanded) {
             contentDiv.classList.remove('d-none');
+            previewArea = measurePreviewArea();
             previewObserver.observe(previewDiv);
         } else {
             previewObserver.unobserve(previewDiv);
@@ -238,7 +254,7 @@ function makeBlockDiv(block) {
 
         // The content smoothly grows from or shrinks into the top of the block
         const expanded = getContentKeyframe(getComputedStyle(contentDiv));
-        const collapsed = { height: '0px', marginBottom: '0px', opacity: 0 };
+        const collapsed = { height: '0px', paddingBottom: '0px', opacity: 0 };
         const keyframes = isExpanded ? [from ?? collapsed, expanded] : [from ?? expanded, collapsed];
 
         contentDiv.classList.add('animating');
@@ -278,7 +294,7 @@ function makeBlockDiv(block) {
 }
 
 function getContentKeyframe(style) {
-    return { height: style.height, marginBottom: style.marginBottom, opacity: style.opacity };
+    return { height: style.height, paddingBottom: style.paddingBottom, opacity: style.opacity };
 }
 
 function makeDropDownDiv(block) {
@@ -319,7 +335,7 @@ function makeDropDownDiv(block) {
 
 function makeContentDiv(block) {
     const contentDiv = document.createElement('div');
-    contentDiv.classList.add('header', 'box-horizontal', 'd-none', 'justify-between', 'mb-2');
+    contentDiv.classList.add('header', 'box-horizontal', 'd-none', 'justify-between', 'block-content');
 
     const propertiesDiv = makePropertiesDiv(block);
     const previewDiv = makePreviewDiv();
@@ -469,11 +485,7 @@ function makeButtonDiv(block) {
     const buttonDiv = document.createElement('div');
     buttonDiv.classList.add('me-2', 'block-buttons');
 
-    const editButton = document.createElement('button');
-    editButton.type = 'button';
-    editButton.innerText = 'Edit';
-    editButton.classList.add('btn');
-
+    const editButton = makeIconButton('Edit', EDIT_ICON_PATH);
     editButton.addEventListener('click', async (e) => {
         const success = await window.call.saveBlockInTemp(block);
         if (success) window.call.loadGenerator();
@@ -481,11 +493,7 @@ function makeButtonDiv(block) {
 
     buttonDiv.appendChild(editButton);
 
-    const deleteButton = document.createElement('button');
-    deleteButton.type = 'button';
-    deleteButton.innerText = 'Delete';
-    deleteButton.classList.add('btn');
-
+    const deleteButton = makeIconButton('Delete', DELETE_ICON_PATH);
     deleteButton.addEventListener('click', async (e) => {
         await window.call.displayDeleteDialog(block);
     });
@@ -493,6 +501,22 @@ function makeButtonDiv(block) {
     buttonDiv.appendChild(deleteButton);
 
     return buttonDiv;
+}
+
+// The usual pencil and trash can icons, from Material Design (Apache 2.0)
+const EDIT_ICON_PATH = 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z';
+const DELETE_ICON_PATH = 'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z';
+
+// A button showing an icon, which is named when pointed at
+function makeIconButton(label, iconPath) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.title = label;
+    button.setAttribute('aria-label', label);
+    button.classList.add('btn', 'icon-btn');
+    button.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPath}"/></svg>`;
+
+    return button;
 }
 
 function getBrokenBy(similarTo) {
