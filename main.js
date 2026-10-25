@@ -399,15 +399,15 @@ function prepareTextures(event, textures) {
 }
 
 async function convertTexture(src, outputPath, size, format) {
-    // Compressonator fails on paths with characters like 'æ', so it only
-    // works on fixed file names in a folder of its own for each conversion,
-    // and the result is moved to where it should be.
+    // Each conversion works on fixed file names in a folder of its own,
+    // so conversions can't get in each other's way, and the result is
+    // moved to where it should be.
     const workPath = fs.mkdtempSync(path.join(tempTexturesPath, 'conversion'));
     try {
         const resizedPath = path.join(workPath, 'resized.png');
         const compressedPath = path.join(workPath, 'compressed.dds');
 
-        // The PNG is only read by Compressonator, so compressing it would
+        // The PNG is only read by texconv, so compressing it would
         // only make it slower.
         const image = await getReadableImage(src, size, workPath);
         await image.resize(size, size).png({ compressionLevel: 0 }).toFile(resizedPath);
@@ -419,7 +419,7 @@ async function convertTexture(src, outputPath, size, format) {
 }
 
 // sharp can't read DDS files, so those are decoded first. readDDSImage is
-// much faster, but other formats are decompressed by Compressonator.
+// much faster, but other formats are decompressed by texconv.
 async function getReadableImage(src, size, workPath) {
     if (!isDDSFile(src)) return sharp(src);
 
@@ -458,7 +458,7 @@ async function getTextureThumbnail(event, filePath) {
             const { width, height, data } = image;
             await sharp(data, { raw: { width, height, channels: 4 } }).resize(256, 256).toFile(thumbnailPath);
         } else {
-            // Other formats are decompressed by Compressonator, which is slower
+            // Other formats are decompressed by texconv, which is slower
             const ddsPath = path.join(thumbnailsPath, `${n}.dds`);
             const fullSizePath = path.join(thumbnailsPath, `${n}_full.png`);
             fs.copyFileSync(filePath, ddsPath);

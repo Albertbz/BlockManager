@@ -4,28 +4,43 @@ const path = require('path');
 const fs = require('fs');
 
 
-const cliPath = path.join(__dirname, 'CLI', 'compressonatorcli.exe');
+const texconvPath = path.join(__dirname, 'CLI', 'texconv.exe');
 
-// Both functions throw if the conversion fails. They run Compressonator
-// without waiting for it, as that would freeze the whole app meanwhile.
+// Both functions throw if the conversion fails. They run texconv without
+// waiting for it, as that would freeze the whole app meanwhile.
+
+// Every mipmap down to 1x1, with a DX10 header like the game's own
+// textures. "-bc u" weighs the colour channels the same, which keeps the
+// colours closest to the original.
 async function createDDSImage(inputPath, outputPath, format) {
-    await runConversion(['-fd', format, '-mipsize', '1', inputPath, outputPath], outputPath);
+    await runConversion(['-bc', 'u', '-dx10', '-f', `${format}_UNORM`], inputPath, outputPath, '.dds');
 }
 
+// Only the largest mipmap
 async function decompressDDSImage(inputPath, outputPath) {
-    await runConversion([inputPath, outputPath], outputPath);
+    await runConversion(['-ft', 'png', '-f', 'R8G8B8A8_UNORM', '-m', '1'], inputPath, outputPath, '.png');
 }
 
-async function runConversion(args, outputPath) {
+async function runConversion(args, inputPath, outputPath, extension) {
+    // texconv names the file after the input, in the output folder, so it
+    // is moved to the given path afterwards.
+    const outputFolder = path.dirname(outputPath);
+    const texconvOutputPath = path.join(outputFolder, path.basename(inputPath, path.extname(inputPath)) + extension);
+    if (texconvOutputPath.toLowerCase() == inputPath.toLowerCase()) {
+        throw new Error(`Can't convert ${path.basename(inputPath)} into a file of the same name`);
+    }
+
     // Remove any old output so that a failed conversion can't be
     // mistaken for a successful one.
     fs.rmSync(outputPath, { force: true });
+    fs.rmSync(texconvOutputPath, { force: true });
 
-    await promisify(execFile)(cliPath, args, { windowsHide: true });
+    await promisify(execFile)(texconvPath, ['-nologo', '-y', ...args, '-o', outputFolder, inputPath], { windowsHide: true });
 
-    if (!fs.existsSync(outputPath)) {
+    if (!fs.existsSync(texconvOutputPath)) {
         throw new Error(`Could not create ${path.basename(outputPath)}`);
     }
+    if (texconvOutputPath != outputPath) fs.renameSync(texconvOutputPath, outputPath);
 }
 
 // The formats that readDDSImage can decode: legacy FourCC codes or DXGI
@@ -80,7 +95,7 @@ function readDDSFileHeader(filePath) {
 
 /**
  * Whether the DDS file is square, of the given format, at least the given
- * size, and has every mipmap down to 1x1 (like Compressonator makes them).
+ * size, and has every mipmap down to 1x1 (like createDDSImage makes them).
  * Then a texture of the given size is just its smaller mipmaps, which
  * extractDDSMipMaps can get without converting anything.
  */
@@ -130,9 +145,9 @@ async function extractDDSMipMaps(inputPath, outputPath, size, format) {
 
 /**
  * Decode a DDS file to RGBA pixels, from the smallest mipmap at least
- * minSize wide and high. Much faster than Compressonator, as only that
- * mipmap is decoded. Gives undefined for formats it can't decode. Like
- * Compressonator, BC4 is shown as grey and BC5 as red and green.
+ * minSize wide and high. Much faster than texconv, as only that mipmap
+ * is decoded. Gives undefined for formats it can't decode. BC4 is shown
+ * as grey and BC5 as red and green.
  */
 function readDDSImage(filePath, minSize) {
     const buffer = fs.readFileSync(filePath);
