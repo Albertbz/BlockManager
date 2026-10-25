@@ -1,11 +1,13 @@
 import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
 
-async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0, canEnlarge = true) {
+// heightPaths has each face's height map, if the block has them, which
+// displace the faces like in the game
+async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0, canEnlarge = true, heightPaths = []) {
     // Clicking the preview shows it large
     if (canEnlarge) {
         canvas.classList.add('enlargeable');
-        canvas.addEventListener('click', () => showLargePreview(canvas, texturePaths, isAnimated, animationSpeed));
+        canvas.addEventListener('click', () => showLargePreview(canvas, texturePaths, isAnimated, animationSpeed, heightPaths));
     }
 
     let cubeRotation = 0.0;
@@ -99,19 +101,26 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
         },
     };
 
+    const scale = isAnimated ? 4.0 : 1.0;
+
+    // Displaced faces are divided into squares of a few pixels each
+    const gridSize = getGridSize(canvas);
+
+    // Load textures and height maps
+    const [textures, heightMaps] = await Promise.all([
+        loadTextures(gl, texturePaths, getMaxTextureSize(canvas)),
+        loadHeightMaps(heightPaths, 2 * gridSize * scale),
+    ]);
+
     // Here's where we call the routine that builds all the
     // objects we'll be drawing.
-    const buffers = initBuffers(gl);
-
-    // Load textures
-    const textures = await loadTextures(gl, texturePaths, getMaxTextureSize(canvas));
+    const buffers = initBuffers(gl, heightMaps, gridSize, scale);
 
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
 
     let then = 0;
-    const scale = isAnimated ? 4.0 : 1.0;
     let offset = glMatrix.vec2.fromValues(0.0, 0.0);
     let animationCounter = 0;
 
@@ -151,12 +160,12 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
 
 }
 
-function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed) {
+function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed, heightPaths) {
     showLargeView(smallCanvas, (size) => {
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
-        loadCanvas(canvas, texturePaths, isAnimated, animationSpeed, false);
+        loadCanvas(canvas, texturePaths, isAnimated, animationSpeed, false, heightPaths);
         return canvas;
     });
 }
@@ -355,6 +364,102 @@ async function loadTexture(gl, url, maxTextureSize) {
     }
 
     return texture;
+}
+
+// A face takes up a bit under half the canvas, and is divided into squares
+// of around 3 pixels, like the game's micro-triangles (at most 128 x 128).
+function getGridSize(canvas) {
+    return Math.min(128, Math.max(16, Math.round(Math.max(canvas.width, canvas.height) / 7)));
+}
+
+// Like loadTextures, faces with the same height map share it
+async function loadHeightMaps(heightPaths, minSize) {
+    const loading = new Map();
+    for (const path of new Set(heightPaths)) {
+        if (path) loading.set(path, loadHeightMap(path, minSize));
+    }
+    return Promise.all(heightPaths.map(path => loading.get(path)));
+}
+
+//
+// Load a height map DDS file (BC4) as heights from 0 to 1, from the
+// smallest mipmap at least minSize wide. Also finds the face's level: the
+// height half the face is below (the game's automatic one). Gives
+// undefined if it can't be loaded, so the face is just flat.
+//
+async function loadHeightMap(url, minSize) {
+    let buffer;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) return undefined;
+        buffer = await response.arrayBuffer();
+    } catch (err) {
+        return undefined;
+    }
+    if (buffer.byteLength < 128) return undefined;
+
+    const header = new DataView(buffer);
+    const height = header.getUint32(12, true);
+    const width = header.getUint32(16, true);
+    const mipMapCount = Math.max(1, header.getUint32(28, true));
+    const fourCC = String.fromCharCode(...new Uint8Array(buffer, 84, 4));
+    const hasDX10Header = fourCC == 'DX10';
+    const isBC4 = hasDX10Header ? header.getUint32(128, true) == 80 : ['ATI1', 'BC4U'].includes(fourCC);
+    if (!isBC4 || width != height) return undefined;
+
+    // Find the mipmap, 8 bytes per 4x4 block
+    let offset = hasDX10Header ? 148 : 128;
+    let level = { size: width, offset };
+    for (let i = 0; i < mipMapCount; i++) {
+        const size = Math.max(1, width >> i);
+        if (size < minSize || size < 4) break;
+        level = { size, offset };
+        offset += Math.ceil(size / 4) ** 2 * 8;
+    }
+    if (level.offset + Math.ceil(level.size / 4) ** 2 * 8 > buffer.byteLength) return undefined;
+
+    const data = decodeBC4(new Uint8Array(buffer, level.offset), level.size);
+    return { size: level.size, data, faceLevel: getMedian(data) };
+}
+
+function decodeBC4(bytes, size) {
+    const data = new Float32Array(size * size);
+    const blocksPerRow = Math.ceil(size / 4);
+    const values = new Float32Array(8);
+    for (let by = 0; by < blocksPerRow; by++) {
+        for (let bx = 0; bx < blocksPerRow; bx++) {
+            const b = (by * blocksPerRow + bx) * 8;
+            const r0 = bytes[b], r1 = bytes[b + 1];
+            values[0] = r0;
+            values[1] = r1;
+            if (r0 > r1) {
+                for (let k = 1; k < 7; k++) values[k + 1] = ((7 - k) * r0 + k * r1) / 7;
+            } else {
+                for (let k = 1; k < 5; k++) values[k + 1] = ((5 - k) * r0 + k * r1) / 5;
+                values[6] = 0;
+                values[7] = 255;
+            }
+
+            // 16 3-bit indices in the following 6 bytes, the first in the lowest bits
+            let bits = 0, bitCount = 0, next = b + 2;
+            for (let p = 0; p < 16; p++) {
+                if (bitCount < 3) {
+                    bits |= bytes[next++] << bitCount;
+                    bitCount += 8;
+                }
+                const x = bx * 4 + (p & 3), y = by * 4 + (p >> 2);
+                if (x < size && y < size) data[y * size + x] = values[bits & 7] / 255;
+                bits >>= 3;
+                bitCount -= 3;
+            }
+        }
+    }
+    return data;
+}
+
+function getMedian(data) {
+    const sorted = Float32Array.from(data).sort();
+    return sorted[sorted.length >> 1];
 }
 
 export { loadCanvas, showLargeView }

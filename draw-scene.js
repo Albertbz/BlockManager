@@ -43,17 +43,6 @@ function drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offs
     glMatrix.mat4.invert(normalMatrix, modelViewMatrix);
     glMatrix.mat4.transpose(normalMatrix, normalMatrix);
 
-    // Tell WebGL how to pull out the positions from the position
-    // buffer into the vertexPosition attribute.
-    setPositionAttribute(gl, buffers, programInfo);
-
-    setTextureAttribute(gl, buffers, programInfo);
-
-    // Tell WebGL which indices to use to index the vertices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-    setNormalAttribute(gl, buffers, programInfo);
-
     // Tell WebGL to use our program when drawing
     gl.useProgram(programInfo.program);
 
@@ -86,22 +75,31 @@ function drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offs
     );
 
 
+    // Each face has its own buffers, as displaced faces have many vertices
     for (let i = 0; i < 6; i++) {
-        // Tell WebGL we want to affect texture unit 0
+        const faceBuffers = buffers[i];
+
+        // Tell WebGL how to pull out the positions from the position
+        // buffer into the vertexPosition attribute.
+        setPositionAttribute(gl, faceBuffers, programInfo);
+
+        setTextureAttribute(gl, faceBuffers, programInfo);
+
+        setNormalAttribute(gl, faceBuffers, programInfo);
+
+        // Tell WebGL which indices to use to index the vertices
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, faceBuffers.indices);
+
+        // Tell WebGL we want to affect texture unit i
         gl.activeTexture(gl.TEXTURE0 + i);
 
-        // Bind the texture to texture unit 0
+        // Bind the texture to texture unit i
         gl.bindTexture(gl.TEXTURE_2D, textures[i]);
 
-        // Tell the shader we bound the texture to texture unit 0
+        // Tell the shader we bound the texture to texture unit i
         gl.uniform1i(programInfo.uniformLocations.uSampler, i);
 
-        {
-            const vertexCount = 6;
-            const type = gl.UNSIGNED_SHORT;
-            const offset = i * 12;
-            gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
-        }
+        gl.drawElements(gl.TRIANGLES, faceBuffers.indexCount, gl.UNSIGNED_SHORT, 0);
     }
 }
 

@@ -741,9 +741,11 @@ function showPopup(popupWin) {
     popupWin.show();
 }
 
-// Made in the background while choosing textures, so no popup is shown
-async function generatePreviewBlock(event, textures) {
+// Made in the background while choosing textures, so no popup is shown.
+// Height maps are made smaller, as the preview doesn't show more detail.
+async function generatePreviewBlock(event, textures, heightTextures = []) {
     let texturesDDS = {};
+    let heightsDDS = {};
 
     try {
         clearFolder(previewPath);
@@ -754,7 +756,13 @@ async function generatePreviewBlock(event, textures) {
             texturesDDS[name] = outputPath;
         }
 
-        return texturesDDS;
+        for (const [src, name] of heightTextures) {
+            const outputPath = path.join(previewPath, `${name}_height.dds`);
+            await createTexture(src, outputPath, 1024, 'BC4');
+            heightsDDS[name] = outputPath;
+        }
+
+        return { textures: texturesDDS, heights: heightsDDS };
     } catch (err) {
         console.error(err);
         dialog.showErrorBox('Could not generate preview',

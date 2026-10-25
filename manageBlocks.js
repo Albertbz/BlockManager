@@ -215,7 +215,7 @@ function makeBlockDiv(block) {
 
             const canvas = makePreviewCanvas(size);
             previewDiv.replaceChildren(canvas);
-            loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed);
+            loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed, true, getHeightPaths(block));
             loadRecipePreview(recipePreviewDiv, block.properties.Recipe);
         },
         // Removing them also stops them and frees their WebGL contexts
@@ -479,6 +479,12 @@ function getTexturePaths(block) {
     }
 
     return texturePaths;
+}
+
+// Each texture's height map, if the block has them, is next to it
+function getHeightPaths(block) {
+    if (!block.properties.Textures?.WithHeight) return [];
+    return getTexturePaths(block).map(path => path?.replace(/\.dds$/, '_height.dds'));
 }
 
 function makeButtonDiv(block) {

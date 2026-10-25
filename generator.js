@@ -1110,6 +1110,7 @@ let previewTimeout;
 let isGeneratingPreview = false;
 let previewedTextures = '[]';
 let previewTexturePaths;
+let previewHeightPaths;
 
 function schedulePreview() {
     clearTimeout(previewTimeout);
@@ -1120,13 +1121,26 @@ function getRegularTextures() {
     return getTexturesSrcAndValue(document.getElementById('textureFilesInput'));
 }
 
+// The height maps are only shown when there is one for each texture
+function getPreviewHeightTextures() {
+    const heightTextures = getTexturesSrcAndValue(document.getElementById('heightTextureFilesInput'));
+    const heightTexturesDiv = document.getElementById('heightTextureFilesInput').nextElementSibling;
+    const isValid = heightTextures.length == getRegularTextures().length && !hasDuplicateFaces(heightTexturesDiv);
+    return isValid ? heightTextures : [];
+}
+
+function getPreviewTexturesKey() {
+    return JSON.stringify([getRegularTextures(), getPreviewHeightTextures()]);
+}
+
 async function updatePreview() {
     // Only one preview is made at a time. When it is done, it checks
     // whether the textures have changed again in the meantime.
     if (isGeneratingPreview) return;
 
     const textures = getRegularTextures();
-    const texturesKey = JSON.stringify(textures);
+    const heightTextures = getPreviewHeightTextures();
+    const texturesKey = getPreviewTexturesKey();
     if (texturesKey == previewedTextures) return;
     previewedTextures = texturesKey;
 
@@ -1143,16 +1157,17 @@ async function updatePreview() {
     message.innerText = 'Generating preview...';
     blockPreviewDiv.replaceChildren(message);
 
-    const texturesDDS = await window.call.generatePreviewBlock(textures);
+    const previewDDS = await window.call.generatePreviewBlock(textures, heightTextures);
     isGeneratingPreview = false;
 
     // Newer textures are previewed instead
-    if (JSON.stringify(getRegularTextures()) != texturesKey) {
+    if (getPreviewTexturesKey() != texturesKey) {
         updatePreview();
         return;
     }
 
-    previewTexturePaths = texturesDDS == undefined ? undefined : getPreviewTexturePaths(texturesDDS);
+    previewTexturePaths = previewDDS == undefined ? undefined : getPreviewTexturePaths(previewDDS.textures);
+    previewHeightPaths = previewDDS == undefined || heightTextures.length == 0 ? [] : getPreviewTexturePaths(previewDDS.heights);
     showPreview();
 }
 
@@ -1190,7 +1205,7 @@ function showPreview() {
     let isAnimated = document.getElementById('makeAnimatedInput').checked;
     let animationSpeed = document.getElementById('animationSpeedNumberInput').value;
 
-    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed);
+    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, true, previewHeightPaths);
 }
 
 // The texture for each side of the cube

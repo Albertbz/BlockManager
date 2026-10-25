@@ -21,7 +21,7 @@ contextBridge.exposeInMainWorld('call', {
     getTemp: () => ipcRenderer.invoke('getTemp'),
     getTempTextures: () => ipcRenderer.invoke('getTempTextures'),
     removeBlockToDelete: () => ipcRenderer.invoke('removeBlockToDelete'),
-    generatePreviewBlock: (textures) => ipcRenderer.invoke('generatePreviewBlock', textures),
+    generatePreviewBlock: (textures, heightTextures) => ipcRenderer.invoke('generatePreviewBlock', textures, heightTextures),
     getTextureThumbnail: (filePath) => ipcRenderer.invoke('getTextureThumbnail', filePath),
     getBlockTexturesUrl: () => ipcRenderer.invoke('getBlockTexturesUrl')
 })
