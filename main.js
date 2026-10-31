@@ -782,6 +782,7 @@ function addBlocksTo(blocks, blocksFolderPath) {
             if (typeof properties != 'object' || properties == null) {
                 throw new Error(`Invalid properties file: ${propertiesFilePath}`);
             }
+            fixMisplacedProperties(properties, propertiesFilePath);
             block.properties = properties;
         } catch (err) {
             // Skip blocks whose properties can't be read, as
@@ -806,6 +807,30 @@ function addBlocksTo(blocks, blocksFolderPath) {
         }
 
         blocks.push(block);
+    }
+}
+
+/**
+ * Earlier versions saved HardEdgesBetweenDifferentTextures outside of
+ * Textures, which makes the game crash. Move it into Textures, and save
+ * the fixed properties file.
+ */
+function fixMisplacedProperties(properties, propertiesFilePath) {
+    if (!('HardEdgesBetweenDifferentTextures' in properties)) return;
+
+    if (typeof properties.Textures != 'object' || properties.Textures == null) {
+        properties.Textures = {};
+    }
+    // If it is in both places, the one in Textures is the right one
+    if (!('HardEdgesBetweenDifferentTextures' in properties.Textures)) {
+        properties.Textures.HardEdgesBetweenDifferentTextures = properties.HardEdgesBetweenDifferentTextures;
+    }
+    delete properties.HardEdgesBetweenDifferentTextures;
+
+    try {
+        fs.writeFileSync(propertiesFilePath, JSON.stringify(properties));
+    } catch (err) {
+        console.error(err);
     }
 }
 

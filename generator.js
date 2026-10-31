@@ -707,7 +707,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     // The game makes the edges between different textures hard, unless
     // this says they continue into each other
     if (noHardEdges) {
-        propertiesFileContent.HardEdgesBetweenDifferentTextures = false;
+        propertiesFileContent.Textures.HardEdgesBetweenDifferentTextures = false;
     }
 
     // If it has a category name
@@ -1006,7 +1006,7 @@ async function loadTemp() {
         if (tempBlock.properties.AllowRotation != undefined) {
             formElem.elements['allowRotation'].checked = tempBlock.properties.AllowRotation;
         }
-        if (tempBlock.properties.HardEdgesBetweenDifferentTextures == false) {
+        if (tempBlock.properties.Textures?.HardEdgesBetweenDifferentTextures == false) {
             formElem.elements['noHardEdges'].checked = true;
         }
         if (tempBlock.properties.AnimationSpeed != undefined) {
