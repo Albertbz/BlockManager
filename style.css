@@ -712,11 +712,13 @@ select:focus {
 	height: 100%;
 }
 
-.recipe-preview canvas {
+.recipe-preview canvas,
+.orbitable {
 	cursor: grab;
 }
 
-.recipe-preview canvas:active {
+.recipe-preview canvas:active,
+.orbitable:active {
 	cursor: grabbing;
 }
 

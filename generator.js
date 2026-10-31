@@ -707,7 +707,7 @@ document.getElementById('blockForm').addEventListener('submit', async function (
     // The game makes the edges between different textures hard, unless
     // this says they continue into each other
     if (noHardEdges) {
-        propertiesFileContent.HardEdgesBetweenDifferentTextures = false;
+        propertiesFileContent.Textures.HardEdgesBetweenDifferentTextures = false;
     }
 
     // If it has a category name
@@ -1006,7 +1006,7 @@ async function loadTemp() {
         if (tempBlock.properties.AllowRotation != undefined) {
             formElem.elements['allowRotation'].checked = tempBlock.properties.AllowRotation;
         }
-        if (tempBlock.properties.HardEdgesBetweenDifferentTextures == false) {
+        if (tempBlock.properties.Textures?.HardEdgesBetweenDifferentTextures == false) {
             formElem.elements['noHardEdges'].checked = true;
         }
         if (tempBlock.properties.AnimationSpeed != undefined) {
@@ -1114,6 +1114,9 @@ let isGeneratingPreview = false;
 let previewedTextures = '[]';
 let previewTexturePaths;
 let previewHeightPaths;
+// The preview can be turned and zoomed, and is still seen from there when
+// it is made again, like when the textures change
+const previewView = {};
 // Shown in place of the preview when there is none
 let previewMessage = 'Add a regular texture to see the preview';
 
@@ -1250,7 +1253,7 @@ function showPreview() {
     let isAnimated = document.getElementById('makeAnimatedInput').checked;
     let animationSpeed = document.getElementById('animationSpeedNumberInput').value;
 
-    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, true, previewHeightPaths, !hasNoHardEdges());
+    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, false, previewHeightPaths, !hasNoHardEdges(), false, previewView);
 }
 
 /**

@@ -1,5 +1,17 @@
 import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
+import * as THREE from "./three/three.module.min.js";
+import { OrbitControls } from "./three/OrbitControls.js";
+
+// The block is seen from here, spinning around it
+const eyeDistance = 3.7;
+const eyeHeight = 2.3;
+// Seen from above, the cube's nearest bottom corner reaches further down
+// than its top reaches up, so aiming at its middle cut that corner off at
+// the bottom. Aiming a bit lower keeps the whole cube inside the canvas.
+const target = [0, -0.27, 0];
+// In radians per second
+const spinSpeed = 0.5;
 
 // heightPaths has each face's height map, if the block has them, which
 // displace the faces like in the game. Without hardEdges, different
@@ -8,7 +20,10 @@ import { drawScene } from "./draw-scene.js";
 // such previews share, and each picture is handed over to the canvas.
 // Making and removing a context for each preview is slow, which made
 // scrolling past many of them stutter.
-async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0, canEnlarge = true, heightPaths = [], hardEdges = true, shareContext = false) {
+// With orbitView, the block can be turned by dragging it and zoomed by
+// scrolling, like the recipe preview. Where it is seen from is kept in
+// orbitView, so a new preview given the same one is seen from there too.
+async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpeed = 0, canEnlarge = true, heightPaths = [], hardEdges = true, shareContext = false, orbitView = undefined) {
     // Clicking the preview shows it large
     if (canEnlarge) {
         canvas.classList.add('enlargeable');
@@ -38,6 +53,8 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
     // objects we'll be drawing.
     const buffers = initBuffers(gl, heightMaps, gridSize, scale, hardEdges);
 
+    const orbit = orbitView ? createOrbit(canvas, orbitView) : undefined;
+
     let then = 0;
     let offset = glMatrix.vec2.fromValues(0.0, 0.0);
     let animationCounter = 0;
@@ -51,6 +68,7 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
         // WebGL context, as only a limited number can exist, or what it
         // used of the shared one.
         if (!canvas.isConnected) {
+            if (orbit) orbit.dispose();
             if (shareContext) {
                 freeResources(gl, textures, buffers);
             } else {
@@ -73,7 +91,8 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
             gl.viewport(0, 0, width, height);
         }
 
-        drawScene(gl, programInfo, buffers, textures, cubeRotation, scale, offset, canvas.clientWidth / canvas.clientHeight);
+        const viewMatrix = orbit ? orbit.update(deltaTime) : getSpinningView(cubeRotation);
+        drawScene(gl, programInfo, buffers, textures, viewMatrix, scale, offset, canvas.clientWidth / canvas.clientHeight);
 
         // Handing the picture over is much faster than copying it
         if (shareContext) output.transferFromImageBitmap(gl.canvas.transferToImageBitmap());
@@ -87,12 +106,55 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
             }
         }
 
-        cubeRotation += deltaTime * 0.5;
+        cubeRotation += deltaTime * spinSpeed;
 
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
 
+}
+
+// The view of the block spun by rotation radians around it
+function getSpinningView(rotation) {
+    const eye = glMatrix.vec3.fromValues(eyeDistance * Math.sin(rotation), eyeHeight, eyeDistance * Math.cos(rotation));
+    const viewMatrix = glMatrix.mat4.create();
+    glMatrix.mat4.lookAt(viewMatrix, eye, target, glMatrix.vec3.fromValues(0, 1, 0));
+    return viewMatrix;
+}
+
+// Orbit controls for the canvas, which start out spinning like the other
+// previews, until the block is grabbed. Only the camera is used from three.js,
+// to know where the block is seen from. update gives the view matrix for
+// the next frame, and saves the view in orbitView.
+function createOrbit(canvas, orbitView) {
+    const camera = new THREE.PerspectiveCamera();
+    camera.position.copy(orbitView.position ?? new THREE.Vector3(0, eyeHeight, eyeDistance));
+
+    const controls = new OrbitControls(camera, canvas);
+    controls.target.set(...target);
+    controls.enableDamping = true;
+    controls.enablePan = false;
+    controls.minDistance = 2.5;
+    controls.maxDistance = 12;
+    controls.autoRotate = orbitView.autoRotate ?? true;
+    // OrbitControls turns 2π/60 radians per second for each unit of speed,
+    // the other way around from the other previews
+    controls.autoRotateSpeed = -spinSpeed * 60 / (2 * Math.PI);
+    // Stop spinning once it is grabbed, so it stays where it was put
+    controls.addEventListener('start', () => controls.autoRotate = false);
+    canvas.classList.add('orbitable');
+
+    return {
+        update(deltaTime) {
+            // The first frame's time is since the page was opened
+            controls.update(Math.min(deltaTime, 0.1));
+            camera.updateMatrixWorld();
+            orbitView.position = camera.position.clone();
+            orbitView.autoRotate = controls.autoRotate;
+            return camera.matrixWorldInverse.elements;
+        },
+        dispose: () => controls.dispose(),
+    };
 }
 
 // The context shared by the previews that share one, made when first

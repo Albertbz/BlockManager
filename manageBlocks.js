@@ -239,7 +239,7 @@ function makeBlockDiv(block) {
 
             const canvas = makePreviewCanvas(size);
             previewDiv.replaceChildren(canvas);
-            const hardEdges = block.properties.HardEdgesBetweenDifferentTextures != false;
+            const hardEdges = block.properties.Textures?.HardEdgesBetweenDifferentTextures != false;
             loadCanvas(canvas, getTexturePaths(block), isAnimated, animationSpeed, true, getHeightPaths(block), hardEdges, true);
             loadRecipePreview(recipePreviewDiv, block.properties.Recipe, true);
         },
