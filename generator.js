@@ -1114,6 +1114,9 @@ let isGeneratingPreview = false;
 let previewedTextures = '[]';
 let previewTexturePaths;
 let previewHeightPaths;
+// The preview can be turned and zoomed, and is still seen from there when
+// it is made again, like when the textures change
+const previewView = {};
 // Shown in place of the preview when there is none
 let previewMessage = 'Add a regular texture to see the preview';
 
@@ -1250,7 +1253,7 @@ function showPreview() {
     let isAnimated = document.getElementById('makeAnimatedInput').checked;
     let animationSpeed = document.getElementById('animationSpeedNumberInput').value;
 
-    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, true, previewHeightPaths, !hasNoHardEdges());
+    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, false, previewHeightPaths, !hasNoHardEdges(), false, previewView);
 }
 
 /**
