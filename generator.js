@@ -1253,7 +1253,7 @@ function showPreview() {
     let isAnimated = document.getElementById('makeAnimatedInput').checked;
     let animationSpeed = document.getElementById('animationSpeedNumberInput').value;
 
-    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, false, previewHeightPaths, !hasNoHardEdges(), false, previewView);
+    loadCanvas(canvas, previewTexturePaths, isAnimated, animationSpeed, true, previewHeightPaths, !hasNoHardEdges(), false, previewView);
 }
 
 /**
