@@ -27,7 +27,7 @@ async function loadCanvas(canvas, texturePaths, isAnimated = false, animationSpe
     // Clicking the preview shows it large
     if (canEnlarge) {
         canvas.classList.add('enlargeable');
-        canvas.addEventListener('click', () => showLargePreview(canvas, texturePaths, isAnimated, animationSpeed, heightPaths, hardEdges));
+        canvas.addEventListener('click', () => showLargePreview(canvas, texturePaths, isAnimated, animationSpeed, heightPaths, hardEdges, orbitView));
     }
 
     let cubeRotation = 0.0;
@@ -131,7 +131,17 @@ function createOrbit(canvas, orbitView) {
     camera.position.copy(orbitView.position ?? new THREE.Vector3(0, eyeHeight, eyeDistance));
 
     const controls = new OrbitControls(camera, canvas);
-    controls.target.set(...target);
+
+// Left mouse button is reserved for enlarging the preview
+controls.mouseButtons.LEFT = null;
+
+// Right mouse button rotates the block
+controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
+
+// Prevent the browser context menu on right-click
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+controls.target.set(...target);
     controls.enableDamping = true;
     controls.enablePan = false;
     controls.minDistance = 2.5;
@@ -274,12 +284,27 @@ function createContext(canvas) {
     return { gl, programInfo };
 }
 
-function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed, heightPaths, hardEdges) {
+function showLargePreview(smallCanvas, texturePaths, isAnimated, animationSpeed, heightPaths, hardEdges, orbitView) {
     showLargeView(smallCanvas, (size) => {
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
-        loadCanvas(canvas, texturePaths, isAnimated, animationSpeed, false, heightPaths, hardEdges);
+
+        // Give the enlarged preview its own copy of the camera position
+        const largeOrbitView = orbitView ? { ...orbitView } : undefined;
+
+        loadCanvas(
+            canvas,
+            texturePaths,
+            isAnimated,
+            animationSpeed,
+            false,
+            heightPaths,
+            hardEdges,
+            false,
+            largeOrbitView
+        );
+
         return canvas;
     });
 }
